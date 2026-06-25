@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-interface SearchProduct {
+export interface SearchProduct {
   slug: string;
   name: string;
   description: string;
@@ -8,7 +8,7 @@ interface SearchProduct {
   category: string;
 }
 
-interface SearchExtra {
+export interface SearchExtra {
   slug: string;
   name: string;
   description: string;

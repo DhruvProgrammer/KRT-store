@@ -19,7 +19,7 @@ const linkGroups = [
   {
     title: "Company",
     links: [
-      { href: "/", label: "About KRT" },
+      { href: "/", label: "About KRT store" },
       { href: "/", label: "License terms" },
       { href: "/", label: "Refund policy" },
       { href: "/", label: "Privacy" }
@@ -65,13 +65,13 @@ export default function Footer() {
         <div>
           <a
             href="/"
-            className="inline-flex items-center gap-3 rounded-full px-2 py-1 transition hover:bg-slate-800/40"
-            aria-label="KRT home"
+            class="inline-flex items-center gap-3 rounded-full px-2 py-1 transition hover:bg-slate-800/40"
+            aria-label="KRT store home"
           >
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-accent font-black text-ink-inverse shadow-[0_0_18px_rgba(0,162,255,0.45)]">
               K
             </span>
-            <span className="text-base font-black tracking-[-0.04em] text-ink">KRT</span>
+            <span className="text-base font-black tracking-[-0.04em] text-ink">KRT store</span>
           </a>
           <p className="mt-5 max-w-xs text-sm leading-7 text-ink-muted">
             Premium plugins, templates, and design assets crafted for designers and engineers who care about

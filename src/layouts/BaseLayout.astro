@@ -10,7 +10,7 @@ interface Props {
 }
 
 const { title, description, image, canonical } = Astro.props;
-const siteTitle = "KRT";
+const siteTitle = "KRT store";
 const siteDescription = description;
 const siteUrl = Astro.url.origin;
 const pageImage = image ? new URL(image, siteUrl).href : `${siteUrl}/og.svg`;
