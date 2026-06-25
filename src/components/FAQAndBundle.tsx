@@ -76,7 +76,7 @@ export default function FAQAndBundle() {
                   Save 40% Off
                 </span>
                 <h3 className="text-3xl font-black tracking-[-0.05em] text-ink sm:text-4xl">
-                  Get the full KRT Bundle
+                  Get the full KRT store Bundle
                 </h3>
                 <p className="mt-4 text-sm leading-relaxed text-ink-muted">
                   Every plugin, theme, design token set, and icon pack we make. Get immediate access to all current releases, lifetime updates, and priority developer support with one simple payment.

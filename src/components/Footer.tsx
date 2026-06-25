@@ -65,7 +65,7 @@ export default function Footer() {
         <div>
           <a
             href="/"
-            class="inline-flex items-center gap-3 rounded-full px-2 py-1 transition hover:bg-slate-800/40"
+            className="inline-flex items-center gap-3 rounded-full px-2 py-1 transition hover:bg-slate-800/40"
             aria-label="KRT store home"
           >
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-accent font-black text-ink-inverse shadow-[0_0_18px_rgba(0,162,255,0.45)]">
