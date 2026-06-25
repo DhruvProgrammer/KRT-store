@@ -1,0 +1,22 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Navigation from "../components/Navigation.astro";
+import Footer from "../components/Footer";
+import CartList from "../components/CartList";
+
+const title = "Cart — KRT";
+const description = "Review the digital goods in your cart and proceed to checkout.";
+---
+
+<BaseLayout title={title} description={description}>
+  <Navigation />
+  <main id="main">
+    <nav class="container mx-auto flex flex-wrap items-center gap-2 px-4 pt-6 text-xs font-bold uppercase tracking-[0.18em] text-ink-muted sm:px-6 lg:px-8" aria-label="Breadcrumb">
+      <a href="/" class="transition hover:text-ink">Home</a>
+      <span aria-hidden="true">/</span>
+      <span class="text-ink">Cart</span>
+    </nav>
+    <CartList client:load />
+  </main>
+  <Footer client:load />
+</BaseLayout>

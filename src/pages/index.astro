@@ -1,0 +1,89 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Navigation from "../components/Navigation.astro";
+import Footer from "../components/Footer";
+import ContactCTA from "../components/ContactCTA";
+import FAQAndBundle from "../components/FAQAndBundle";
+import Button from "../components/Button";
+import TrustMicroBar from "../components/TrustMicroBar";
+import { products } from "../data/products";
+import { extras } from "../data/extras";
+
+const title = "KRT — Premium tools and free extras, in one place";
+const description = "Premium plugins, templates, design systems, icon packs, plus a free extras library. Built for designers and engineers who care about craft.";
+---
+
+<BaseLayout title={title} description={description}>
+  <Navigation />
+  <main id="main">
+    <section class="relative overflow-hidden pt-12 sm:pt-16">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid items-start gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+          <div>
+            <p class="mb-6 inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-accent shadow-[0_0_24px_rgba(0,162,255,0.18)]">
+              <span class="h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_10px_rgba(0,162,255,0.7)]"></span>
+              Premium store · free extras
+            </p>
+            <h1 class="max-w-4xl text-5xl font-black tracking-[-0.06em] text-ink sm:text-7xl lg:text-8xl">
+              One shop, two libraries.
+            </h1>
+            <p class="mt-7 max-w-2xl text-base leading-8 text-ink-muted sm:text-lg">
+              KRT ships a paid store with {products.length} premium tools and a free extras library with {extras.length}+ downloads — cheatsheets, swatches, starter files. No subscriptions, no clutter.
+            </p>
+            <div class="mt-7">
+              <TrustMicroBar variant="full" />
+            </div>
+            <div class="mt-9 flex flex-col gap-3 sm:flex-row">
+              <Button href="/store">Open the store</Button>
+              <Button variant="secondary" href="/extras">Browse free extras</Button>
+            </div>
+          </div>
+
+          <aside class="grid gap-4">
+            <a
+              href="/store"
+              class="group block rounded-3xl border border-line bg-surface/70 p-6 shadow-soft transition hover:-translate-y-1 hover:border-accent/40 hover:shadow-[0_0_28px_rgba(0,162,255,0.18)]"
+            >
+              <div class="flex items-center justify-between">
+                <p class="text-xs font-black uppercase tracking-[0.24em] text-accent">Store</p>
+                <span class="text-xs font-bold text-ink-muted">{products.length} items</span>
+              </div>
+              <h2 class="mt-3 text-2xl font-black tracking-[-0.05em] text-ink transition-colors group-hover:text-accent">
+                Premium tools.
+              </h2>
+              <p class="mt-2 text-sm leading-7 text-ink-muted">
+                Plugins, templates, design systems, icon packs, and learning kits. Paid, perpetual license.
+              </p>
+              <p class="mt-4 inline-flex items-center gap-2 text-sm font-black text-accent">
+                Open store <span>→</span>
+              </p>
+            </a>
+
+            <a
+              href="/extras"
+              class="group block rounded-3xl border border-line bg-surface/70 p-6 shadow-soft transition hover:-translate-y-1 hover:border-accent/40 hover:shadow-[0_0_28px_rgba(0,162,255,0.18)]"
+            >
+              <div class="flex items-center justify-between">
+                <p class="text-xs font-black uppercase tracking-[0.24em] text-accent">Extras</p>
+                <span class="text-xs font-bold text-ink-muted">{extras.length}+ downloads</span>
+              </div>
+              <h2 class="mt-3 text-2xl font-black tracking-[-0.05em] text-ink transition-colors group-hover:text-accent">
+                Free downloads.
+              </h2>
+              <p class="mt-2 text-sm leading-7 text-ink-muted">
+                Cheatsheets, swatches, starter files, and small utilities. Open source and free to use.
+              </p>
+              <p class="mt-4 inline-flex items-center gap-2 text-sm font-black text-accent">
+                Browse extras <span>→</span>
+              </p>
+            </a>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <FAQAndBundle client:load />
+    <ContactCTA client:load />
+  </main>
+  <Footer client:load />
+</BaseLayout>

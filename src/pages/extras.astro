@@ -1,0 +1,35 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Navigation from "../components/Navigation.astro";
+import Footer from "../components/Footer";
+import ExtrasFilter from "../components/ExtrasFilter";
+import { extras } from "../data/extras";
+
+const title = "Extras — KRT";
+const description = "Cheatsheets, starter files, icon batches, and small free tools from KRT. No account required.";
+---
+
+<BaseLayout title={title} description={description}>
+  <Navigation />
+  <main id="main">
+    <header class="container mx-auto border-b border-line px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+      <p class="mb-3 text-xs font-black uppercase tracking-[0.28em] text-accent">Extras</p>
+      <h1 class="max-w-3xl text-4xl font-black tracking-[-0.06em] text-ink sm:text-6xl">
+        Free tools, guides, and swatches.
+      </h1>
+      <p class="mt-4 max-w-2xl text-base leading-7 text-ink-muted sm:text-lg">
+        Small things we've made and want out in the world. No email gate.
+      </p>
+      <div class="mt-8 flex flex-wrap gap-3 text-xs font-black uppercase tracking-[0.2em] text-ink-muted">
+        <span class="rounded-full border border-accent/30 bg-accent/10 px-3 py-1.5 text-accent">
+          {extras.length} downloads
+        </span>
+        <span class="rounded-full border border-line bg-surface/60 px-3 py-1.5">Always free</span>
+        <span class="rounded-full border border-line bg-surface/60 px-3 py-1.5">No signup</span>
+      </div>
+    </header>
+
+    <ExtrasFilter client:load items={extras} />
+  </main>
+  <Footer client:load />
+</BaseLayout>

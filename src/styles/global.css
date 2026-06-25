@@ -1,0 +1,248 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src:
+    url("/fonts/files/inter-latin-400-normal.woff2") format("woff2"),
+    url("/fonts/files/inter-latin-500-normal.woff2") format("woff2"),
+    url("/fonts/files/inter-latin-600-normal.woff2") format("woff2"),
+    url("/fonts/files/inter-latin-700-normal.woff2") format("woff2"),
+    url("/fonts/files/inter-latin-800-normal.woff2") format("woff2"),
+    url("/fonts/files/inter-latin-900-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src:
+    url("/fonts/files/inter-latin-ext-400-normal.woff2") format("woff2"),
+    url("/fonts/files/inter-latin-ext-500-normal.woff2") format("woff2"),
+    url("/fonts/files/inter-latin-ext-600-normal.woff2") format("woff2"),
+    url("/fonts/files/inter-latin-ext-700-normal.woff2") format("woff2"),
+    url("/fonts/files/inter-latin-ext-800-normal.woff2") format("woff2"),
+    url("/fonts/files/inter-latin-ext-900-normal.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+:root {
+  color-scheme: dark;
+  --bg: #161a22;
+  --bg-soft: #11141b;
+  --surface: #1f2430;
+  --surface-bright: #262d3d;
+  --ink: #f1f5f9;
+  --ink-muted: #94a3b8;
+  --line: rgba(148, 163, 184, 0.14);
+  --line-bright: rgba(148, 163, 184, 0.22);
+  --accent: #00a2ff;
+  --accent-bright: #38bdf8;
+  --radius-card: 1.25rem;
+  --shadow-soft: 0 16px 48px rgba(10, 12, 18, 0.4);
+  --shadow-glow: 0 0 25px rgba(0, 162, 255, 0.18);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  background: var(--bg);
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  overflow-x: hidden;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(0, 162, 255, 0.08), transparent 28rem),
+    radial-gradient(circle at 88% 18%, rgba(148, 163, 184, 0.05), transparent 26rem),
+    radial-gradient(circle at 50% 92%, rgba(0, 162, 255, 0.05), transparent 32rem),
+    var(--bg);
+  color: var(--ink);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  font-variation-settings: normal;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body::before {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  content: "";
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: linear-gradient(to bottom, black, transparent 78%);
+}
+
+body::after {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  content: "";
+  background: radial-gradient(circle at center, transparent 0%, rgba(10, 12, 18, 0.3) 76%);
+}
+
+::selection {
+  background: rgba(0, 162, 255, 0.25);
+  color: #fff;
+}
+
+.skip-link {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 100;
+  transform: translateY(-140%);
+  border-radius: 999px;
+  background: #1f2430;
+  color: #f1f5f9;
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+  transition: transform 180ms ease;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+  outline: 3px solid rgba(0, 162, 255, 0.4);
+  outline-offset: 3px;
+}
+
+.prose {
+  max-width: 72ch;
+}
+
+.prose p {
+  margin: 1.35rem 0;
+  color: #94a3b8;
+  font-size: clamp(1.03rem, 0.98rem + 0.22vw, 1.18rem);
+  line-height: 1.85;
+}
+
+.prose h1,
+.prose h2,
+.prose h3 {
+  color: #f1f5f9;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+}
+
+.prose h2 {
+  margin: 3rem 0 1rem;
+  font-size: clamp(2rem, 1.7rem + 1.2vw, 3.25rem);
+}
+
+.prose h3 {
+  margin: 2.4rem 0 0.8rem;
+  font-size: clamp(1.35rem, 1.1rem + 0.6vw, 1.8rem);
+}
+
+.prose a {
+  color: #00a2ff;
+  text-decoration-color: rgba(0, 162, 255, 0.3);
+  text-underline-offset: 0.22em;
+  transition: text-decoration-color 180ms ease, color 180ms ease;
+}
+
+.prose a:hover {
+  color: #38bdf8;
+  text-decoration-color: rgba(56, 189, 248, 0.9);
+}
+
+.glass-card {
+  position: relative;
+  isolation: isolate;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: linear-gradient(145deg, rgba(31, 36, 48, 0.72), rgba(17, 20, 27, 0.55));
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(22px);
+  transition: border-color 220ms ease, box-shadow 220ms ease, transform 220ms ease, background 220ms ease;
+}
+
+.glass-card:hover {
+  border-color: var(--line-bright);
+  box-shadow: var(--shadow-soft), 0 0 0 1px rgba(0, 162, 255, 0.06);
+}
+
+.glass-card.is-interactive:hover {
+  border-color: rgba(0, 162, 255, 0.35);
+  box-shadow: var(--shadow-soft), 0 0 28px rgba(0, 162, 255, 0.18);
+}
+
+.gumroad-button {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  min-height: 2.85rem;
+  border: 1px solid rgba(0, 110, 220, 0.55);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #00b4ff 0%, #0078ff 100%);
+  box-shadow: 0 4px 14px rgba(0, 110, 220, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  overflow: hidden;
+  padding: 0 1.5rem;
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 220ms ease, opacity 180ms ease;
+}
+
+.gumroad-button::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  content: "";
+  background: linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.22) 36%, transparent 58%);
+  transform: translateX(-130%);
+  transition: transform 420ms ease;
+}
+
+.gumroad-button:hover {
+  border-color: rgba(0, 162, 255, 0.7);
+  box-shadow: 0 8px 28px rgba(0, 162, 255, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  transform: translateY(-1px);
+}
+
+.gumroad-button:hover::before {
+  transform: translateX(130%);
+}
+
+.gumroad-button:active {
+  transform: translateY(0);
+}
+
+.gumroad-button:focus-visible,
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+  outline: 3px solid rgba(0, 162, 255, 0.4);
+  outline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

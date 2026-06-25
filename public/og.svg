@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <radialGradient id="a" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(230 120) rotate(90) scale(330)">
+      <stop stop-color="#FFFFFF" stop-opacity=".16"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="b" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(950 150) rotate(90) scale(290)">
+      <stop stop-color="#9FB7FF" stop-opacity=".18"/>
+      <stop offset="1" stop-color="#9FB7FF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" rx="0" fill="#0B0D10"/>
+  <rect width="1200" height="630" fill="url(#a)"/>
+  <rect width="1200" height="630" fill="url(#b)"/>
+  <path d="M0 528H1200" stroke="#FFFFFF" stroke-opacity=".1"/>
+  <text x="80" y="230" fill="#F3F4F6" font-family="Inter, Arial, sans-serif" font-size="76" font-weight="900" letter-spacing="-5">Design Goods</text>
+  <text x="84" y="310" fill="#A7ADB8" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="700">Premium notes for thoughtful builders</text>
+  <rect x="84" y="404" width="220" height="72" rx="36" fill="#F3F4F6"/>
+  <text x="124" y="451" fill="#0B0D10" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="900">Read notes</text>
+</svg>

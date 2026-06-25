@@ -1,0 +1,36 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Navigation from "../components/Navigation.astro";
+import Footer from "../components/Footer";
+import ShopFilter from "../components/ShopFilter";
+import { products } from "../data/products";
+import { categories } from "../data/categories";
+
+const title = "Store — KRT";
+const description = "Premium plugins, templates, design systems, icon packs, and learning kits for designers and engineers who care about craft.";
+---
+
+<BaseLayout title={title} description={description}>
+  <Navigation />
+  <main id="main">
+    <header class="container mx-auto border-b border-line px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+      <p class="mb-3 text-xs font-black uppercase tracking-[0.28em] text-accent">Store</p>
+      <h1 class="max-w-3xl text-4xl font-black tracking-[-0.06em] text-ink sm:text-6xl">
+        Every download in one place.
+      </h1>
+      <p class="mt-4 max-w-2xl text-base leading-7 text-ink-muted sm:text-lg">
+        Browse the full catalogue. Pay once, own forever, update free.
+      </p>
+      <div class="mt-8 flex flex-wrap gap-3 text-xs font-black uppercase tracking-[0.2em] text-ink-muted">
+        <span class="rounded-full border border-accent/30 bg-accent/10 px-3 py-1.5 text-accent">
+          {products.length} products
+        </span>
+        <span class="rounded-full border border-line bg-surface/60 px-3 py-1.5">From $18</span>
+        <span class="rounded-full border border-line bg-surface/60 px-3 py-1.5">Instant download</span>
+      </div>
+    </header>
+
+    <ShopFilter client:load products={products} categories={categories} />
+  </main>
+  <Footer client:load />
+</BaseLayout>
