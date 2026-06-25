@@ -97,7 +97,7 @@ export default function Footer() {
 
       <div className="border-t border-line/60">
         <div className="container mx-auto flex flex-col gap-3 px-4 py-6 text-xs text-ink-muted sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-          <p>© 2026 KRT. Crafted with Inter, Tailwind, and Astro.</p>
+          <p>© 2026 KRT store. Crafted with Inter, Tailwind, and Astro.</p>
           <div className="flex flex-wrap gap-4">
             <a href="/" className="transition hover:text-ink">License</a>
             <a href="/" className="transition hover:text-ink">Privacy</a>
