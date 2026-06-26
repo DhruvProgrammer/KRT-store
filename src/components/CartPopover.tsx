@@ -5,25 +5,27 @@ function formatPrice(cents: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents);
 }
 
-interface CartPopoverProps {
-  open: boolean;
-  onClose: () => void;
-}
-
-export default function CartPopover({ open, onClose }: CartPopoverProps) {
+export default function CartPopover() {
   const { items, total, count, remove, updateQuantity } = useCart();
+  const [open, setOpen] = useState(false);
   const popoverRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const openHandler = () => setOpen(true);
+    window.addEventListener("krt:open-cart", openHandler);
+    return () => window.removeEventListener("krt:open-cart", openHandler);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
     const onDocClick = (event: MouseEvent) => {
       const target = event.target as Node | null;
-      if (!popoverRef.current?.contains(target ?? null) && !(target as HTMLElement | null)?.closest("[data-cart-trigger]")) {
-        onClose();
+      if (!popoverRef.current?.contains(target ?? null) && !(target as HTMLElement | null)?.closest("[data-open-cart]")) {
+        setOpen(false);
       }
     };
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") setOpen(false);
     };
     document.addEventListener("mousedown", onDocClick);
     document.addEventListener("keydown", onKey);
@@ -31,7 +33,7 @@ export default function CartPopover({ open, onClose }: CartPopoverProps) {
       document.removeEventListener("mousedown", onDocClick);
       document.removeEventListener("keydown", onKey);
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 
@@ -56,7 +58,7 @@ export default function CartPopover({ open, onClose }: CartPopoverProps) {
           <p className="mt-1 text-xs text-ink-muted">Add a product to see it here.</p>
           <a
             href="/store"
-            onClick={onClose}
+            onClick={() => setOpen(false)}
             className="mt-4 inline-flex items-center justify-center rounded-full bg-accent px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-white shadow-[0_0_22px_rgba(0,162,255,0.35)] transition hover:bg-accent-bright"
           >
             Browse store
@@ -95,7 +97,7 @@ export default function CartPopover({ open, onClose }: CartPopoverProps) {
               <li>
                 <a
                   href="/cart"
-                  onClick={onClose}
+                  onClick={() => setOpen(false)}
                   className="block text-center text-xs font-black uppercase tracking-[0.18em] text-ink-muted transition hover:text-accent"
                 >
                   + {items.length - 4} more — view cart
@@ -113,14 +115,14 @@ export default function CartPopover({ open, onClose }: CartPopoverProps) {
             <div className="mt-3 grid grid-cols-2 gap-2">
               <a
                 href="/cart"
-                onClick={onClose}
+                onClick={() => setOpen(false)}
                 className="rounded-full border border-line px-3 py-2 text-center text-xs font-black uppercase tracking-[0.18em] text-ink transition hover:border-accent/40 hover:text-accent"
               >
                 View cart
               </a>
               <a
                 href="/checkout"
-                onClick={onClose}
+                onClick={() => setOpen(false)}
                 className="rounded-full bg-accent px-3 py-2 text-center text-xs font-black uppercase tracking-[0.18em] text-white shadow-[0_0_22px_rgba(0,162,255,0.35)] transition hover:bg-accent-bright"
               >
                 Checkout

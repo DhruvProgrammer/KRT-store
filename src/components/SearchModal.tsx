@@ -17,8 +17,6 @@ export interface SearchExtra {
 }
 
 interface SearchModalProps {
-  open: boolean;
-  onClose: () => void;
   products?: SearchProduct[];
   extras?: SearchExtra[];
 }
@@ -28,8 +26,6 @@ type Result =
   | { kind: "extras"; slug: string; name: string; description: string; tag: string };
 
 export default function SearchModal({
-  open,
-  onClose,
   products = [],
   extras = []
 }: SearchModalProps) {
@@ -95,7 +91,7 @@ export default function SearchModal({
         className={`fixed inset-0 z-50 bg-black/60 backdrop-blur-sm transition-opacity ${
           open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
         }`}
-        onClick={onClose}
+        onClick={close}
         aria-hidden="true"
       />
       <div
@@ -123,7 +119,7 @@ export default function SearchModal({
             />
             <button
               type="button"
-              onClick={onClose}
+              onClick={close}
               aria-label="Close search"
               className="grid h-9 w-9 place-items-center rounded-full border border-line bg-surface-ink text-ink transition hover:bg-surface-bright"
             >
@@ -139,17 +135,17 @@ export default function SearchModal({
                 <p className="text-[11px] font-black uppercase tracking-[0.24em] text-ink-muted">Quick links</p>
                 <ul className="mt-3 space-y-2 text-sm">
                   <li>
-                    <a href="/store" onClick={onClose} className="text-ink transition hover:text-accent">
+                    <a href="/store" onClick={close} className="text-ink transition hover:text-accent">
                       Browse the store →
                     </a>
                   </li>
                   <li>
-                    <a href="/extras" onClick={onClose} className="text-ink transition hover:text-accent">
+                    <a href="/extras" onClick={close} className="text-ink transition hover:text-accent">
                       Browse free extras →
                     </a>
                   </li>
                   <li>
-                    <a href="/cart" onClick={onClose} className="text-ink transition hover:text-accent">
+                    <a href="/cart" onClick={close} className="text-ink transition hover:text-accent">
                       View cart →
                     </a>
                   </li>
@@ -180,7 +176,7 @@ export default function SearchModal({
                       <li key={`store-${r.slug}`}>
                         <a
                           href={`/store/${r.slug}`}
-                          onClick={onClose}
+                          onClick={close}
                           className="block rounded-xl border border-line/0 bg-surface/40 px-4 py-3 transition hover:border-accent/30 hover:bg-surface/80"
                         >
                           <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-ink-muted">{r.tag}</span>
@@ -202,7 +198,7 @@ export default function SearchModal({
                       <li key={`extras-${r.slug}`}>
                         <a
                           href={`/extras/${r.slug}`}
-                          onClick={onClose}
+                          onClick={close}
                           className="block rounded-xl border border-line/0 bg-surface/40 px-4 py-3 transition hover:border-accent/30 hover:bg-surface/80"
                         >
                           <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-ink-muted">{r.tag}</span>
