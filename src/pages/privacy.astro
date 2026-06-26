@@ -1,0 +1,25 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Navigation from "../components/Navigation.astro";
+import Footer from "../components/Footer";
+import LegalPage from "../components/LegalPage";
+import { privacySections } from "../data/privacy-sections";
+
+const title = "Privacy — KRT store";
+const description = "How KRT store collects, uses, and protects your information.";
+---
+
+<BaseLayout title={title} description={description}>
+  <Navigation />
+  <main id="main">
+    <LegalPage
+      client:load
+      eyebrow="Privacy"
+      title="Privacy policy"
+      lead="A plain-language summary of what we collect, why, and what we do with it."
+      lastUpdated="Q2 2026"
+      sections={privacySections}
+    />
+  </main>
+  <Footer client:load />
+</BaseLayout>

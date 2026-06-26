@@ -1,0 +1,25 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Navigation from "../components/Navigation.astro";
+import Footer from "../components/Footer";
+import LegalPage from "../components/LegalPage";
+import { termsSections } from "../data/terms-sections";
+
+const title = "Terms — KRT store";
+const description = "Terms and conditions for using the KRT store.";
+---
+
+<BaseLayout title={title} description={description}>
+  <Navigation />
+  <main id="main">
+    <LegalPage
+      client:load
+      eyebrow="Terms"
+      title="Terms of service"
+      lead="The legalese, in plain language. The full licence text delivered with each purchase is the binding version."
+      lastUpdated="Q2 2026"
+      sections={termsSections}
+    />
+  </main>
+  <Footer client:load />
+</BaseLayout>

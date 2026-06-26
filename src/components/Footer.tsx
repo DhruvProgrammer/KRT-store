@@ -17,12 +17,23 @@ const linkGroups = [
     ]
   },
   {
+    title: "Account",
+    links: [
+      { href: "/login", label: "Sign in" },
+      { href: "/signup", label: "Create account" },
+      { href: "/profile", label: "Profile" },
+      { href: "/settings", label: "Settings" },
+      { href: "/cart", label: "Cart" },
+      { href: "/checkout", label: "Checkout" }
+    ]
+  },
+  {
     title: "Company",
     links: [
       { href: "/", label: "About KRT store" },
-      { href: "/", label: "License terms" },
-      { href: "/", label: "Refund policy" },
-      { href: "/", label: "Privacy" }
+      { href: "/privacy", label: "Privacy" },
+      { href: "/terms", label: "Terms of service" },
+      { href: "/#contact", label: "Refund policy" }
     ]
   }
 ];
@@ -61,7 +72,7 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="container mx-auto grid gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.2fr_repeat(3,minmax(0,1fr))] lg:gap-12 lg:py-16 lg:px-8">
+      <div className="container mx-auto grid gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.1fr_repeat(4,minmax(0,1fr))] lg:gap-10 lg:py-16 lg:px-8">
         <div>
           <a
             href="/"
@@ -98,10 +109,10 @@ export default function Footer() {
       <div className="border-t border-line/60">
         <div className="container mx-auto flex flex-col gap-3 px-4 py-6 text-xs text-ink-muted sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <p>© 2026 KRT store. Crafted with Inter, Tailwind, and Astro.</p>
-          <div className="flex flex-wrap gap-4">
-            <a href="/" className="transition hover:text-ink">License</a>
-            <a href="/" className="transition hover:text-ink">Privacy</a>
-            <a href="/" className="transition hover:text-ink">Terms</a>
+          <div className="flex flex-wrap gap-x-5 gap-y-2">
+            <a href="/privacy" className="transition hover:text-ink">Privacy</a>
+            <a href="/terms" className="transition hover:text-ink">Terms</a>
+            <a href="mailto:hello@krt.example" className="transition hover:text-ink">Support</a>
           </div>
         </div>
       </div>

@@ -1,0 +1,17 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Navigation from "../components/Navigation.astro";
+import Footer from "../components/Footer";
+import ProfileSection from "../components/ProfileSection";
+
+const title = "Profile — KRT store";
+const description = "Manage your KRT store account, downloads, and license keys.";
+---
+
+<BaseLayout title={title} description={description}>
+  <Navigation />
+  <main id="main">
+    <ProfileSection client:load />
+  </main>
+  <Footer client:load />
+</BaseLayout>

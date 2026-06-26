@@ -31,26 +31,26 @@ const searchExtras = extras.map((e) => ({
 
 <header class="sticky top-0 z-40 border-b border-line bg-bg-soft/90 backdrop-blur-xl" data-navigation>
   <div class="border-b border-line/60">
-    <div class="container mx-auto flex h-9 items-center justify-between px-4 text-[11px] font-semibold uppercase tracking-[0] text-ink-muted sm:px-6 lg:px-8">
-      <p class="flex items-center gap-2">
-        <span class="inline-block h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_10px_rgba(0,162,255,0.7)]"></span>
-        <span>{announcement}</span>
+    <div class="container mx-auto flex h-9 items-center justify-between gap-2 px-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-muted sm:px-6 lg:px-8">
+      <p class="flex items-center gap-2 truncate">
+        <span class="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-accent shadow-[0_0_10px_rgba(0,162,255,0.7)]"></span>
+        <span class="truncate">{announcement}</span>
       </p>
       <div class="hidden items-center gap-4 sm:flex">
         <a href="/store" class="transition hover:text-ink">Browse store</a>
         <span aria-hidden="true" class="opacity-30">·</span>
         <a href="mailto:hello@krt.example" class="transition hover:text-ink">hello@krt.example</a>
       </div>
-      <a href="/store" class="sm:hidden transition hover:text-ink">Browse store</a>
+      <a href="/login" class="sm:hidden transition hover:text-ink">Sign in</a>
     </div>
   </div>
 
   <div class="container mx-auto flex h-16 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-    <a href="/" class="group flex items-center gap-3" aria-label="KRT store home">
+    <a href="/" class="group flex items-center gap-2" aria-label="KRT store home">
       <span class="grid h-9 w-9 place-items-center rounded-xl bg-accent font-black text-ink-inverse shadow-[0_0_18px_rgba(0,162,255,0.45)] transition group-hover:scale-105">
         K
       </span>
-      <span class="text-base font-black tracking-[-0.04em] text-ink">KRT store</span>
+      <span class="text-base font-black tracking-[-0.04em] text-ink truncate">KRT store</span>
     </a>
 
     <nav class="hidden items-center gap-1 md:flex" aria-label="Primary navigation">
@@ -71,6 +71,7 @@ const searchExtras = extras.map((e) => ({
 
   <div class="hidden border-t border-line bg-bg-soft md:hidden" data-mobile-panel>
     <nav class="container mx-auto flex flex-col gap-1 px-4 py-4 sm:px-6" aria-label="Mobile primary">
+      <p class="px-2 text-[11px] font-black uppercase tracking-[0.2em] text-ink-muted">Browse</p>
       {links.map((link) => (
         <a
           href={link.href}
@@ -79,16 +80,38 @@ const searchExtras = extras.map((e) => ({
           {link.label}
         </a>
       ))}
+
+      <p class="mt-4 px-2 text-[11px] font-black uppercase tracking-[0.2em] text-ink-muted">Account</p>
       <a href="/login" class="rounded-2xl px-4 py-3 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">
         Sign in
+      </a>
+      <a href="/signup" class="rounded-2xl px-4 py-3 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">
+        Create account
+      </a>
+      <a href="/profile" class="rounded-2xl px-4 py-3 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">
+        Profile
+      </a>
+      <a href="/settings" class="rounded-2xl px-4 py-3 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">
+        Settings
       </a>
       <a href="/cart" class="rounded-2xl px-4 py-3 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">
         Cart
       </a>
-      <a href="/store" class="mt-2 rounded-2xl bg-accent px-4 py-3 text-center text-sm font-black text-white shadow-[0_0_22px_rgba(0,162,255,0.35)] transition hover:bg-accent-bright">
+
+      <a href="/store" class="mt-4 rounded-2xl bg-accent px-4 py-3 text-center text-sm font-black text-white shadow-[0_0_22px_rgba(0,162,255,0.35)] transition hover:bg-accent-bright">
         Browse store
       </a>
     </nav>
+
+    <div class="border-t border-line/60">
+      <div class="container mx-auto flex flex-wrap items-center justify-center gap-x-5 gap-y-2 px-4 py-4 text-[11px] font-bold uppercase tracking-[0.18em] text-ink-muted sm:px-6">
+        <a href="/privacy" class="transition hover:text-ink">Privacy</a>
+        <span aria-hidden="true" class="opacity-30">·</span>
+        <a href="/terms" class="transition hover:text-ink">Terms</a>
+        <span aria-hidden="true" class="opacity-30">·</span>
+        <a href="/#contact" class="transition hover:text-ink">Contact</a>
+      </div>
+    </div>
   </div>
 </header>
 
