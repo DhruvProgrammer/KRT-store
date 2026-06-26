@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Product } from "../data/products";
+import { cart } from "../lib/cart";
 import Button from "./Button";
 import Stars from "./Stars";
 import Reveal from "./Reveal";
@@ -78,27 +79,17 @@ export default function ProductDetail({ product }: { product: Product }) {
 
   const handleAdd = () => {
     try {
-      const raw = window.localStorage.getItem("dg-cart");
-      const items = raw ? JSON.parse(raw) : [];
-      if (Array.isArray(items)) {
-        const existing = items.find((i) => i.slug === product.slug);
-        if (existing) {
-          existing.quantity = Math.min(99, (existing.quantity || 1) + 1);
-        } else {
-          items.push({
-            slug: product.slug,
-            name: product.name,
-            price: product.price,
-            quantity: 1,
-            gradient: product.gradient,
-            tag: product.tag
-          });
-        }
-        window.localStorage.setItem("dg-cart", JSON.stringify(items));
-        window.dispatchEvent(new Event("cart:update"));
-        setAdded(true);
-        window.setTimeout(() => setAdded(false), 1800);
-      }
+      cart.add({
+        slug: product.slug,
+        name: product.name,
+        price: product.price,
+        gradient: product.gradient,
+        tag: product.tag,
+        quantity: 1
+      });
+      setAdded(true);
+      window.dispatchEvent(new CustomEvent("krt:open-cart"));
+      window.setTimeout(() => setAdded(false), 1800);
     } catch {
       /* ignore */
     }
