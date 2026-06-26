@@ -1,5 +1,6 @@
 ---
-import HeaderControls from "./HeaderControls";
+import SearchModal, { type SearchProduct, type SearchExtra } from "./SearchModal";
+import CartPopover from "./CartPopover";
 import { products } from "../data/products";
 import { extras } from "../data/extras";
 
@@ -12,7 +13,7 @@ const links = [
 
 const announcement = "Free updates for life · 30-day refund";
 
-const searchProducts = products.map((p) => ({
+const searchProducts: SearchProduct[] = products.map((p) => ({
   slug: p.slug,
   name: p.name,
   description: p.description,
@@ -20,7 +21,7 @@ const searchProducts = products.map((p) => ({
   category: p.category
 }));
 
-const searchExtras = extras.map((e) => ({
+const searchExtras: SearchExtra[] = extras.map((e) => ({
   slug: e.slug,
   name: e.name,
   description: e.description,
@@ -64,8 +65,108 @@ const searchExtras = extras.map((e) => ({
       ))}
     </nav>
 
-    <div class="flex items-center gap-2">
-      <HeaderControls client:load products={searchProducts} extras={searchExtras} />
+    {/* DESKTOP header buttons */}
+    <div class="hidden items-center gap-2 md:flex">
+      <a
+        href="/login"
+        class="inline-flex h-10 items-center gap-2 rounded-full border border-line bg-surface-ink px-4 text-xs font-bold text-ink-muted transition hover:border-accent/40 hover:bg-surface-bright hover:text-ink"
+      >
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="h-4 w-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+        <span>Sign in</span>
+      </a>
+
+      <button
+        type="button"
+        data-open-search
+        aria-label="Open search"
+        title="Search (⌘K)"
+        class="hidden h-10 items-center gap-2 rounded-full border border-line bg-surface-ink px-4 text-xs font-bold text-ink-muted transition hover:border-accent/40 hover:bg-surface-bright lg:inline-flex"
+      >
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="h-5 w-5">
+          <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" />
+          <path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+        <span>Search</span>
+        <span aria-hidden="true" class="hidden rounded border border-line bg-surface px-1.5 py-0.5 text-[10px] font-black uppercase tracking-[0.18em] text-ink-muted sm:inline-block">
+          ⌘K
+        </span>
+      </button>
+
+      <div class="relative">
+        <button
+          type="button"
+          data-open-cart
+          aria-label="Open cart"
+          class="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface-ink text-ink transition hover:border-accent/40 hover:bg-surface-bright"
+        >
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="h-5 w-5">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <span
+            data-cart-count
+            class="pointer-events-none absolute -right-1 -top-1 hidden h-5 min-w-[1.25rem] place-items-center rounded-full bg-accent px-1 text-[10px] font-black text-white shadow-[0_0_12px_rgba(0,162,255,0.5)]"
+          >
+            <span data-cart-count-text>0</span>
+          </span>
+        </button>
+      </div>
+
+      <a
+        href="/store"
+        class="hidden items-center gap-2 rounded-full bg-accent px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-white shadow-[0_0_22px_rgba(0,162,255,0.35)] transition hover:bg-accent-bright hover:shadow-[0_0_30px_rgba(0,162,255,0.55)] lg:inline-flex"
+      >
+        Shop now
+      </a>
+    </div>
+
+    {/* MOBILE header buttons */}
+    <div class="flex items-center gap-2 md:hidden">
+      <button
+        type="button"
+        data-open-search
+        aria-label="Open search"
+        title="Search (⌘K)"
+        class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface-ink text-ink transition hover:border-accent/40 hover:bg-surface-bright"
+      >
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="h-5 w-5">
+          <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" />
+          <path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+      </button>
+
+      <div class="relative">
+        <button
+          type="button"
+          data-open-cart
+          aria-label="Open cart"
+          class="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface-ink text-ink transition hover:border-accent/40 hover:bg-surface-bright"
+        >
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="h-5 w-5">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <span
+            data-cart-count
+            class="pointer-events-none absolute -right-1 -top-1 hidden h-5 min-w-[1.25rem] place-items-center rounded-full bg-accent px-1 text-[10px] font-black text-white shadow-[0_0_12px_rgba(0,162,255,0.5)]"
+          >
+            <span data-cart-count-text>0</span>
+          </span>
+        </button>
+      </div>
+
+      <button
+        type="button"
+        data-mobile-trigger
+        aria-label="Open menu"
+        aria-expanded="false"
+        class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface-ink text-ink transition hover:bg-surface-bright"
+      >
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="h-5 w-5">
+          <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+      </button>
     </div>
   </div>
 
@@ -82,21 +183,11 @@ const searchExtras = extras.map((e) => ({
       ))}
 
       <p class="mt-4 px-2 text-[11px] font-black uppercase tracking-[0.2em] text-ink-muted">Account</p>
-      <a href="/login" class="rounded-2xl px-4 py-3 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">
-        Sign in
-      </a>
-      <a href="/signup" class="rounded-2xl px-4 py-3 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">
-        Create account
-      </a>
-      <a href="/profile" class="rounded-2xl px-4 py-3 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">
-        Profile
-      </a>
-      <a href="/settings" class="rounded-2xl px-4 py-3 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">
-        Settings
-      </a>
-      <a href="/cart" class="rounded-2xl px-4 py-3 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">
-        Cart
-      </a>
+      <a href="/login" class="rounded-2xl px-4 py-3 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Sign in</a>
+      <a href="/signup" class="rounded-2xl px-4 py-3 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Create account</a>
+      <a href="/profile" class="rounded-2xl px-4 py-3 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Profile</a>
+      <a href="/settings" class="rounded-2xl px-4 py-3 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Settings</a>
+      <a href="/cart" class="rounded-2xl px-4 py-3 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Cart</a>
 
       <a href="/store" class="mt-4 rounded-2xl bg-accent px-4 py-3 text-center text-sm font-black text-white shadow-[0_0_22px_rgba(0,162,255,0.35)] transition hover:bg-accent-bright">
         Browse store
@@ -115,30 +206,118 @@ const searchExtras = extras.map((e) => ({
   </div>
 </header>
 
+{/* On-demand React islands — render only the small modals; triggered by inline events */}
+<SearchModal client:load products={searchProducts} extras={searchExtras} />
+<CartPopover client:load />
+
 <script is:inline>
   (function () {
-    const panel = document.querySelector("[data-mobile-panel]");
-    const trigger = document.querySelector("[data-mobile-trigger]");
-    if (!panel) return;
-    const setOpen = (open) => {
-      panel.classList.toggle("hidden", !open);
-      if (trigger) trigger.setAttribute("aria-expanded", String(open));
-    };
-    window.addEventListener("krt:toggle-menu", () => {
-      const isOpen = !panel.classList.contains("hidden");
-      setOpen(!isOpen);
-    });
-    panel.querySelectorAll("a").forEach((anchor) =>
-      anchor.addEventListener("click", () => {
-        panel.classList.add("hidden");
-        if (trigger) trigger.setAttribute("aria-expanded", "false");
-      })
-    );
+    // ============ Cart badge sync ============
+    const STORAGE_KEY = "dg-cart";
+    const BAD = /<|>|javascript:|data:|@import|url\(|expression\(/i;
+    const MAX_QTY = 99;
 
-    document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape" && !panel.classList.contains("hidden")) {
-        setOpen(false);
+    const validateGradient = (v) => {
+      if (typeof v !== "string") return false;
+      const t = v.trim();
+      if (t.length === 0 || t.length > 500) return false;
+      return !BAD.test(t);
+    };
+    const safeNumber = (v, min, max) => {
+      const n = Number(v);
+      return Number.isFinite(n) && n >= min && n <= max;
+    };
+    const validateItem = (raw) => {
+      if (!raw || typeof raw !== "object") return false;
+      if (typeof raw.slug !== "string" || raw.slug.length === 0 || raw.slug.length > 120) return false;
+      if (typeof raw.name !== "string" || raw.name.length === 0 || raw.name.length > 200) return false;
+      if (!safeNumber(raw.price, 0, 100000)) return false;
+      if (!safeNumber(raw.quantity, 1, MAX_QTY)) return false;
+      return validateGradient(raw.gradient);
+    };
+
+    const readCount = () => {
+      try {
+        const raw = window.localStorage.getItem(STORAGE_KEY);
+        if (!raw) return 0;
+        const items = JSON.parse(raw);
+        if (!Array.isArray(items)) return 0;
+        return items
+          .filter(validateItem)
+          .reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+      } catch (e) {
+        return 0;
+      }
+    };
+
+    const updateBadges = () => {
+      const count = readCount();
+      document.querySelectorAll("[data-cart-count]").forEach((b) => {
+        const text = b.querySelector("[data-cart-count-text]");
+        if (text) text.textContent = String(count);
+        b.classList.toggle("hidden", count === 0);
+        b.classList.toggle("flex", count > 0);
+        b.classList.toggle("grid", count > 0);
+      });
+    };
+
+    updateBadges();
+    window.addEventListener("cart:update", updateBadges);
+    window.addEventListener("storage", (event) => {
+      if (event.key === STORAGE_KEY) updateBadges();
+    });
+
+    // ============ Search modal open/close ============
+    let searchShown = false;
+    const ensureSearchModal = () => {
+      if (searchShown) return;
+      searchShown = true;
+      window.dispatchEvent(new CustomEvent("krt:open-search"));
+    };
+    const ensureCartPopover = () => {
+      window.dispatchEvent(new CustomEvent("krt:open-cart"));
+    };
+
+    document.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      if (target.closest("[data-open-search]")) {
+        ensureSearchModal();
+      } else if (target.closest("[data-open-cart]")) {
+        ensureCartPopover();
       }
     });
+
+    document.addEventListener("keydown", (event) => {
+      if ((event.key === "k" || event.key === "K") && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        ensureSearchModal();
+      }
+    });
+
+    // ============ Mobile menu toggle ============
+    const panel = document.querySelector("[data-mobile-panel]");
+    const trigger = document.querySelector("[data-mobile-trigger]");
+    if (panel) {
+      const setOpen = (open) => {
+        panel.classList.toggle("hidden", !open);
+        if (trigger) trigger.setAttribute("aria-expanded", String(open));
+      };
+      window.addEventListener("krt:toggle-menu", () => {
+        const isOpen = !panel.classList.contains("hidden");
+        setOpen(!isOpen);
+      });
+      panel.querySelectorAll("a").forEach((anchor) =>
+        anchor.addEventListener("click", () => {
+          panel.classList.add("hidden");
+          if (trigger) trigger.setAttribute("aria-expanded", "false");
+        })
+      );
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !panel.classList.contains("hidden")) {
+          setOpen(false);
+        }
+      });
+    }
   })();
 </script>

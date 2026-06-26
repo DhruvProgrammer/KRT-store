@@ -33,12 +33,19 @@ export default function SearchModal({
   products = [],
   extras = []
 }: SearchModalProps) {
+  const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+
+  useEffect(() => {
+    const openHandler = () => setOpen(true);
+    window.addEventListener("krt:open-search", openHandler);
+    return () => window.removeEventListener("krt:open-search", openHandler);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") setOpen(false);
     };
     window.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
@@ -46,11 +53,13 @@ export default function SearchModal({
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
     };
-  }, [open, onClose]);
+  }, [open]);
 
   useEffect(() => {
     if (open) setQuery("");
   }, [open]);
+
+  const close = () => setOpen(false);
 
   const q = query.trim().toLowerCase();
   const results: Result[] = [];
