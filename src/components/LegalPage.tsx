@@ -12,7 +12,6 @@ interface LegalPageProps {
   lead: string;
   lastUpdated: string;
   sections: LegalSection[];
-  contactEmail?: string;
   company?: string;
   jurisdiction?: string;
 }
@@ -41,7 +40,6 @@ export default function LegalPage({
   lead,
   lastUpdated,
   sections,
-  contactEmail = "hello@krt.example",
   company = "KRT store",
   jurisdiction = "your local jurisdiction"
 }: LegalPageProps) {
@@ -79,11 +77,11 @@ export default function LegalPage({
             <div className="mt-6 rounded-2xl border border-line bg-surface/60 p-4 text-xs text-ink-muted">
               <p className="text-[11px] font-black uppercase tracking-[0.18em] text-ink">Questions?</p>
               <a
-                href={`mailto:${contactEmail}`}
+                href="/#contact"
                 className="mt-2 inline-flex items-center gap-2 font-bold text-accent transition hover:text-accent-bright"
               >
                 <ContactIcon />
-                {contactEmail}
+                Contact us
               </a>
             </div>
           </aside>
