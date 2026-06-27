@@ -1,0 +1,32 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Navigation from "../components/Navigation.astro";
+import Footer from "../components/Footer";
+import Button from "../components/Button";
+import Reveal from "../components/Reveal";
+
+const title = "404 — Page not found";
+const description = "This page doesn't exist on KRT store.";
+---
+
+<BaseLayout title={title} description={description}>
+  <Navigation />
+  <main id="main">
+    <section class="container mx-auto px-4 pt-12 pb-20 sm:px-6 lg:px-8">
+      <Reveal>
+        <div class="mx-auto max-w-lg text-center">
+          <p class="mb-5 text-xs font-black uppercase tracking-[0.28em] text-ink-muted">404</p>
+          <h1 class="text-5xl font-black tracking-[-0.07em] text-ink sm:text-7xl">Not found.</h1>
+          <p class="mt-5 text-lg leading-8 text-ink-muted">
+            The page you are looking for doesn't exist, or it may have moved.
+          </p>
+          <div class="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Button href="/">Go home</Button>
+            <Button variant="secondary" href="/store">Browse the store</Button>
+          </div>
+        </div>
+      </Reveal>
+    </section>
+  </main>
+  <Footer client:load />
+</BaseLayout>

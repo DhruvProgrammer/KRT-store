@@ -1,0 +1,10 @@
+/* TEAM */
+  Developer: KRT store team
+  Site: https://krt.design
+  Location: Remote
+
+/* SITE */
+  Last update: 2026-06-27
+  Language: English
+  Doctype: HTML5
+  Framework: Astro 5, React 19, Tailwind CSS 3
