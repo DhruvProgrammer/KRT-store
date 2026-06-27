@@ -15,6 +15,60 @@ interface Props {
 const { product } = Astro.props as Props;
 const title = `${product.name} — KRT store`;
 const description = product.description;
+
+const siteUrl = Astro.url.origin;
+const pageUrl = new URL(Astro.url.pathname, siteUrl).href;
+
+const productSchema = {
+  "@context": "https://schema.org",
+  "@type": "Product",
+  name: product.name,
+  description: product.description,
+  image: `${siteUrl}/og.svg`,
+  brand: { "@type": "Brand", name: "KRT store" },
+  category: product.category,
+  sku: product.slug,
+  offers: {
+    "@type": "Offer",
+    price: product.price.toFixed(2),
+    priceCurrency: "USD",
+    availability: "https://schema.org/InStock",
+    url: pageUrl,
+    seller: { "@type": "Organization", name: "KRT store" }
+  },
+  aggregateRating: {
+    "@type": "AggregateRating",
+    ratingValue: product.rating.toFixed(1),
+    reviewCount: product.reviewCount,
+    bestRating: "5",
+    worstRating: "1"
+  }
+};
+
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    {
+      "@type": "ListItem",
+      position: 1,
+      name: "Home",
+      item: siteUrl
+    },
+    {
+      "@type": "ListItem",
+      position: 2,
+      name: "Store",
+      item: `${siteUrl}/store`
+    },
+    {
+      "@type": "ListItem",
+      position: 3,
+      name: product.name,
+      item: pageUrl
+    }
+  ]
+};
 ---
 
 <BaseLayout title={title} description={description}>
@@ -30,5 +84,9 @@ const description = product.description;
 
     <ProductDetail client:load product={product} />
   </main>
+
+  <script type="application/ld+json" set:html={JSON.stringify(productSchema)} is:inline></script>
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} is:inline></script>
+
   <Footer client:load />
 </BaseLayout>

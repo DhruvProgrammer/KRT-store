@@ -7,14 +7,39 @@ interface Props {
   description: string;
   image?: string;
   canonical?: string;
+  noindex?: boolean;
 }
 
-const { title, description, image, canonical } = Astro.props;
+const { title, description, image, canonical, noindex = false } = Astro.props;
 const siteTitle = "KRT store";
 const siteDescription = description;
 const siteUrl = Astro.url.origin;
 const pageImage = image ? new URL(image, siteUrl).href : `${siteUrl}/og.svg`;
 const canonicalUrl = canonical ?? Astro.url.href;
+
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: siteTitle,
+  url: siteUrl,
+  logo: `${siteUrl}/favicon.svg`,
+  sameAs: [
+    "https://twitter.com/krtstore",
+    "https://github.com/krtstore"
+  ]
+};
+
+const websiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: siteTitle,
+  url: siteUrl,
+  potentialAction: {
+    "@type": "SearchAction",
+    target: `${siteUrl}/store?q={search_term_string}`,
+    "query-input": "required name=search_term_string"
+  }
+};
 ---
 
 <!doctype html>
@@ -27,6 +52,9 @@ const canonicalUrl = canonical ?? Astro.url.href;
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="canonical" href={canonicalUrl} />
+
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+
     <meta property="og:site_name" content={siteTitle} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={siteDescription} />
@@ -38,7 +66,16 @@ const canonicalUrl = canonical ?? Astro.url.href;
     <meta name="twitter:description" content={siteDescription} />
     <meta name="twitter:image" content={pageImage} />
 
-    <!-- Security headers (best-effort; set real headers at the edge/CDN) -->
+    <!-- Structured data: Organization + WebSite (every page) -->
+    <script type="application/ld+json" set:html={JSON.stringify(organizationSchema)} is:inline></script>
+    <script type="application/ld+json" set:html={JSON.stringify(websiteSchema)} is:inline></script>
+
+    <!--
+      Security headers via <meta> tags. Static-only sites are served from
+      a CDN/edge that should also set these as real HTTP response headers.
+      Astro meta tags are a useful fallback but should NOT be the only place
+      these are enforced.
+    -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; frame-src 'none'; base-uri 'self'; form-action 'self';" />
     <meta http-equiv="X-Frame-Options" content="DENY" />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />

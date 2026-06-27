@@ -11,7 +11,6 @@ const linkGroups = [
     title: "Help",
     links: [
       { href: "/#contact", label: "Contact" },
-      { href: "mailto:hello@krt.example", label: "Email support" },
       { href: "/#faq", label: "FAQ" },
       { href: "/#bundle", label: "Bundle deal" }
     ]
@@ -32,8 +31,7 @@ const linkGroups = [
     links: [
       { href: "/", label: "About KRT store" },
       { href: "/privacy", label: "Privacy" },
-      { href: "/terms", label: "Terms of service" },
-      { href: "/#contact", label: "Refund policy" }
+      { href: "/terms", label: "Terms of service" }
     ]
   }
 ];
@@ -41,37 +39,6 @@ const linkGroups = [
 export default function Footer() {
   return (
     <footer className="border-t border-line bg-bg-soft">
-      <div className="border-b border-line/60">
-        <div className="container mx-auto grid gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[1.1fr_1fr] lg:items-center lg:py-14 lg:px-8">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.28em] text-accent">Stay in the loop</p>
-            <h2 className="mt-3 text-2xl font-black tracking-[-0.05em] text-ink sm:text-3xl">Get the newsletter.</h2>
-            <p className="mt-2 max-w-md text-sm leading-relaxed text-ink-muted">
-              Quiet product launches, occasional discounts, and shipping notes. No spam — about one email a month.
-            </p>
-          </div>
-          <form
-            className="flex w-full max-w-md flex-col gap-2 sm:flex-row sm:items-center lg:justify-self-end"
-            onSubmit={(event) => event.preventDefault()}
-          >
-            <label className="sr-only" htmlFor="newsletter-email">Email address</label>
-            <input
-              id="newsletter-email"
-              type="email"
-              required
-              placeholder="you@studio.com"
-              className="h-12 w-full rounded-full border border-line bg-surface-ink px-5 text-sm text-ink placeholder-ink-muted outline-none transition focus:border-accent focus:bg-surface-bright focus:ring-1 focus:ring-accent"
-            />
-            <button
-              type="submit"
-              className="inline-flex h-12 items-center justify-center rounded-full bg-accent px-5 text-sm font-black text-white shadow-[0_0_22px_rgba(0,162,255,0.35)] transition hover:bg-accent-bright hover:shadow-[0_0_30px_rgba(0,162,255,0.55)] sm:shrink-0"
-            >
-              Subscribe
-            </button>
-          </form>
-        </div>
-      </div>
-
       <div className="container mx-auto grid gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.1fr_repeat(4,minmax(0,1fr))] lg:gap-10 lg:py-16 lg:px-8">
         <div>
           <a
@@ -112,7 +79,7 @@ export default function Footer() {
           <div className="flex flex-wrap gap-x-5 gap-y-2">
             <a href="/privacy" className="transition hover:text-ink">Privacy</a>
             <a href="/terms" className="transition hover:text-ink">Terms</a>
-            <a href="mailto:hello@krt.example" className="transition hover:text-ink">Support</a>
+            <a href="/#contact" className="transition hover:text-ink">Contact</a>
           </div>
         </div>
       </div>

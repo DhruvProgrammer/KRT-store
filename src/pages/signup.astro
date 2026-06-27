@@ -2,13 +2,14 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Navigation from "../components/Navigation.astro";
 import Footer from "../components/Footer";
-import AuthForm from "../components/AuthForm";
+import Reveal from "../components/Reveal";
+import Button from "../components/Button";
 
 const title = "Create account — KRT store";
-const description = "Create your account in one step. We'll email you a verification link.";
+const description = "Account creation is temporarily unavailable while we finalize the backend.";
 ---
 
-<BaseLayout title={title} description={description}>
+<BaseLayout title={title} description={description} noindex={true}>
   <Navigation />
   <main id="main" class="container mx-auto px-4 pt-6 pb-20 sm:px-6 lg:px-8">
     <nav class="mb-6 flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-ink-muted" aria-label="Breadcrumb">
@@ -18,7 +19,20 @@ const description = "Create your account in one step. We'll email you a verifica
     </nav>
 
     <div class="mx-auto max-w-xl">
-      <AuthForm client:load mode="signup" />
+      <Reveal>
+        <div class="rounded-3xl border border-amber-400/30 bg-amber-400/10 p-10 text-center">
+          <p class="mb-2 text-xs font-black uppercase tracking-[0.28em] text-amber-300">Coming soon</p>
+          <h1 class="text-3xl font-black tracking-[-0.06em] text-ink sm:text-4xl">Account creation is on the way.</h1>
+          <p class="mx-auto mt-4 max-w-md text-sm leading-7 text-ink-muted">
+            Saved carts, downloads, and license keys are coming once the backend is finalized.
+            Subscribe to the newsletter to be notified when accounts launch.
+          </p>
+          <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Button href="/store">Browse the store</Button>
+            <Button variant="secondary" href="/#contact">Get notified</Button>
+          </div>
+        </div>
+      </Reveal>
     </div>
   </main>
   <Footer client:load />

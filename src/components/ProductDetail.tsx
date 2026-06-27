@@ -38,14 +38,6 @@ function ZoomIcon() {
   );
 }
 
-function HeartIcon() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-    </svg>
-  );
-}
-
 function DeliveryIcon() {
   return (
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -466,16 +458,6 @@ export default function ProductDetail({ product }: ProductDetailProps) {
               <Button variant="secondary" href="/cart" className="w-full justify-center">
                 View cart
               </Button>
-            </div>
-
-            <div className="mt-4 grid gap-2 text-xs">
-              <button
-                type="button"
-                className="inline-flex items-center gap-2 rounded-full border border-line bg-surface/60 px-3 py-2 font-black uppercase tracking-[0.18em] text-ink-muted transition hover:border-accent/40 hover:text-accent"
-              >
-                <HeartIcon />
-                Save for later
-              </button>
             </div>
 
             <div className="mt-6 rounded-2xl border border-line bg-surface/70 p-5">
