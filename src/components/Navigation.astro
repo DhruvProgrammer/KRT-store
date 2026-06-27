@@ -94,24 +94,21 @@ const searchExtras: SearchExtra[] = extras.map((e) => ({
         </span>
       </button>
 
-      <div class="relative">
-        <button
-          type="button"
-          data-open-cart
-          aria-label="Open cart"
-          class="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface-ink text-ink transition hover:border-accent/40 hover:bg-surface-bright"
+      <a
+        href="/cart"
+        aria-label="Open cart"
+        class="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface-ink text-ink transition hover:border-accent/40 hover:bg-surface-bright"
+      >
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="h-5 w-5">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <span
+          data-cart-count
+          class="pointer-events-none absolute -right-1 -top-1 hidden h-5 min-w-[1.25rem] place-items-center rounded-full bg-accent px-1 text-[10px] font-black text-white shadow-[0_0_12px_rgba(0,162,255,0.5)]"
         >
-          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="h-5 w-5">
-            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
-          <span
-            data-cart-count
-            class="pointer-events-none absolute -right-1 -top-1 hidden h-5 min-w-[1.25rem] place-items-center rounded-full bg-accent px-1 text-[10px] font-black text-white shadow-[0_0_12px_rgba(0,162,255,0.5)]"
-          >
-            <span data-cart-count-text>0</span>
-          </span>
-        </button>
-      </div>
+          <span data-cart-count-text>0</span>
+        </span>
+      </a>
 
       <a
         href="/store"
@@ -136,24 +133,21 @@ const searchExtras: SearchExtra[] = extras.map((e) => ({
         </svg>
       </button>
 
-      <div class="relative">
-        <button
-          type="button"
-          data-open-cart
-          aria-label="Open cart"
-          class="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface-ink text-ink transition hover:border-accent/40 hover:bg-surface-bright"
+      <a
+        href="/cart"
+        aria-label="Open cart"
+        class="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface-ink text-ink transition hover:border-accent/40 hover:bg-surface-bright"
+      >
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="h-5 w-5">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <span
+          data-cart-count
+          class="pointer-events-none absolute -right-1 -top-1 hidden h-5 min-w-[1.25rem] place-items-center rounded-full bg-accent px-1 text-[10px] font-black text-white shadow-[0_0_12px_rgba(0,162,255,0.5)]"
         >
-          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="h-5 w-5">
-            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
-          <span
-            data-cart-count
-            class="pointer-events-none absolute -right-1 -top-1 hidden h-5 min-w-[1.25rem] place-items-center rounded-full bg-accent px-1 text-[10px] font-black text-white shadow-[0_0_12px_rgba(0,162,255,0.5)]"
-          >
-            <span data-cart-count-text>0</span>
-          </span>
-        </button>
-      </div>
+          <span data-cart-count-text>0</span>
+        </span>
+      </a>
 
       <button
         type="button"
@@ -267,190 +261,13 @@ const searchExtras: SearchExtra[] = extras.map((e) => ({
       if (event.key === STORAGE_KEY) updateBadges();
     });
 
-    // ============ Cart popover (vanilla — no React hydration race) ============
-    const formatPrice = (cents) =>
-      new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents);
-
-    // Build an HTML-safe escape function using only comment-safe characters.
-    const escapeAmp = String.fromCharCode(38);
-    const escapeLt = String.fromCharCode(60);
-    const escapeGt = String.fromCharCode(62);
-    const escapeQuot = String.fromCharCode(34);
-    const escapeApos = String.fromCharCode(39);
-    const escapeHtml = (value) => {
-      const v = String(value);
-      return v
-        .replace(/&/g, escapeAmp + "#38;")
-        .replace(/</g, escapeLt + "#60;")
-        .replace(/>/g, escapeGt + "#62;")
-        .replace(/"/g, escapeQuot + "#34;")
-        .replace(/'/g, escapeApos + "#39;");
-    };
-
-    function escapeCssUrl(value) {
-      // SEC-DEFENSE-IN-DEPTH: validated cart items already reject these chars.
-      // This is a second-pass shim that also drops backtick and quotes.
-      return String(value)
-        .replace(/`/g, "")
-        .replace(/"/g, "")
-        .replace(/'/g, "")
-        .replace(/\$\(/g, "")
-        .slice(0, 500);
-    }
-
-    function renderCartItem(item) {
-      const trimmed = (item.name || "").toString().slice(0, 80);
-      const lineTotal = formatPrice(Number(item.price) * Number(item.quantity));
-      const gradient = escapeCssUrl(item.gradient || "#1f2430");
-      return (
-        '<li class="flex gap-3">' +
-          '<div class="h-12 w-12 shrink-0 rounded-lg border border-line" style="background:' + gradient + '"></div>' +
-          '<div class="min-w-0 flex-1">' +
-            '<p class="truncate text-sm font-bold text-ink">' + escapeHtml(trimmed) + "</p>" +
-            '<p class="mt-0.5 text-[11px] uppercase tracking-[0.18em] text-ink-muted">Qty ' +
-            escapeHtml(String(item.quantity)) +
-            "</p>" +
-            '<div class="mt-1 flex items-center justify-between text-xs text-ink-muted">' +
-            "<span>" + lineTotal + "</span>" +
-            '<button type="button" data-remove="' + escapeHtml(String(item.slug)) + '" class="font-black uppercase tracking-[0.18em] text-ink-muted transition hover:text-red-400">Remove</button>' +
-            "</div>" +
-          "</div>" +
-        "</li>"
-      );
-    }
-
-    function renderPopover() {
-      const items = readItems();
-      const count = items.reduce((sum, i) => sum + Number(i.quantity || 0), 0);
-      const total = items.reduce((sum, i) => sum + Number(i.price) * Number(i.quantity), 0);
-
-      const header =
-        '<header class="flex items-center justify-between border-b border-line px-4 py-3">' +
-        '<p class="text-xs font-black uppercase tracking-[0.18em] text-ink-muted">Cart</p>' +
-        '<p class="text-xs font-black uppercase tracking-[0.18em] text-ink">' +
-        count + " " + (count === 1 ? "item" : "items") +
-        "</p>" +
-        "</header>";
-
-      let body;
-      if (items.length === 0) {
-        body =
-          '<div class="px-4 py-6 text-center">' +
-            '<p class="text-base font-black text-ink">Your cart is empty.</p>' +
-            '<p class="mt-1 text-xs text-ink-muted">Add a product to see it here.</p>' +
-            '<a href="/store" data-close-cart class="mt-4 inline-flex items-center justify-center rounded-full bg-accent px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-white shadow-[0_0_22px_rgba(0,162,255,0.35)] transition hover:bg-accent-bright">Browse store</a>' +
-          "</div>";
-      } else {
-        const list = items
-          .slice(0, 4)
-          .map(renderCartItem)
-          .join("");
-        const more =
-          items.length > 4
-            ? '<li><a href="/cart" data-close-cart class="block text-center text-xs font-black uppercase tracking-[0.18em] text-ink-muted transition hover:text-accent">+' +
-              (items.length - 4) + " more — view cart</a></li>"
-            : "";
-        const footer =
-          '<footer class="border-t border-line bg-bg-soft/80 px-4 py-3">' +
-            '<div class="flex justify-between text-sm"><span class="font-bold text-ink">Subtotal</span><span class="font-black text-accent drop-shadow-[0_0_8px_rgba(0,162,255,0.25)]">' +
-            formatPrice(total) +
-            "</span></div>" +
-            '<div class="mt-3 grid grid-cols-2 gap-2">' +
-              '<a href="/cart" data-close-cart class="rounded-full border border-line px-3 py-2 text-center text-xs font-black uppercase tracking-[0.18em] text-ink transition hover:border-accent/40 hover:text-accent">View cart</a>' +
-              '<a href="/checkout" data-close-cart class="rounded-full bg-accent px-3 py-2 text-center text-xs font-black uppercase tracking-[0.18em] text-white shadow-[0_0_22px_rgba(0,162,255,0.35)] transition hover:bg-accent-bright">Checkout</a>' +
-            "</div>" +
-            '<p class="mt-2 text-[10px] leading-tight text-ink-muted">Instant digital download · secure checkout</p>' +
-          "</footer>";
-        body =
-          '<ul class="max-h-72 space-y-3 overflow-auto px-4 py-3">' + list + more + "</ul>" + footer;
-      }
-
-      return header + body;
-    }
-
-    let popoverEl = null;
-    function ensurePopover() {
-      if (popoverEl) return popoverEl;
-      const root = document.createElement("div");
-      root.id = "krt-cart-popover";
-      root.setAttribute("role", "dialog");
-      root.setAttribute("aria-label", "Shopping cart preview");
-      root.className =
-        "fixed right-2 top-[68px] z-[60] hidden w-[min(22rem,calc(100vw-1rem))] origin-top-right rounded-2xl border border-line bg-bg-soft/95 shadow-[0_18px_44px_rgba(0,0,0,0.55)] backdrop-blur-xl";
-      root.hidden = true;
-      document.body.appendChild(root);
-      popoverEl = root;
-      return root;
-    }
-
-    function openPopover() {
-      const root = ensurePopover();
-      root.innerHTML = renderPopover();
-      requestAnimationFrame(() => {
-        root.hidden = false;
-        root.classList.remove("hidden");
-        root.classList.add("flex");
-        root.classList.add("flex-col");
-      });
-    }
-    function closePopover() {
-      const root = popoverEl;
-      if (!root) return;
-      root.hidden = true;
-      root.classList.add("hidden");
-      root.classList.remove("flex");
-      root.classList.remove("flex-col");
-    }
-
-    document.addEventListener("click", (event) => {
-      const target = event.target;
-      if (!(target instanceof Element)) return;
-      if (target.closest("[data-close-cart]") || target.closest('button[data-remove]')) {
-        closePopover();
-      }
-      if (target.closest("button[data-remove]")) {
-        const slug = target.getAttribute("data-remove") || "";
-        if (!slug) return;
-        try {
-          const items = readItems();
-          const next = items.filter((i) => i.slug !== slug);
-          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-          window.dispatchEvent(new Event("cart:update"));
-        } catch (e) {
-          /* ignore */
-        }
-        return;
-      }
-      if (target.closest("[data-open-search]")) {
-        const evt = new CustomEvent("krt:open-search");
-        window.dispatchEvent(evt);
-      }
-      if (target.closest("[data-open-cart]")) {
-        event.preventDefault();
-        event.stopPropagation();
-        openPopover();
-      }
-    });
-
+    // ============ Search shortcut ============
     document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape") {
-        closePopover();
-      }
       if ((event.key === "k" || event.key === "K") && (event.metaKey || event.ctrlKey)) {
         event.preventDefault();
         const evt = new CustomEvent("krt:open-search");
         window.dispatchEvent(evt);
       }
-    });
-
-    document.addEventListener("mousedown", (event) => {
-      const target = event.target;
-      if (!(target instanceof Element)) return;
-      const root = popoverEl;
-      if (!root || root.hidden) return;
-      if (root.contains(target)) return;
-      if (target.closest("[data-open-cart]")) return;
-      closePopover();
     });
 
     // ============ Mobile menu toggle ============

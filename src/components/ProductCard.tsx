@@ -42,8 +42,6 @@ export default function ProductCard({ product }: ProductCardProps) {
         quantity: 1
       });
       setAdded(true);
-      // Auto-open the cart popover so the user sees the addition immediately.
-      window.dispatchEvent(new CustomEvent("krt:open-cart"));
       window.setTimeout(() => setAdded(false), 1600);
     } catch {
       /* ignore */
