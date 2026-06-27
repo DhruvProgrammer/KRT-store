@@ -95,14 +95,15 @@ export default function SearchModal({
         aria-hidden="true"
       />
       <div
-        className={`fixed inset-x-0 top-0 z-50 origin-top border-b border-line bg-bg-soft/95 shadow-[0_24px_60px_rgba(0,0,0,0.55)] backdrop-blur-xl transition-transform ${
+        className={`fixed inset-x-0 top-0 z-50 max-h-[100dvh] origin-top overflow-y-auto overscroll-contain border-b border-line bg-bg-soft/95 shadow-[0_24px_60px_rgba(0,0,0,0.55)] backdrop-blur-xl transition-transform ${
           open ? "translate-y-0" : "-translate-y-full"
         }`}
         role="dialog"
+        aria-modal="true"
         aria-label="Search products"
         aria-hidden={!open}
       >
-        <div className="container mx-auto px-4 py-6 sm:px-6 lg:px-8">
+        <div className="container mx-auto px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1.5rem,env(safe-area-inset-top))] sm:px-6 lg:px-8">
           <div className="flex items-center gap-3 rounded-full border border-line bg-surface px-5 shadow-soft focus-within:border-accent focus-within:ring-1 focus-within:ring-accent">
             <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-4 w-4 text-ink-muted">
               <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
