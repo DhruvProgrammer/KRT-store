@@ -4,6 +4,38 @@ import Reveal from "./Reveal";
 
 type SectionKey = "account" | "notifications" | "billing" | "data";
 
+interface StoredCard {
+  id: string;
+  brand: "visa" | "mastercard" | "amex" | "unknown";
+  last4: string;
+  expMonth: string;
+  expYear: string;
+  holder: string;
+  isDefault: boolean;
+}
+
+function detectBrand(num: string): StoredCard["brand"] {
+  const digits = num.replace(/\D/g, "");
+  if (/^4/.test(digits)) return "visa";
+  if (/^5[1-5]/.test(digits) || /^2(2[2-9]|[3-6]|7[01]|720)/.test(digits)) return "mastercard";
+  if (/^3[47]/.test(digits)) return "amex";
+  return "unknown";
+}
+
+function CardBrandMark({ brand }: { brand: StoredCard["brand"] }) {
+  const labels: Record<StoredCard["brand"], string> = {
+    visa: "VISA",
+    mastercard: "MC",
+    amex: "AMEX",
+    unknown: "CARD"
+  };
+  return (
+    <span className="inline-flex h-7 min-w-[3rem] items-center justify-center rounded-md border border-accent/40 bg-accent/10 px-2 text-[11px] font-black uppercase tracking-[0.18em] text-accent">
+      {labels[brand]}
+    </span>
+  );
+}
+
 interface ToggleProps {
   label: string;
   description?: string;
@@ -40,6 +72,82 @@ function Toggle({ label, description, defaultChecked = false }: ToggleProps) {
 export default function SettingsSection() {
   const [section, setSection] = useState<SectionKey>("account");
   const [savedNotice, setSavedNotice] = useState<string | null>(null);
+  const [cards, setCards] = useState<StoredCard[]>([]);
+  const [addingCard, setAddingCard] = useState(false);
+  const [cardDraft, setCardDraft] = useState({
+    holder: "",
+    number: "",
+    expMonth: "",
+    expYear: "",
+    cvc: ""
+  });
+  const [cardErrors, setCardErrors] = useState<string[]>([]);
+
+  const closeCardForm = () => {
+    setAddingCard(false);
+    setCardErrors([]);
+    setCardDraft({ holder: "", number: "", expMonth: "", expYear: "", cvc: "" });
+  };
+
+  const handleSaveCard = () => {
+    const errors: string[] = [];
+    const digits = cardDraft.number.replace(/\D/g, "");
+    const holderOK = cardDraft.holder.trim().length >= 2 && cardDraft.holder.length <= 60;
+    const numberOK = digits.length >= 13 && digits.length <= 19;
+    const monthOK = /^(0?[1-9]|1[0-2])$/.test(cardDraft.expMonth);
+    const yearOK = /^\d{2}$/.test(cardDraft.expYear);
+    const cvcOK = /^\d{3,4}$/.test(cardDraft.cvc);
+
+    if (!holderOK) errors.push("Cardholder name must be 2–60 characters.");
+    if (!numberOK) errors.push("Card number must be 13–19 digits.");
+    if (!monthOK) errors.push("Expiry month must be 01–12.");
+    if (!yearOK) errors.push("Expiry year must be 2 digits.");
+    if (!cvcOK) errors.push("CVC must be 3–4 digits.");
+    if (
+      monthOK &&
+      yearOK &&
+      parseInt(cardDraft.expYear, 10) < new Date().getFullYear() % 100
+    ) {
+      errors.push("That card has already expired.");
+    }
+
+    setCardErrors(errors);
+    if (errors.length > 0) return;
+
+    const newCard: StoredCard = {
+      id: `card_${Math.random().toString(36).slice(2, 10)}`,
+      brand: detectBrand(cardDraft.number),
+      last4: digits.slice(-4),
+      expMonth: cardDraft.expMonth.padStart(2, "0"),
+      expYear: `20${cardDraft.expYear}`,
+      holder: cardDraft.holder.trim(),
+      isDefault: cards.length === 0
+    };
+
+    setCards((prev) => [...prev, newCard]);
+    closeCardForm();
+    setSavedNotice(
+      newCard.brand === "unknown"
+        ? "Card saved locally."
+        : `${newCard.brand.toUpperCase()} ending ${newCard.last4} saved to your wallet.`
+    );
+    window.setTimeout(() => setSavedNotice(null), 2600);
+  };
+
+  const setCardAsDefault = (id: string) => {
+    setCards((prev) => prev.map((card) => ({ ...card, isDefault: card.id === id })));
+  };
+
+  const removeCard = (id: string) => {
+    const target = cards.find((c) => c.id === id);
+    setCards((prev) => {
+      const next = prev.filter((c) => c.id !== id);
+      if (target?.isDefault && next.length > 0) {
+        next[0] = { ...next[0], isDefault: true };
+      }
+      return next;
+    });
+  };
 
   const onSave = (label: string) => {
     setSavedNotice(label);
