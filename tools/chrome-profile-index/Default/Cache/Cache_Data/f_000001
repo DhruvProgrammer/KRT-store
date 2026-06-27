@@ -1,0 +1,295 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#161a22"><meta name="description" content="Premium plugins, templates, design systems, icon packs, plus a free extras library. Built for designers and engineers who care about craft."><link rel="canonical" href="https://design-goods.example.com/"><meta property="og:site_name" content="KRT store"><meta property="og:title" content="KRT store — Premium tools and free extras, in one place"><meta property="og:description" content="Premium plugins, templates, design systems, icon packs, plus a free extras library. Built for designers and engineers who care about craft."><meta property="og:type" content="website"><meta property="og:url" content="https://design-goods.example.com/"><meta property="og:image" content="https://design-goods.example.com/og.svg"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="KRT store — Premium tools and free extras, in one place"><meta name="twitter:description" content="Premium plugins, templates, design systems, icon packs, plus a free extras library. Built for designers and engineers who care about craft."><meta name="twitter:image" content="https://design-goods.example.com/og.svg"><title>KRT store — Premium tools and free extras, in one place</title><meta name="astro-view-transitions-enabled" content="true"><meta name="astro-view-transitions-fallback" content="animate"><script type="module" src="/_astro/ClientRouter.astro_astro_type_script_index_0_lang.CDGfc0hd.js"></script><link rel="stylesheet" href="/_astro/cart.BGxq_T5d.css"></head> <body class="font-sans"> <a href="#main" class="skip-link">Skip to content</a>  <header class="sticky top-0 z-40 border-b border-line bg-bg-soft/90 backdrop-blur-xl" data-navigation> <div class="border-b border-line/60"> <div class="container mx-auto flex h-9 items-center justify-between gap-2 px-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-muted sm:px-6 lg:px-8"> <p class="flex items-center gap-2 truncate"> <span class="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-accent shadow-[0_0_10px_rgba(0,162,255,0.7)]"></span> <span class="truncate">Free updates for life · 30-day refund</span> </p> <div class="hidden items-center gap-4 sm:flex"> <a href="/store" class="transition hover:text-ink">Browse store</a> <span aria-hidden="true" class="opacity-30">·</span> <a href="mailto:hello@krt.example" class="transition hover:text-ink">hello@krt.example</a> </div> <a href="/login" class="sm:hidden transition hover:text-ink">Sign in</a> </div> </div> <div class="container mx-auto flex h-16 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8"> <a href="/" class="group flex items-center gap-2" aria-label="KRT store home"> <span class="grid h-9 w-9 place-items-center rounded-xl bg-accent font-black text-ink-inverse shadow-[0_0_18px_rgba(0,162,255,0.45)] transition group-hover:scale-105">
+K
+</span> <span class="text-base font-black tracking-[-0.04em] text-ink truncate">KRT store</span> </a> <nav class="hidden items-center gap-1 md:flex" aria-label="Primary navigation"> <a href="/" class="rounded-full px-4 py-2 text-sm font-semibold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink"> Home </a><a href="/store" class="rounded-full px-4 py-2 text-sm font-semibold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink"> Store </a><a href="/extras" class="rounded-full px-4 py-2 text-sm font-semibold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink"> Extras </a><a href="/#contact" class="rounded-full px-4 py-2 text-sm font-semibold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink"> Contact </a> </nav>  <div class="hidden items-center gap-2 md:flex"> <a href="/login" class="inline-flex h-10 items-center gap-2 rounded-full border border-line bg-surface-ink px-4 text-xs font-bold text-ink-muted transition hover:border-accent/40 hover:bg-surface-bright hover:text-ink"> <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="h-4 w-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path> <circle cx="12" cy="7" r="4"></circle> </svg> <span>Sign in</span> </a> <button type="button" data-open-search aria-label="Open search" title="Search (⌘K)" class="hidden h-10 items-center gap-2 rounded-full border border-line bg-surface-ink px-4 text-xs font-bold text-ink-muted transition hover:border-accent/40 hover:bg-surface-bright lg:inline-flex"> <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="h-5 w-5"> <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"></circle> <path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path> </svg> <span>Search</span> <span aria-hidden="true" class="hidden rounded border border-line bg-surface px-1.5 py-0.5 text-[10px] font-black uppercase tracking-[0.18em] text-ink-muted sm:inline-block">
+⌘K
+</span> </button> <div class="relative"> <button type="button" data-open-cart aria-label="Open cart" class="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface-ink text-ink transition hover:border-accent/40 hover:bg-surface-bright"> <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="h-5 w-5"> <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> </svg> <span data-cart-count class="pointer-events-none absolute -right-1 -top-1 hidden h-5 min-w-[1.25rem] place-items-center rounded-full bg-accent px-1 text-[10px] font-black text-white shadow-[0_0_12px_rgba(0,162,255,0.5)]"> <span data-cart-count-text>0</span> </span> </button> </div> <a href="/store" class="hidden items-center gap-2 rounded-full bg-accent px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-white shadow-[0_0_22px_rgba(0,162,255,0.35)] transition hover:bg-accent-bright hover:shadow-[0_0_30px_rgba(0,162,255,0.55)] lg:inline-flex">
+Shop now
+</a> </div>  <div class="flex items-center gap-2 md:hidden"> <button type="button" data-open-search aria-label="Open search" title="Search (⌘K)" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface-ink text-ink transition hover:border-accent/40 hover:bg-surface-bright"> <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="h-5 w-5"> <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"></circle> <path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path> </svg> </button> <div class="relative"> <button type="button" data-open-cart aria-label="Open cart" class="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface-ink text-ink transition hover:border-accent/40 hover:bg-surface-bright"> <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="h-5 w-5"> <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> </svg> <span data-cart-count class="pointer-events-none absolute -right-1 -top-1 hidden h-5 min-w-[1.25rem] place-items-center rounded-full bg-accent px-1 text-[10px] font-black text-white shadow-[0_0_12px_rgba(0,162,255,0.5)]"> <span data-cart-count-text>0</span> </span> </button> </div> <button type="button" data-mobile-trigger aria-label="Open menu" aria-expanded="false" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface-ink text-ink transition hover:bg-surface-bright"> <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="h-5 w-5"> <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path> </svg> </button> </div> </div> <div class="hidden border-t border-line bg-bg-soft md:hidden" data-mobile-panel> <nav class="container mx-auto flex flex-col gap-1 px-4 py-4 sm:px-6" aria-label="Mobile primary"> <p class="px-2 text-[11px] font-black uppercase tracking-[0.2em] text-ink-muted">Browse</p> <a href="/" class="rounded-2xl px-4 py-3 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink"> Home </a><a href="/store" class="rounded-2xl px-4 py-3 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink"> Store </a><a href="/extras" class="rounded-2xl px-4 py-3 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink"> Extras </a><a href="/#contact" class="rounded-2xl px-4 py-3 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink"> Contact </a> <p class="mt-4 px-2 text-[11px] font-black uppercase tracking-[0.2em] text-ink-muted">Account</p> <a href="/login" class="rounded-2xl px-4 py-3 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Sign in</a> <a href="/signup" class="rounded-2xl px-4 py-3 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Create account</a> <a href="/profile" class="rounded-2xl px-4 py-3 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Profile</a> <a href="/settings" class="rounded-2xl px-4 py-3 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Settings</a> <a href="/cart" class="rounded-2xl px-4 py-3 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Cart</a> <a href="/store" class="mt-4 rounded-2xl bg-accent px-4 py-3 text-center text-sm font-black text-white shadow-[0_0_22px_rgba(0,162,255,0.35)] transition hover:bg-accent-bright">
+Browse store
+</a> </nav> <div class="border-t border-line/60"> <div class="container mx-auto flex flex-wrap items-center justify-center gap-x-5 gap-y-2 px-4 py-4 text-[11px] font-bold uppercase tracking-[0.18em] text-ink-muted sm:px-6"> <a href="/privacy" class="transition hover:text-ink">Privacy</a> <span aria-hidden="true" class="opacity-30">·</span> <a href="/terms" class="transition hover:text-ink">Terms</a> <span aria-hidden="true" class="opacity-30">·</span> <a href="/#contact" class="transition hover:text-ink">Contact</a> </div> </div> </div> </header>  <style>astro-island,astro-slot,astro-static-slot{display:contents}</style><script>(()=>{var e=async t=>{await(await t())()};(self.Astro||(self.Astro={})).load=e;window.dispatchEvent(new Event("astro:load"));})();</script><script>(()=>{var A=Object.defineProperty;var g=(i,o,a)=>o in i?A(i,o,{enumerable:!0,configurable:!0,writable:!0,value:a}):i[o]=a;var d=(i,o,a)=>g(i,typeof o!="symbol"?o+"":o,a);{let i={0:t=>m(t),1:t=>a(t),2:t=>new RegExp(t),3:t=>new Date(t),4:t=>new Map(a(t)),5:t=>new Set(a(t)),6:t=>BigInt(t),7:t=>new URL(t),8:t=>new Uint8Array(t),9:t=>new Uint16Array(t),10:t=>new Uint32Array(t),11:t=>1/0*t},o=t=>{let[l,e]=t;return l in i?i[l](e):void 0},a=t=>t.map(o),m=t=>typeof t!="object"||t===null?t:Object.fromEntries(Object.entries(t).map(([l,e])=>[l,o(e)]));class y extends HTMLElement{constructor(){super(...arguments);d(this,"Component");d(this,"hydrator");d(this,"hydrate",async()=>{var b;if(!this.hydrator||!this.isConnected)return;let e=(b=this.parentElement)==null?void 0:b.closest("astro-island[ssr]");if(e){e.addEventListener("astro:hydrate",this.hydrate,{once:!0});return}let c=this.querySelectorAll("astro-slot"),n={},h=this.querySelectorAll("template[data-astro-template]");for(let r of h){let s=r.closest(this.tagName);s!=null&&s.isSameNode(this)&&(n[r.getAttribute("data-astro-template")||"default"]=r.innerHTML,r.remove())}for(let r of c){let s=r.closest(this.tagName);s!=null&&s.isSameNode(this)&&(n[r.getAttribute("name")||"default"]=r.innerHTML)}let p;try{p=this.hasAttribute("props")?m(JSON.parse(this.getAttribute("props"))):{}}catch(r){let s=this.getAttribute("component-url")||"<unknown>",v=this.getAttribute("component-export");throw v&&(s+=` (export ${v})`),console.error(`[hydrate] Error parsing props for component ${s}`,this.getAttribute("props"),r),r}let u;await this.hydrator(this)(this.Component,p,n,{client:this.getAttribute("client")}),this.removeAttribute("ssr"),this.dispatchEvent(new CustomEvent("astro:hydrate"))});d(this,"unmount",()=>{this.isConnected||this.dispatchEvent(new CustomEvent("astro:unmount"))})}disconnectedCallback(){document.removeEventListener("astro:after-swap",this.unmount),document.addEventListener("astro:after-swap",this.unmount,{once:!0})}connectedCallback(){if(!this.hasAttribute("await-children")||document.readyState==="interactive"||document.readyState==="complete")this.childrenConnectedCallback();else{let e=()=>{document.removeEventListener("DOMContentLoaded",e),c.disconnect(),this.childrenConnectedCallback()},c=new MutationObserver(()=>{var n;((n=this.lastChild)==null?void 0:n.nodeType)===Node.COMMENT_NODE&&this.lastChild.nodeValue==="astro:end"&&(this.lastChild.remove(),e())});c.observe(this,{childList:!0}),document.addEventListener("DOMContentLoaded",e)}}async childrenConnectedCallback(){let e=this.getAttribute("before-hydration-url");e&&await import(e),this.start()}async start(){let e=JSON.parse(this.getAttribute("opts")),c=this.getAttribute("client");if(Astro[c]===void 0){window.addEventListener(`astro:${c}`,()=>this.start(),{once:!0});return}try{await Astro[c](async()=>{let n=this.getAttribute("renderer-url"),[h,{default:p}]=await Promise.all([import(this.getAttribute("component-url")),n?import(n):()=>()=>{}]),u=this.getAttribute("component-export")||"default";if(!u.includes("."))this.Component=h[u];else{this.Component=h;for(let f of u.split("."))this.Component=this.Component[f]}return this.hydrator=p,this.hydrate},e,this)}catch(n){console.error(`[astro-island] Error hydrating ${this.getAttribute("component-url")}`,n)}}attributeChangedCallback(){this.hydrate()}}d(y,"observedAttributes",["props"]),customElements.get("astro-island")||customElements.define("astro-island",y)}})();</script><astro-island uid="o44Dg" prefix="r11" component-url="/_astro/SearchModal.DPcV5Fjj.js" component-export="default" renderer-url="/_astro/client.nFz3bvDj.js" props="{&quot;products&quot;:[1,[[0,{&quot;slug&quot;:[0,&quot;clarity-plugin&quot;],&quot;name&quot;:[0,&quot;Clarity&quot;],&quot;description&quot;:[0,&quot;One-click accessibility audits for live URLs and design files.&quot;],&quot;tag&quot;:[0,&quot;Accessibility&quot;],&quot;category&quot;:[0,&quot;plugins&quot;]}],[0,{&quot;slug&quot;:[0,&quot;pivot-extension&quot;],&quot;name&quot;:[0,&quot;Pivot&quot;],&quot;description&quot;:[0,&quot;Jump between files, symbols, and references without leaving the keyboard.&quot;],&quot;tag&quot;:[0,&quot;Editor tool&quot;],&quot;category&quot;:[0,&quot;plugins&quot;]}],[0,{&quot;slug&quot;:[0,&quot;composer-plugin&quot;],&quot;name&quot;:[0,&quot;Composer&quot;],&quot;description&quot;:[0,&quot;Generate Tailwind CSS component files from design tokens automatically.&quot;],&quot;tag&quot;:[0,&quot;Workflow&quot;],&quot;category&quot;:[0,&quot;plugins&quot;]}],[0,{&quot;slug&quot;:[0,&quot;atlas-template&quot;],&quot;name&quot;:[0,&quot;Atlas&quot;],&quot;description&quot;:[0,&quot;An Astro blog template with editorial rhythm and zero config.&quot;],&quot;tag&quot;:[0,&quot;Blog starter&quot;],&quot;category&quot;:[0,&quot;templates&quot;]}],[0,{&quot;slug&quot;:[0,&quot;arcwise-template&quot;],&quot;name&quot;:[0,&quot;Arcwise&quot;],&quot;description&quot;:[0,&quot;A Next.js SaaS landing template with pricing, auth, and payments.&quot;],&quot;tag&quot;:[0,&quot;SaaS starter&quot;],&quot;category&quot;:[0,&quot;templates&quot;]}],[0,{&quot;slug&quot;:[0,&quot;calm-tokens&quot;],&quot;name&quot;:[0,&quot;Calm Tokens&quot;],&quot;description&quot;:[0,&quot;A neutral gray design token set for premium dark-mode interfaces.&quot;],&quot;tag&quot;:[0,&quot;Token pack&quot;],&quot;category&quot;:[0,&quot;design-systems&quot;]}],[0,{&quot;slug&quot;:[0,&quot;frontline-ui&quot;],&quot;name&quot;:[0,&quot;Frontline UI&quot;],&quot;description&quot;:[0,&quot;React components with glass surfaces, motion, and Gumroad-style actions.&quot;],&quot;tag&quot;:[0,&quot;Component library&quot;],&quot;category&quot;:[0,&quot;design-systems&quot;]}],[0,{&quot;slug&quot;:[0,&quot;monochrome-icons&quot;],&quot;name&quot;:[0,&quot;Monochrome&quot;],&quot;description&quot;:[0,&quot;320 monotone SVG icons for UI, dashboards, and marketing pages.&quot;],&quot;tag&quot;:[0,&quot;Icon family&quot;],&quot;category&quot;:[0,&quot;icon-packs&quot;]}],[0,{&quot;slug&quot;:[0,&quot;open-lesson-kit&quot;],&quot;name&quot;:[0,&quot;Open Lesson Kit&quot;],&quot;description&quot;:[0,&quot;An Astro course template with video embeds, progress, and quizzes.&quot;],&quot;tag&quot;:[0,&quot;Course starter&quot;],&quot;category&quot;:[0,&quot;learning&quot;]}],[0,{&quot;slug&quot;:[0,&quot;editor-shield&quot;],&quot;name&quot;:[0,&quot;Editor Shield&quot;],&quot;description&quot;:[0,&quot;Auto-save, version snapshots, and offline recovery for browser editors.&quot;],&quot;tag&quot;:[0,&quot;Content safety&quot;],&quot;category&quot;:[0,&quot;plugins&quot;]}],[0,{&quot;slug&quot;:[0,&quot;dash-ui-kit&quot;],&quot;name&quot;:[0,&quot;Dash UI Kit&quot;],&quot;description&quot;:[0,&quot;A complete dashboard design system with charts, tables, and sidebars.&quot;],&quot;tag&quot;:[0,&quot;Dashboard system&quot;],&quot;category&quot;:[0,&quot;design-systems&quot;]}],[0,{&quot;slug&quot;:[0,&quot;trailhead-template&quot;],&quot;name&quot;:[0,&quot;Trailhead&quot;],&quot;description&quot;:[0,&quot;A change-log and release-notes template with RSS and categories.&quot;],&quot;tag&quot;:[0,&quot;Release notes&quot;],&quot;category&quot;:[0,&quot;templates&quot;]}]]],&quot;extras&quot;:[1,[[0,{&quot;slug&quot;:[0,&quot;launch-checklist&quot;],&quot;name&quot;:[0,&quot;Launch checklist&quot;],&quot;description&quot;:[0,&quot;A one-page QA list for shipping production sites without missing the boring things.&quot;],&quot;tag&quot;:[0,&quot;Pre-flight&quot;],&quot;category&quot;:[0,&quot;guide&quot;]}],[0,{&quot;slug&quot;:[0,&quot;tailwind-color-swatches&quot;],&quot;name&quot;:[0,&quot;Tailwind color swatches&quot;],&quot;description&quot;:[0,&quot;120 accessible oklch swatches exported as Tailwind config — drop into any project.&quot;],&quot;tag&quot;:[0,&quot;Color&quot;],&quot;category&quot;:[0,&quot;swatch&quot;]}],[0,{&quot;slug&quot;:[0,&quot;figma-starter&quot;],&quot;name&quot;:[0,&quot;Figma starter file&quot;],&quot;description&quot;:[0,&quot;Empty Figma file with variants, components, and tokens wired up — start designing in minutes.&quot;],&quot;tag&quot;:[0,&quot;Design&quot;],&quot;category&quot;:[0,&quot;starter&quot;]}],[0,{&quot;slug&quot;:[0,&quot;astro-snippets&quot;],&quot;name&quot;:[0,&quot;Astro snippets pack&quot;],&quot;description&quot;:[0,&quot;25 copy-paste Astro code blocks: layouts, islands, content collections, view transitions.&quot;],&quot;tag&quot;:[0,&quot;Snippets&quot;],&quot;category&quot;:[0,&quot;resource&quot;]}],[0,{&quot;slug&quot;:[0,&quot;writing-prompts&quot;],&quot;name&quot;:[0,&quot;Writing prompts for engineers&quot;],&quot;description&quot;:[0,&quot;70 prompts for shipping better release notes, changelogs, and pull request descriptions.&quot;],&quot;tag&quot;:[0,&quot;Writing&quot;],&quot;category&quot;:[0,&quot;guide&quot;]}],[0,{&quot;slug&quot;:[0,&quot;icon-batch-01&quot;],&quot;name&quot;:[0,&quot;Icon batch 01&quot;],&quot;description&quot;:[0,&quot;40 hand-drawn SVG icons in a single zipped folder. Free, no attribution required.&quot;],&quot;tag&quot;:[0,&quot;Icons&quot;],&quot;category&quot;:[0,&quot;resource&quot;]}]]]}" ssr client="load" opts="{&quot;name&quot;:&quot;SearchModal&quot;,&quot;value&quot;:true}" await-children><div class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm transition-opacity pointer-events-none opacity-0" aria-hidden="true"></div><div class="fixed inset-x-0 top-0 z-50 origin-top border-b border-line bg-bg-soft/95 shadow-[0_24px_60px_rgba(0,0,0,0.55)] backdrop-blur-xl transition-transform -translate-y-full" role="dialog" aria-label="Search products" aria-hidden="true"><div class="container mx-auto px-4 py-6 sm:px-6 lg:px-8"><div class="flex items-center gap-3 rounded-full border border-line bg-surface px-5 shadow-soft focus-within:border-accent focus-within:ring-1 focus-within:ring-accent"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="h-4 w-4 text-ink-muted"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"></circle><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg><input autofocus="" type="search" placeholder="Search plugins, templates, free extras…" class="h-12 flex-1 bg-transparent text-base text-ink placeholder-ink-muted outline-none" aria-label="Search" value=""/><button type="button" aria-label="Close search" class="grid h-9 w-9 place-items-center rounded-full border border-line bg-surface-ink text-ink transition hover:bg-surface-bright"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="h-4 w-4"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg></button></div><div class="mt-6 grid gap-6 sm:grid-cols-2"><div><p class="text-[11px] font-black uppercase tracking-[0.24em] text-ink-muted">Quick links</p><ul class="mt-3 space-y-2 text-sm"><li><a href="/store" class="text-ink transition hover:text-accent">Browse the store →</a></li><li><a href="/extras" class="text-ink transition hover:text-accent">Browse free extras →</a></li><li><a href="/cart" class="text-ink transition hover:text-accent">View cart →</a></li></ul></div><div><p class="text-[11px] font-black uppercase tracking-[0.24em] text-ink-muted">Tips</p><p class="mt-3 text-sm text-ink-muted">Type a tool name, category, or tag. Includes store products and free extras.</p></div></div></div></div><!--astro:end--></astro-island> <script>
+  (function () {
+    // ============ Cart badge sync ============
+    const STORAGE_KEY = "dg-cart";
+    const BAD = /<|>|javascript:|data:|@import|url\(|expression\(/i;
+    const MAX_QTY = 99;
+
+    const validateGradient = (v) => {
+      if (typeof v !== "string") return false;
+      const t = v.trim();
+      if (t.length === 0 || t.length > 500) return false;
+      return !BAD.test(t);
+    };
+    const safeNumber = (v, min, max) => {
+      const n = Number(v);
+      return Number.isFinite(n) && n >= min && n <= max;
+    };
+    const validateItem = (raw) => {
+      if (!raw || typeof raw !== "object") return false;
+      if (typeof raw.slug !== "string" || raw.slug.length === 0 || raw.slug.length > 120) return false;
+      if (typeof raw.name !== "string" || raw.name.length === 0 || raw.name.length > 200) return false;
+      if (!safeNumber(raw.price, 0, 100000)) return false;
+      if (!safeNumber(raw.quantity, 1, MAX_QTY)) return false;
+      return validateGradient(raw.gradient);
+    };
+
+    const readItems = () => {
+      try {
+        const raw = window.localStorage.getItem(STORAGE_KEY);
+        if (!raw) return [];
+        const items = JSON.parse(raw);
+        if (!Array.isArray(items)) return [];
+        const valid = items.filter(validateItem);
+        return valid;
+      } catch (e) {
+        return [];
+      }
+    };
+
+    const readCount = () =>
+      readItems().reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+
+    const updateBadges = () => {
+      const count = readCount();
+      document.querySelectorAll("[data-cart-count]").forEach((b) => {
+        const text = b.querySelector("[data-cart-count-text]");
+        if (text) text.textContent = String(count);
+        b.classList.toggle("hidden", count === 0);
+        b.classList.toggle("flex", count > 0);
+        b.classList.toggle("grid", count > 0);
+      });
+    };
+
+    updateBadges();
+    window.addEventListener("cart:update", updateBadges);
+    window.addEventListener("storage", (event) => {
+      if (event.key === STORAGE_KEY) updateBadges();
+    });
+
+    // ============ Cart popover (vanilla — no React hydration race) ============
+    const formatPrice = (cents) =>
+      new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents);
+
+    // Build an HTML-safe escape function using only comment-safe characters.
+    const escapeAmp = String.fromCharCode(38);
+    const escapeLt = String.fromCharCode(60);
+    const escapeGt = String.fromCharCode(62);
+    const escapeQuot = String.fromCharCode(34);
+    const escapeApos = String.fromCharCode(39);
+    const escapeHtml = (value) => {
+      const v = String(value);
+      return v
+        .replace(/&/g, escapeAmp + "#38;")
+        .replace(/</g, escapeLt + "#60;")
+        .replace(/>/g, escapeGt + "#62;")
+        .replace(/"/g, escapeQuot + "#34;")
+        .replace(/'/g, escapeApos + "#39;");
+    };
+
+    function escapeCssUrl(value) {
+      // SEC-DEFENSE-IN-DEPTH: validated cart items already reject these chars.
+      // This is a second-pass shim that also drops backtick and quotes.
+      return String(value)
+        .replace(/`/g, "")
+        .replace(/"/g, "")
+        .replace(/'/g, "")
+        .replace(/\$\(/g, "")
+        .slice(0, 500);
+    }
+
+    function renderCartItem(item) {
+      const trimmed = (item.name || "").toString().slice(0, 80);
+      const lineTotal = formatPrice(Number(item.price) * Number(item.quantity));
+      const gradient = escapeCssUrl(item.gradient || "#1f2430");
+      return (
+        '<li class="flex gap-3">' +
+          '<div class="h-12 w-12 shrink-0 rounded-lg border border-line" style="background:' + gradient + '"></div>' +
+          '<div class="min-w-0 flex-1">' +
+            '<p class="truncate text-sm font-bold text-ink">' + escapeHtml(trimmed) + "</p>" +
+            '<p class="mt-0.5 text-[11px] uppercase tracking-[0.18em] text-ink-muted">Qty ' +
+            escapeHtml(String(item.quantity)) +
+            "</p>" +
+            '<div class="mt-1 flex items-center justify-between text-xs text-ink-muted">' +
+            "<span>" + lineTotal + "</span>" +
+            '<button type="button" data-remove="' + escapeHtml(String(item.slug)) + '" class="font-black uppercase tracking-[0.18em] text-ink-muted transition hover:text-red-400">Remove</button>' +
+            "</div>" +
+          "</div>" +
+        "</li>"
+      );
+    }
+
+    function renderPopover() {
+      const items = readItems();
+      const count = items.reduce((sum, i) => sum + Number(i.quantity || 0), 0);
+      const total = items.reduce((sum, i) => sum + Number(i.price) * Number(i.quantity), 0);
+
+      const header =
+        '<header class="flex items-center justify-between border-b border-line px-4 py-3">' +
+        '<p class="text-xs font-black uppercase tracking-[0.18em] text-ink-muted">Cart</p>' +
+        '<p class="text-xs font-black uppercase tracking-[0.18em] text-ink">' +
+        count + " " + (count === 1 ? "item" : "items") +
+        "</p>" +
+        "</header>";
+
+      let body;
+      if (items.length === 0) {
+        body =
+          '<div class="px-4 py-6 text-center">' +
+            '<p class="text-base font-black text-ink">Your cart is empty.</p>' +
+            '<p class="mt-1 text-xs text-ink-muted">Add a product to see it here.</p>' +
+            '<a href="/store" data-close-cart class="mt-4 inline-flex items-center justify-center rounded-full bg-accent px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-white shadow-[0_0_22px_rgba(0,162,255,0.35)] transition hover:bg-accent-bright">Browse store</a>' +
+          "</div>";
+      } else {
+        const list = items
+          .slice(0, 4)
+          .map(renderCartItem)
+          .join("");
+        const more =
+          items.length > 4
+            ? '<li><a href="/cart" data-close-cart class="block text-center text-xs font-black uppercase tracking-[0.18em] text-ink-muted transition hover:text-accent">+' +
+              (items.length - 4) + " more — view cart</a></li>"
+            : "";
+        const footer =
+          '<footer class="border-t border-line bg-bg-soft/80 px-4 py-3">' +
+            '<div class="flex justify-between text-sm"><span class="font-bold text-ink">Subtotal</span><span class="font-black text-accent drop-shadow-[0_0_8px_rgba(0,162,255,0.25)]">' +
+            formatPrice(total) +
+            "</span></div>" +
+            '<div class="mt-3 grid grid-cols-2 gap-2">' +
+              '<a href="/cart" data-close-cart class="rounded-full border border-line px-3 py-2 text-center text-xs font-black uppercase tracking-[0.18em] text-ink transition hover:border-accent/40 hover:text-accent">View cart</a>' +
+              '<a href="/checkout" data-close-cart class="rounded-full bg-accent px-3 py-2 text-center text-xs font-black uppercase tracking-[0.18em] text-white shadow-[0_0_22px_rgba(0,162,255,0.35)] transition hover:bg-accent-bright">Checkout</a>' +
+            "</div>" +
+            '<p class="mt-2 text-[10px] leading-tight text-ink-muted">Instant digital download · secure checkout</p>' +
+          "</footer>";
+        body =
+          '<ul class="max-h-72 space-y-3 overflow-auto px-4 py-3">' + list + more + "</ul>" + footer;
+      }
+
+      return header + body;
+    }
+
+    let popoverEl = null;
+    function ensurePopover() {
+      if (popoverEl) return popoverEl;
+      const root = document.createElement("div");
+      root.id = "krt-cart-popover";
+      root.setAttribute("role", "dialog");
+      root.setAttribute("aria-label", "Shopping cart preview");
+      root.className =
+        "fixed right-2 top-[68px] z-[60] hidden w-[min(22rem,calc(100vw-1rem))] origin-top-right rounded-2xl border border-line bg-bg-soft/95 shadow-[0_18px_44px_rgba(0,0,0,0.55)] backdrop-blur-xl";
+      root.hidden = true;
+      document.body.appendChild(root);
+      popoverEl = root;
+      return root;
+    }
+
+    function openPopover() {
+      const root = ensurePopover();
+      root.innerHTML = renderPopover();
+      requestAnimationFrame(() => {
+        root.hidden = false;
+        root.classList.remove("hidden");
+        root.classList.add("flex");
+        root.classList.add("flex-col");
+      });
+    }
+    function closePopover() {
+      const root = popoverEl;
+      if (!root) return;
+      root.hidden = true;
+      root.classList.add("hidden");
+      root.classList.remove("flex");
+      root.classList.remove("flex-col");
+    }
+
+    document.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      if (target.closest("[data-close-cart]") || target.closest('button[data-remove]')) {
+        closePopover();
+      }
+      if (target.closest("button[data-remove]")) {
+        const slug = target.getAttribute("data-remove") || "";
+        if (!slug) return;
+        try {
+          const items = readItems();
+          const next = items.filter((i) => i.slug !== slug);
+          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+          window.dispatchEvent(new Event("cart:update"));
+        } catch (e) {
+          /* ignore */
+        }
+        return;
+      }
+      if (target.closest("[data-open-search]")) {
+        const evt = new CustomEvent("krt:open-search");
+        window.dispatchEvent(evt);
+      }
+      if (target.closest("[data-open-cart]")) {
+        event.preventDefault();
+        event.stopPropagation();
+        openPopover();
+      }
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        closePopover();
+      }
+      if ((event.key === "k" || event.key === "K") && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        const evt = new CustomEvent("krt:open-search");
+        window.dispatchEvent(evt);
+      }
+    });
+
+    document.addEventListener("mousedown", (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const root = popoverEl;
+      if (!root || root.hidden) return;
+      if (root.contains(target)) return;
+      if (target.closest("[data-open-cart]")) return;
+      closePopover();
+    });
+
+    // ============ Mobile menu toggle ============
+    const panel = document.querySelector("[data-mobile-panel]");
+    const trigger = document.querySelector("[data-mobile-trigger]");
+    if (panel) {
+      const setOpen = (open) => {
+        panel.classList.toggle("hidden", !open);
+        if (trigger) trigger.setAttribute("aria-expanded", String(open));
+      };
+      window.addEventListener("krt:toggle-menu", () => {
+        const isOpen = !panel.classList.contains("hidden");
+        setOpen(!isOpen);
+      });
+      panel.querySelectorAll("a").forEach((anchor) =>
+        anchor.addEventListener("click", () => {
+          panel.classList.add("hidden");
+          if (trigger) trigger.setAttribute("aria-expanded", "false");
+        })
+      );
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !panel.classList.contains("hidden")) {
+          setOpen(false);
+        }
+      });
+    }
+  })();
+</script> <main id="main"> <section class="relative overflow-hidden pt-12 sm:pt-16"> <div class="container mx-auto px-4 sm:px-6 lg:px-8"> <div class="grid items-start gap-10 lg:grid-cols-[1.1fr_0.9fr]"> <div> <p class="mb-6 inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-accent shadow-[0_0_24px_rgba(0,162,255,0.18)]"> <span class="h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_10px_rgba(0,162,255,0.7)]"></span>
+Premium store · free extras
+</p> <h1 class="max-w-4xl text-5xl font-black tracking-[-0.06em] text-ink sm:text-7xl lg:text-8xl">
+One shop, two libraries.
+</h1> <p class="mt-7 max-w-2xl text-base leading-8 text-ink-muted sm:text-lg">
+KRT store ships a paid store with 12 premium tools and a free extras library with 6+ downloads — cheatsheets, swatches, starter files. No subscriptions, no clutter.
+</p> <div class="mt-7"> <ul class="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs font-bold text-ink-muted"><li class="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.18em]"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="h-3.5 w-3.5 shrink-0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM9 12l2 2 4-4"></path></svg>Secure checkout</li><li class="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.18em]"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="h-3.5 w-3.5 shrink-0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h7v8l11-13h-8z"></path></svg>Instant download</li><li class="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.18em]"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="h-3.5 w-3.5 shrink-0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 16.93-3L21 8M21 3v5h-5M21 12a9 9 0 0 1-16.93 3L3 16M3 21v-5h5"></path></svg>Lifetime updates</li><li class="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.18em]"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="h-3.5 w-3.5 shrink-0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 16.93-3L21 8M21 3v5h-5M21 12a9 9 0 0 1-16.93 3L3 16M3 21v-5h5"></path></svg>30-day refund</li></ul> </div> <div class="mt-9 flex flex-col gap-3 sm:flex-row"> <a class="gumroad-button " href="/store">Open the store</a> <a class="inline-flex items-center justify-center gap-2 rounded-full border border-line bg-surface/60 px-5 py-3 text-sm font-bold text-ink transition hover:border-accent/40 hover:bg-surface-bright hover:text-ink hover:shadow-[0_0_22px_rgba(0,162,255,0.18)] focus-visible:outline-none " href="/extras">Browse free extras</a> </div> </div> <aside class="grid gap-4"> <a href="/store" class="group block rounded-3xl border border-line bg-surface/70 p-6 shadow-soft transition hover:-translate-y-1 hover:border-accent/40 hover:shadow-[0_0_28px_rgba(0,162,255,0.18)]"> <div class="flex items-center justify-between"> <p class="text-xs font-black uppercase tracking-[0.24em] text-accent">Store</p> <span class="text-xs font-bold text-ink-muted">12 items</span> </div> <h2 class="mt-3 text-2xl font-black tracking-[-0.05em] text-ink transition-colors group-hover:text-accent">
+Premium tools.
+</h2> <p class="mt-2 text-sm leading-7 text-ink-muted">
+Plugins, templates, design systems, icon packs, and learning kits. Paid, perpetual license.
+</p> <p class="mt-4 inline-flex items-center gap-2 text-sm font-black text-accent">
+Open store <span>→</span> </p> </a> <a href="/extras" class="group block rounded-3xl border border-line bg-surface/70 p-6 shadow-soft transition hover:-translate-y-1 hover:border-accent/40 hover:shadow-[0_0_28px_rgba(0,162,255,0.18)]"> <div class="flex items-center justify-between"> <p class="text-xs font-black uppercase tracking-[0.24em] text-accent">Extras</p> <span class="text-xs font-bold text-ink-muted">6+ downloads</span> </div> <h2 class="mt-3 text-2xl font-black tracking-[-0.05em] text-ink transition-colors group-hover:text-accent">
+Free downloads.
+</h2> <p class="mt-2 text-sm leading-7 text-ink-muted">
+Cheatsheets, swatches, starter files, and small utilities. Open source and free to use.
+</p> <p class="mt-4 inline-flex items-center gap-2 text-sm font-black text-accent">
+Browse extras <span>→</span> </p> </a> </aside> </div> </div> </section> <astro-island uid="lA7KM" prefix="r8" component-url="/_astro/FAQAndBundle.BNXyE4QH.js" component-export="default" renderer-url="/_astro/client.nFz3bvDj.js" props="{}" ssr client="load" opts="{&quot;name&quot;:&quot;FAQAndBundle&quot;,&quot;value&quot;:true}" await-children><section class="border-y border-line/40 bg-bg-soft/50 py-16 sm:py-20"><div class="container mx-auto px-4 sm:px-6 lg:px-8"><div class="grid gap-16 lg:grid-cols-[0.9fr_1.1fr] lg:items-start"><div class=""><div class="relative overflow-hidden rounded-[1.5rem] border border-accent/30 bg-gradient-to-br from-[#0b2545] via-[#0c1e3a] to-surface p-8 shadow-[0_24px_60px_rgba(0,30,80,0.45)] sm:p-10"><div class="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-accent/30 blur-3xl"></div><div class="absolute -bottom-24 -left-10 h-56 w-56 rounded-full bg-accent-bright/20 blur-3xl"></div><div class="relative"><span class="mb-6 inline-flex items-center gap-2 rounded-full border border-accent-bright/40 bg-accent-bright/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-accent-bright"><span class="h-1.5 w-1.5 rounded-full bg-accent-bright shadow-[0_0_10px_rgba(56,189,248,0.7)]"></span>Save 40% Off</span><h3 class="text-3xl font-black tracking-[-0.05em] text-ink sm:text-4xl">Get the full KRT store Bundle</h3><p class="mt-4 text-sm leading-relaxed text-ink-muted">Every plugin, theme, design token set, and icon pack we make. Get immediate access to all current releases, lifetime updates, and priority developer support with one simple payment.</p><div class="mt-8 flex items-baseline gap-2"><span class="text-4xl font-black tracking-[-0.04em] text-ink">$149</span><span class="text-sm font-semibold text-ink-muted line-through">$249</span><span class="ml-1 text-xs font-black uppercase tracking-wider text-accent">One-time payment</span></div><div class="mt-8"><a class="gumroad-button w-full justify-center shadow-[0_0_28px_rgba(0,162,255,0.5)]" href="/store">Purchase the Bundle</a></div></div></div></div><div class=""><div><p class="mb-4 text-sm font-bold uppercase tracking-[0.28em] text-ink-muted">FAQ</p><h2 class="mb-8 text-3xl font-black tracking-[-0.06em] text-ink sm:text-4xl">Frequently asked questions.</h2><div class="border-t border-line"><div class="group border-b border-line py-5"><button type="button" class="flex w-full items-center justify-between text-left font-bold text-ink transition hover:text-accent-bright" aria-expanded="false"><span class="text-base sm:text-lg">Do I get future updates?</span><span class="ml-4 grid h-7 w-7 shrink-0 place-items-center rounded-full border border-accent/40 bg-accent/10 text-sm font-black text-accent transition " aria-hidden="true">+</span></button><div class="grid transition-all duration-300 ease-in-out grid-rows-[0fr] opacity-0"><div class="overflow-hidden"><p class="max-w-3xl text-sm leading-relaxed text-ink-muted">Yes — every purchase includes lifetime updates at no extra cost. You will be notified via email when a new version is released.</p></div></div></div><div class="group border-b border-line py-5"><button type="button" class="flex w-full items-center justify-between text-left font-bold text-ink transition hover:text-accent-bright" aria-expanded="false"><span class="text-base sm:text-lg">Can I use these on multiple sites?</span><span class="ml-4 grid h-7 w-7 shrink-0 place-items-center rounded-full border border-accent/40 bg-accent/10 text-sm font-black text-accent transition " aria-hidden="true">+</span></button><div class="grid transition-all duration-300 ease-in-out grid-rows-[0fr] opacity-0"><div class="overflow-hidden"><p class="max-w-3xl text-sm leading-relaxed text-ink-muted">Each standard license covers usage for one project/site. If you need to use them on multiple client sites or in unlimited projects, developer and agency licenses are available at checkout.</p></div></div></div><div class="group border-b border-line py-5"><button type="button" class="flex w-full items-center justify-between text-left font-bold text-ink transition hover:text-accent-bright" aria-expanded="false"><span class="text-base sm:text-lg">What&#x27;s your refund policy?</span><span class="ml-4 grid h-7 w-7 shrink-0 place-items-center rounded-full border border-accent/40 bg-accent/10 text-sm font-black text-accent transition " aria-hidden="true">+</span></button><div class="grid transition-all duration-300 ease-in-out grid-rows-[0fr] opacity-0"><div class="overflow-hidden"><p class="max-w-3xl text-sm leading-relaxed text-ink-muted">Not happy with your purchase? Email us within 30 days of purchase for a full, no-questions-asked refund. We want you to love what you build.</p></div></div></div><div class="group border-b border-line py-5"><button type="button" class="flex w-full items-center justify-between text-left font-bold text-ink transition hover:text-accent-bright" aria-expanded="false"><span class="text-base sm:text-lg">Is technical support included?</span><span class="ml-4 grid h-7 w-7 shrink-0 place-items-center rounded-full border border-accent/40 bg-accent/10 text-sm font-black text-accent transition " aria-hidden="true">+</span></button><div class="grid transition-all duration-300 ease-in-out grid-rows-[0fr] opacity-0"><div class="overflow-hidden"><p class="max-w-3xl text-sm leading-relaxed text-ink-muted">Absolutely. We pride ourselves on fast, helpful, human-led support. Every customer gets direct access to help, with replies guaranteed within 24 hours.</p></div></div></div></div></div></div></div></div></section><!--astro:end--></astro-island> <astro-island uid="1M62UA" prefix="r9" component-url="/_astro/ContactCTA.ClnEiZWf.js" component-export="default" renderer-url="/_astro/client.nFz3bvDj.js" props="{}" ssr client="load" opts="{&quot;name&quot;:&quot;ContactCTA&quot;,&quot;value&quot;:true}" await-children><section id="contact" class="relative overflow-hidden bg-bg-soft/40 py-16 sm:py-20"><div class="pointer-events-none absolute -left-32 top-10 h-72 w-72 rounded-full bg-accent/20 blur-3xl"></div><div class="pointer-events-none absolute -right-24 bottom-0 h-72 w-72 rounded-full bg-accent-bright/15 blur-3xl"></div><div class="container relative mx-auto px-4 sm:px-6 lg:px-8"><div class=""><div class="glass-card relative overflow-hidden p-6 sm:p-10 lg:p-14"><div class="absolute right-0 top-0 h-72 w-72 rounded-full bg-accent/15 blur-3xl"></div><div class="absolute -left-10 bottom-0 h-60 w-60 rounded-full bg-accent-bright/10 blur-3xl"></div><div class="relative grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center"><div><p class="text-sm font-bold uppercase tracking-[0.28em] text-ink-muted">Digital goods store</p><h2 class="mt-4 max-w-3xl text-4xl font-black tracking-[-0.06em] text-ink sm:text-6xl">Premium tools that ship once and work forever.</h2><ul class="mt-7 grid gap-3 text-base leading-8 text-ink-muted md:grid-cols-2"><li class="flex items-start gap-3"><span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent shadow-[0_0_10px_rgba(0,162,255,0.7)]"></span><span>Instant download after purchase</span></li><li class="flex items-start gap-3"><span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent shadow-[0_0_10px_rgba(0,162,255,0.7)]"></span><span>Perpetual license, no subscriptions</span></li><li class="flex items-start gap-3"><span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent shadow-[0_0_10px_rgba(0,162,255,0.7)]"></span><span>Free updates within the major version</span></li><li class="flex items-start gap-3"><span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent shadow-[0_0_10px_rgba(0,162,255,0.7)]"></span><span>Email support and refund guarantee</span></li></ul></div><div class="flex flex-col gap-3 sm:flex-row lg:flex-col"><a class="gumroad-button " href="/store">Browse the store</a><a class="inline-flex items-center justify-center gap-2 rounded-full border border-line bg-surface/60 px-5 py-3 text-sm font-bold text-ink transition hover:border-accent/40 hover:bg-surface-bright hover:text-ink hover:shadow-[0_0_22px_rgba(0,162,255,0.18)] focus-visible:outline-none " href="/extras">Free extras</a></div></div></div></div></div></section><!--astro:end--></astro-island> </main> <astro-island uid="Z1D9kWi" prefix="r10" component-url="/_astro/Footer.B2ds2EV5.js" component-export="default" renderer-url="/_astro/client.nFz3bvDj.js" props="{}" ssr client="load" opts="{&quot;name&quot;:&quot;Footer&quot;,&quot;value&quot;:true}" await-children><footer class="border-t border-line bg-bg-soft"><div class="border-b border-line/60"><div class="container mx-auto grid gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[1.1fr_1fr] lg:items-center lg:py-14 lg:px-8"><div><p class="text-xs font-black uppercase tracking-[0.28em] text-accent">Stay in the loop</p><h2 class="mt-3 text-2xl font-black tracking-[-0.05em] text-ink sm:text-3xl">Get the newsletter.</h2><p class="mt-2 max-w-md text-sm leading-relaxed text-ink-muted">Quiet product launches, occasional discounts, and shipping notes. No spam — about one email a month.</p></div><form class="flex w-full max-w-md flex-col gap-2 sm:flex-row sm:items-center lg:justify-self-end"><label class="sr-only" for="newsletter-email">Email address</label><input id="newsletter-email" type="email" required="" placeholder="you@studio.com" class="h-12 w-full rounded-full border border-line bg-surface-ink px-5 text-sm text-ink placeholder-ink-muted outline-none transition focus:border-accent focus:bg-surface-bright focus:ring-1 focus:ring-accent"/><button type="submit" class="inline-flex h-12 items-center justify-center rounded-full bg-accent px-5 text-sm font-black text-white shadow-[0_0_22px_rgba(0,162,255,0.35)] transition hover:bg-accent-bright hover:shadow-[0_0_30px_rgba(0,162,255,0.55)] sm:shrink-0">Subscribe</button></form></div></div><div class="container mx-auto grid gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.1fr_repeat(4,minmax(0,1fr))] lg:gap-10 lg:py-16 lg:px-8"><div><a href="/" class="inline-flex items-center gap-3 rounded-full px-2 py-1 transition hover:bg-slate-800/40" aria-label="KRT store home"><span class="grid h-9 w-9 place-items-center rounded-xl bg-accent font-black text-ink-inverse shadow-[0_0_18px_rgba(0,162,255,0.45)]">K</span><span class="text-base font-black tracking-[-0.04em] text-ink">KRT store</span></a><p class="mt-5 max-w-xs text-sm leading-7 text-ink-muted">Premium plugins, templates, and design assets crafted for designers and engineers who care about craft. Pay once, own forever, update free.</p></div><div><p class="text-xs font-black uppercase tracking-[0.24em] text-ink-muted">Shop</p><ul class="mt-4 space-y-3 text-sm"><li><a href="/store" class="text-ink-muted transition hover:text-ink">Store</a></li><li><a href="/extras" class="text-ink-muted transition hover:text-ink">Free extras</a></li><li><a href="/" class="text-ink-muted transition hover:text-ink">Home</a></li></ul></div><div><p class="text-xs font-black uppercase tracking-[0.24em] text-ink-muted">Help</p><ul class="mt-4 space-y-3 text-sm"><li><a href="/#contact" class="text-ink-muted transition hover:text-ink">Contact</a></li><li><a href="mailto:hello@krt.example" class="text-ink-muted transition hover:text-ink">Email support</a></li><li><a href="/#faq" class="text-ink-muted transition hover:text-ink">FAQ</a></li><li><a href="/#bundle" class="text-ink-muted transition hover:text-ink">Bundle deal</a></li></ul></div><div><p class="text-xs font-black uppercase tracking-[0.24em] text-ink-muted">Account</p><ul class="mt-4 space-y-3 text-sm"><li><a href="/login" class="text-ink-muted transition hover:text-ink">Sign in</a></li><li><a href="/signup" class="text-ink-muted transition hover:text-ink">Create account</a></li><li><a href="/profile" class="text-ink-muted transition hover:text-ink">Profile</a></li><li><a href="/settings" class="text-ink-muted transition hover:text-ink">Settings</a></li><li><a href="/cart" class="text-ink-muted transition hover:text-ink">Cart</a></li><li><a href="/checkout" class="text-ink-muted transition hover:text-ink">Checkout</a></li></ul></div><div><p class="text-xs font-black uppercase tracking-[0.24em] text-ink-muted">Company</p><ul class="mt-4 space-y-3 text-sm"><li><a href="/" class="text-ink-muted transition hover:text-ink">About KRT store</a></li><li><a href="/privacy" class="text-ink-muted transition hover:text-ink">Privacy</a></li><li><a href="/terms" class="text-ink-muted transition hover:text-ink">Terms of service</a></li><li><a href="/#contact" class="text-ink-muted transition hover:text-ink">Refund policy</a></li></ul></div></div><div class="border-t border-line/60"><div class="container mx-auto flex flex-col gap-3 px-4 py-6 text-xs text-ink-muted sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8"><p>© 2026 KRT store. Crafted with Inter, Tailwind, and Astro.</p><div class="flex flex-wrap gap-x-5 gap-y-2"><a href="/privacy" class="transition hover:text-ink">Privacy</a><a href="/terms" class="transition hover:text-ink">Terms</a><a href="mailto:hello@krt.example" class="transition hover:text-ink">Support</a></div></div></div></footer><!--astro:end--></astro-island>  </body></html>

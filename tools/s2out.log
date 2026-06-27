@@ -1,0 +1,3 @@
+Serving dist on http://127.0.0.1:4318
+{"recent":[{"t":1782547135330,"url":"/index.html","bytes":"sent"}]}
+{"recent":[{"t":1782547166405,"url":"/_astro/Footer.B2ds2EV5.js","bytes":"sent"},{"t":1782547166669,"url":"/_astro/jsx-runtime.D_zvdyIk.js","bytes":"sent"},{"t":1782547166670,"url":"/_astro/index.DBy5LfQW.js","bytes":"sent"},{"t":1782547166681,"url":"/_astro/Reveal.DYXztLSb.js","bytes":"sent"},{"t":1782547166683,"url":"/_astro/Button.BWoiCcAo.js","bytes":"sent"}]}
