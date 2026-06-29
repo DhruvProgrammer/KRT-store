@@ -1,5 +1,4 @@
 import Button from "./Button";
-import GlassCard from "./GlassCard";
 import Reveal from "./Reveal";
 
 const principles = [
@@ -17,7 +16,7 @@ export default function ContactCTA() {
 
       <div className="container relative mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal>
-          <GlassCard className="relative overflow-hidden p-6 sm:p-10 lg:p-14">
+          <div className="glass-card relative overflow-hidden p-6 sm:p-10 lg:p-14">
             <div className="absolute right-0 top-0 h-72 w-72 rounded-full bg-accent/15 blur-3xl" />
             <div className="absolute -left-10 bottom-0 h-60 w-60 rounded-full bg-accent-bright/10 blur-3xl" />
             <div className="relative grid gap-8 lg:grid-cols-[1fr_auto] lg:items-center">
@@ -42,7 +41,7 @@ export default function ContactCTA() {
                 </Button>
               </div>
             </div>
-          </GlassCard>
+          </div>
         </Reveal>
       </div>
     </section>

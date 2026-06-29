@@ -1,66 +1,26 @@
-import { useState } from "react";
 import Reveal from "./Reveal";
 import Button from "./Button";
 
-interface FAQItemProps {
-  question: string;
-  answer: string;
-}
-
-function FAQItem({ question, answer }: FAQItemProps) {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <div className="group border-b border-line py-5">
-      <button
-        type="button"
-        className="flex w-full items-center justify-between text-left font-bold text-ink transition hover:text-accent-bright"
-        onClick={() => setIsOpen(!isOpen)}
-        aria-expanded={isOpen}
-      >
-        <span className="text-base sm:text-lg">{question}</span>
-        <span
-          className={`ml-4 grid h-11 w-11 shrink-0 place-items-center rounded-full border border-accent/40 bg-accent/10 text-sm font-black text-accent transition ${
-            isOpen ? "rotate-45 bg-accent/20 shadow-[0_0_18px_rgba(0,162,255,0.4)]" : ""
-          }`}
-          aria-hidden="true"
-        >
-          +
-        </span>
-      </button>
-      <div
-        className={`grid transition-all duration-300 ease-in-out ${
-          isOpen ? "grid-rows-[1fr] opacity-100 mt-3" : "grid-rows-[0fr] opacity-0"
-        }`}
-      >
-        <div className="overflow-hidden">
-          <p className="max-w-3xl text-sm leading-relaxed text-ink-muted">{answer}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
+const faqs = [
+  {
+    question: "Do I get future updates?",
+    answer: "Yes — every purchase includes lifetime updates at no extra cost. You will be notified via email when a new version is released."
+  },
+  {
+    question: "Can I use these on multiple sites?",
+    answer: "Each standard license covers usage for one project/site. If you need to use them on multiple client sites or in unlimited projects, developer and agency licenses are available at checkout."
+  },
+  {
+    question: "What's your refund policy?",
+    answer: "Not happy with your purchase? Email us within 30 days of purchase for a full, no-questions-asked refund. We want you to love what you build."
+  },
+  {
+    question: "Is technical support included?",
+    answer: "Absolutely. We pride ourselves on fast, helpful, human-led support. Every customer gets direct access to help, with replies guaranteed within 24 hours."
+  }
+];
 
 export default function FAQAndBundle() {
-  const faqs = [
-    {
-      question: "Do I get future updates?",
-      answer: "Yes — every purchase includes lifetime updates at no extra cost. You will be notified via email when a new version is released."
-    },
-    {
-      question: "Can I use these on multiple sites?",
-      answer: "Each standard license covers usage for one project/site. If you need to use them on multiple client sites or in unlimited projects, developer and agency licenses are available at checkout."
-    },
-    {
-      question: "What's your refund policy?",
-      answer: "Not happy with your purchase? Email us within 30 days of purchase for a full, no-questions-asked refund. We want you to love what you build."
-    },
-    {
-      question: "Is technical support included?",
-      answer: "Absolutely. We pride ourselves on fast, helpful, human-led support. Every customer gets direct access to help, with replies guaranteed within 24 hours."
-    }
-  ];
-
   return (
     <section id="faq" className="border-y border-line/40 bg-bg-soft/50 py-16 sm:py-20">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -106,8 +66,16 @@ export default function FAQAndBundle() {
                 Frequently asked questions.
               </h2>
               <div className="border-t border-line">
-                {faqs.map((faq, i) => (
-                  <FAQItem key={i} question={faq.question} answer={faq.answer} />
+                {faqs.map((faq) => (
+                  <details key={faq.question} className="group border-b border-line py-5">
+                    <summary className="flex cursor-pointer list-none items-center justify-between text-base font-bold text-ink transition hover:text-accent-bright sm:text-lg [&::-webkit-details-marker]:hidden">
+                      <span>{faq.question}</span>
+                      <span aria-hidden="true" className="ml-4 grid h-11 w-11 shrink-0 place-items-center rounded-full border border-accent/40 bg-accent/10 text-sm font-black text-accent transition group-open:rotate-45 group-open:bg-accent/20 group-open:shadow-[0_0_18px_rgba(0,162,255,0.4)]">
+                        +
+                      </span>
+                    </summary>
+                    <p className="mt-3 max-w-3xl text-sm leading-relaxed text-ink-muted">{faq.answer}</p>
+                  </details>
                 ))}
               </div>
             </div>

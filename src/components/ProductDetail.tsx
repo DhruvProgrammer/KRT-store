@@ -59,39 +59,28 @@ function getGallery(gradient: string) {
   ];
 }
 
-interface AccordionItemProps {
-  title: string;
-  defaultOpen?: boolean;
-  children: React.ReactNode;
-}
-function AccordionItem({ title, defaultOpen, children }: AccordionItemProps) {
-  const [open, setOpen] = useState(!!defaultOpen);
+function PlusGlyph({ open }: { open: boolean }) {
   return (
-    <div className="group border-b border-line py-5">
-      <button
-        type="button"
-        className="flex w-full items-center justify-between text-left font-bold text-ink transition hover:text-accent-bright"
-        onClick={() => setOpen(!open)}
-        aria-expanded={open}
-      >
-        <span className="text-base sm:text-lg">{title}</span>
-        <span
-          className={`ml-4 grid h-11 w-11 shrink-0 place-items-center rounded-full border border-accent/40 bg-accent/10 text-sm font-black text-accent transition ${
-            open ? "rotate-45 bg-accent/20 shadow-[0_0_18px_rgba(0,162,255,0.4)]" : ""
-          }`}
-          aria-hidden="true"
-        >
-          +
-        </span>
-      </button>
-      <div
-        className={`grid transition-all duration-300 ease-in-out ${
-          open ? "grid-rows-[1fr] opacity-100 mt-3" : "grid-rows-[0fr] opacity-0"
-        }`}
-      >
-        <div className="overflow-hidden">{children}</div>
-      </div>
-    </div>
+    <span
+      aria-hidden="true"
+      className={`ml-4 grid h-11 w-11 shrink-0 place-items-center rounded-full border border-accent/40 bg-accent/10 text-sm font-black text-accent transition ${
+        open ? "rotate-45 bg-accent/20 shadow-[0_0_18px_rgba(0,162,255,0.4)]" : ""
+      }`}
+    >
+      +
+    </span>
+  );
+}
+
+function Details({ title, open, children }: { title: string; open?: boolean; children: React.ReactNode }) {
+  return (
+    <details {...(open ? { open: true } : {})} className="group border-b border-line py-5">
+      <summary className="flex cursor-pointer list-none items-center justify-between text-base font-bold text-ink transition hover:text-accent-bright sm:text-lg [&::-webkit-details-marker]:hidden">
+        <span>{title}</span>
+        <PlusGlyph open={!!open} />
+      </summary>
+      <div className="mt-3">{children}</div>
+    </details>
   );
 }
 
@@ -503,10 +492,10 @@ export default function ProductDetail({ product }: ProductDetailProps) {
         <section className="mt-16 border-t border-line pt-10">
           <h2 className="mb-6 text-2xl font-black tracking-[-0.06em] text-ink">Product details</h2>
           <div className="border-t border-line">
-            <AccordionItem title="Description" defaultOpen>
+            <Details title="Description" open>
               <p className="max-w-3xl text-sm leading-relaxed text-ink-muted">{product.longDescription}</p>
-            </AccordionItem>
-            <AccordionItem title={`Features (${product.features.length})`} defaultOpen>
+            </Details>
+            <Details title={`Features (${product.features.length})`} open>
               <ul className="grid max-w-3xl gap-2 sm:grid-cols-2">
                 {product.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-2 text-sm leading-7 text-ink-muted">
@@ -515,8 +504,8 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                   </li>
                 ))}
               </ul>
-            </AccordionItem>
-            <AccordionItem title="Requirements & compatibility">
+            </Details>
+            <Details title="Requirements & compatibility">
               <ul className="flex flex-wrap gap-2">
                 {product.compatibility.map((c) => (
                   <li
@@ -527,8 +516,8 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                   </li>
                 ))}
               </ul>
-            </AccordionItem>
-            <AccordionItem title="Specifications">
+            </Details>
+            <Details title="Specifications">
               <table className="w-full max-w-3xl text-sm">
                 <tbody className="divide-y divide-line/60">
                   <tr>
@@ -557,8 +546,8 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                   </tr>
                 </tbody>
               </table>
-            </AccordionItem>
-            <AccordionItem title="Changelog">
+            </Details>
+            <Details title="Changelog">
               <ul className="space-y-3 text-sm text-ink-muted">
                 <li className="flex gap-3">
                   <span className="mt-0.5 shrink-0 rounded-full border border-accent/30 bg-accent/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.22em] text-accent">
@@ -579,13 +568,13 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                   </div>
                 </li>
               </ul>
-            </AccordionItem>
-            <AccordionItem title="Support & documentation">
+            </Details>
+            <Details title="Support & documentation">
               <p className="max-w-3xl text-sm text-ink-muted">
                 48-hour response on business days. A complete knowledge base ships with the download. Migration guides and example projects are linked from the README.
               </p>
-            </AccordionItem>
-            <AccordionItem title="Frequently asked questions">
+            </Details>
+            <Details title="Frequently asked questions">
               <div className="grid max-w-3xl gap-4">
                 <div>
                   <p className="text-sm font-bold text-ink">Can I use this on client projects?</p>
@@ -606,7 +595,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                   </p>
                 </div>
               </div>
-            </AccordionItem>
+            </Details>
           </div>
         </section>
       </Reveal>
