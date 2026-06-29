@@ -1,0 +1,40 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "🔄 Auto-commit & push (file watcher)",
+      "type": "shell",
+      "command": "node",
+      "args": ["scripts/auto-commit.js"],
+      "detail": "Watches src/ for changes and auto-commits + pushes to origin/main",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "icon": {
+        "id": "sync",
+        "color": "terminal.ansiGreen"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "close": false
+      },
+      "isBackground": true,
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "📤 Manual push",
+      "type": "shell",
+      "command": "git add . && git commit -m 'manual update' && git push",
+      "group": "build",
+      "presentation": {
+        "reveal": "always"
+      },
+      "problemMatcher": []
+    }
+  ]
+}
