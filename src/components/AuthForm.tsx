@@ -150,7 +150,7 @@ function PasswordInput({
           onClick={() => setShown((v) => !v)}
           aria-label={shown ? "Hide password" : "Show password"}
           aria-pressed={shown}
-          className="absolute right-4 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-md text-ink-muted transition hover:bg-surface-bright hover:text-ink"
+          className="absolute right-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-md text-ink-muted transition hover:bg-surface-bright hover:text-ink"
         >
           {shown ? <EyeOffIcon /> : <EyeIcon />}
         </button>

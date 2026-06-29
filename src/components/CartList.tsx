@@ -100,7 +100,7 @@ function QuantityStepper({
   const dec = () => onChange(Math.max(1, value - 1));
   const inc = () => onChange(Math.min(99, value + 1));
   const stepBtn =
-    "grid h-9 w-9 place-items-center rounded-full border border-line bg-surface-ink text-ink transition hover:border-accent/40 hover:text-accent disabled:cursor-not-allowed disabled:opacity-30";
+    "grid h-11 w-11 place-items-center rounded-full border border-line bg-surface-ink text-ink transition hover:border-accent/40 hover:text-accent disabled:cursor-not-allowed disabled:opacity-30";
   return (
     <div className="inline-flex items-center gap-1 rounded-full border border-line bg-surface-ink p-1">
       <button

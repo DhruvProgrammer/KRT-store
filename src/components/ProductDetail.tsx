@@ -90,7 +90,7 @@ function AccordionItem({ title, defaultOpen, children }: AccordionItemProps) {
       >
         <span className="text-base sm:text-lg">{title}</span>
         <span
-          className={`ml-4 grid h-7 w-7 shrink-0 place-items-center rounded-full border border-accent/40 bg-accent/10 text-sm font-black text-accent transition ${
+          className={`ml-4 grid h-11 w-11 shrink-0 place-items-center rounded-full border border-accent/40 bg-accent/10 text-sm font-black text-accent transition ${
             open ? "rotate-45 bg-accent/20 shadow-[0_0_18px_rgba(0,162,255,0.4)]" : ""
           }`}
           aria-hidden="true"

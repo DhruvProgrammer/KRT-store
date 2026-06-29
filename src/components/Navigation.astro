@@ -68,7 +68,7 @@ const searchExtras: SearchExtra[] = extras.map((e) => ({
     <div class="hidden items-center gap-2 md:flex">
       <a
         href="/login"
-        class="inline-flex h-10 items-center gap-2 rounded-full border border-line bg-surface-ink px-4 text-xs font-bold text-ink-muted transition hover:border-accent/40 hover:bg-surface-bright hover:text-ink"
+        class="inline-flex h-11 items-center gap-2 rounded-full border border-line bg-surface-ink px-4 text-xs font-bold text-ink-muted transition hover:border-accent/40 hover:bg-surface-bright hover:text-ink"
       >
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="h-4 w-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -82,7 +82,7 @@ const searchExtras: SearchExtra[] = extras.map((e) => ({
         data-open-search
         aria-label="Open search"
         title="Search (⌘K)"
-        class="hidden h-10 items-center gap-2 rounded-full border border-line bg-surface-ink px-4 text-xs font-bold text-ink-muted transition hover:border-accent/40 hover:bg-surface-bright lg:inline-flex"
+        class="hidden h-11 items-center gap-2 rounded-full border border-line bg-surface-ink px-4 text-xs font-bold text-ink-muted transition hover:border-accent/40 hover:bg-surface-bright lg:inline-flex"
       >
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="h-5 w-5">
           <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" />
@@ -97,7 +97,7 @@ const searchExtras: SearchExtra[] = extras.map((e) => ({
       <a
         href="/cart"
         aria-label="Open cart"
-        class="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface-ink text-ink transition hover:border-accent/40 hover:bg-surface-bright"
+        class="relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-surface-ink text-ink transition hover:border-accent/40 hover:bg-surface-bright"
       >
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="h-5 w-5">
           <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -125,7 +125,7 @@ const searchExtras: SearchExtra[] = extras.map((e) => ({
         data-open-search
         aria-label="Open search"
         title="Search (⌘K)"
-        class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface-ink text-ink transition hover:border-accent/40 hover:bg-surface-bright"
+        class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-surface-ink text-ink transition hover:border-accent/40 hover:bg-surface-bright"
       >
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="h-5 w-5">
           <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" />
@@ -136,7 +136,7 @@ const searchExtras: SearchExtra[] = extras.map((e) => ({
       <a
         href="/cart"
         aria-label="Open cart"
-        class="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface-ink text-ink transition hover:border-accent/40 hover:bg-surface-bright"
+        class="relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-surface-ink text-ink transition hover:border-accent/40 hover:bg-surface-bright"
       >
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="h-5 w-5">
           <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -169,17 +169,17 @@ const searchExtras: SearchExtra[] = extras.map((e) => ({
       {links.map((link) => (
         <a
           href={link.href}
-          class="rounded-2xl px-4 py-3 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink"
+          class="rounded-2xl px-4 py-3.5 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink"
         >
           {link.label}
         </a>
       ))}
 
       <p class="mt-4 px-2 text-[11px] font-black uppercase tracking-[0.2em] text-ink-muted">Account</p>
-      <a href="/login" class="rounded-2xl px-4 py-3 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Sign in</a>
-      <a href="/signup" class="rounded-2xl px-4 py-3 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Create account</a>
-      <a href="/profile" class="rounded-2xl px-4 py-3 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Profile</a>
-      <a href="/settings" class="rounded-2xl px-4 py-3 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Settings</a>
+      <a href="/login" class="rounded-2xl px-4 py-3.5 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Sign in</a>
+      <a href="/signup" class="rounded-2xl px-4 py-3.5 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Create account</a>
+      <a href="/profile" class="rounded-2xl px-4 py-3.5 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Profile</a>
+      <a href="/settings" class="rounded-2xl px-4 py-3.5 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Settings</a>
       <a href="/cart" class="rounded-2xl px-4 py-3 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Cart</a>
 
       <a href="/store" class="mt-4 rounded-2xl bg-accent px-4 py-3 text-center text-sm font-black text-white shadow-[0_0_22px_rgba(0,162,255,0.35)] transition hover:bg-accent-bright">
