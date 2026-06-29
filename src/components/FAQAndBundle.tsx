@@ -62,12 +62,12 @@ export default function FAQAndBundle() {
   ];
 
   return (
-    <section className="border-y border-line/40 bg-bg-soft/50 py-16 sm:py-20">
+    <section id="faq" className="border-y border-line/40 bg-bg-soft/50 py-16 sm:py-20">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid gap-16 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
           {/* Bundle Column */}
           <Reveal>
-            <div className="relative overflow-hidden rounded-[1.5rem] border border-accent/30 bg-gradient-to-br from-[#0b2545] via-[#0c1e3a] to-surface p-8 shadow-[0_24px_60px_rgba(0,30,80,0.45)] sm:p-10">
+            <div id="bundle" className="relative overflow-hidden rounded-[1.5rem] border border-accent/30 bg-gradient-to-br from-[#0b2545] via-[#0c1e3a] to-surface p-8 shadow-[0_24px_60px_rgba(0,30,80,0.45)] sm:p-10">
               <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-accent/30 blur-3xl" />
               <div className="absolute -bottom-24 -left-10 h-56 w-56 rounded-full bg-accent-bright/20 blur-3xl" />
               <div className="relative">

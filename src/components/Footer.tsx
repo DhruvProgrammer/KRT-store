@@ -22,14 +22,13 @@ const linkGroups = [
       { href: "/signup", label: "Create account" },
       { href: "/profile", label: "Profile" },
       { href: "/settings", label: "Settings" },
-      { href: "/cart", label: "Cart" },
-      { href: "/checkout", label: "Checkout" }
+      { href: "/cart", label: "Cart" }
     ]
   },
   {
     title: "Company",
     links: [
-      { href: "/", label: "About KRT store" },
+      { href: "/#contact", label: "About KRT store" },
       { href: "/privacy", label: "Privacy" },
       { href: "/terms", label: "Terms of service" }
     ]

@@ -3,6 +3,7 @@ import Button from "./Button";
 import Reveal from "./Reveal";
 import TrustMicroBar from "./TrustMicroBar";
 import type { ExtraItem } from "../data/extras";
+import { extras } from "../data/extras";
 
 function DownloadIcon() {
   return (
@@ -67,6 +68,27 @@ function AccordionItem({ title, children }: AccordionItemProps) {
 }
 
 export default function ExtraDetail({ item }: { item: ExtraItem }) {
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownload = () => {
+    const content = `KRT store - ${item.name}\n\n${item.description}\n\nFormat: ${item.format}\nSize: ${item.size}\n\nThis is a prototype placeholder file. In production this would be the real download.`;
+    try {
+      const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${item.slug}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setDownloading(true);
+      window.setTimeout(() => setDownloading(false), 1800);
+    } catch {
+      /* ignore */
+    }
+  };
+
   return (
     <article>
       <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
@@ -120,11 +142,11 @@ export default function ExtraDetail({ item }: { item: ExtraItem }) {
 
               <div className="mt-5 flex flex-col gap-3 sm:flex-row">
                 <Button
-                  href={`/extras/${item.slug}.${item.fileType}`}
+                  onClick={handleDownload}
                   className="w-full justify-center shadow-[0_0_28px_rgba(0,162,255,0.4)]"
                 >
                   <DownloadIcon />
-                  <span className="ml-2">Download {item.format}</span>
+                  <span className="ml-2">{downloading ? "Downloading..." : `Download ${item.format}`}</span>
                 </Button>
                 <Button variant="secondary" href="/extras" className="w-full justify-center">
                   Browse extras
