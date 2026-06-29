@@ -31,42 +31,6 @@ const fileTypeLabel: Record<ExtraItem["fileType"], string> = {
   md: "MD"
 };
 
-interface AccordionItemProps {
-  title: string;
-  children: React.ReactNode;
-}
-
-function AccordionItem({ title, children }: AccordionItemProps) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="group border-b border-line py-5">
-      <button
-        type="button"
-        className="flex w-full items-center justify-between text-left font-bold text-ink transition hover:text-accent-bright"
-        onClick={() => setOpen(!open)}
-        aria-expanded={open}
-      >
-        <span className="text-base sm:text-lg">{title}</span>
-        <span
-          className={`ml-4 grid h-7 w-7 shrink-0 place-items-center rounded-full border border-accent/40 bg-accent/10 text-sm font-black text-accent transition ${
-            open ? "rotate-45 bg-accent/20 shadow-[0_0_18px_rgba(0,162,255,0.4)]" : ""
-          }`}
-          aria-hidden="true"
-        >
-          +
-        </span>
-      </button>
-      <div
-        className={`grid transition-all duration-300 ease-in-out ${
-          open ? "grid-rows-[1fr] opacity-100 mt-3" : "grid-rows-[0fr] opacity-0"
-        }`}
-      >
-        <div className="overflow-hidden">{children}</div>
-      </div>
-    </div>
-  );
-}
-
 export default function ExtraDetail({ item }: { item: ExtraItem }) {
   const [downloading, setDownloading] = useState(false);
 
@@ -94,7 +58,6 @@ export default function ExtraDetail({ item }: { item: ExtraItem }) {
       <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
         <Reveal>
           <div className="overflow-hidden rounded-[2rem] border border-line">
-            {/* SECURITY: `gradient` is static data from `src/data/extras.ts`. */}
             <div
               className="aspect-[4/3] sm:aspect-[16/10]"
               style={{ background: item.gradient }}
@@ -164,25 +127,37 @@ export default function ExtraDetail({ item }: { item: ExtraItem }) {
       <section className="mt-16 border-t border-line pt-10">
         <h2 className="mb-4 text-2xl font-black tracking-[-0.06em] text-ink">About this extra</h2>
         <div className="border-t border-line">
-          <AccordionItem title={`What's included`}>
-            <ul className="space-y-2 text-sm text-ink-muted">
+          <details className="group border-b border-line py-5">
+            <summary className="flex cursor-pointer list-none items-center justify-between text-base font-bold text-ink transition hover:text-accent-bright sm:text-lg [&::-webkit-details-marker]:hidden">
+              <span>What's included</span>
+              <span aria-hidden="true" className="ml-4 grid h-7 w-7 shrink-0 place-items-center rounded-full border border-accent/40 bg-accent/10 text-sm font-black text-accent transition group-open:rotate-45 group-open:bg-accent/20 group-open:shadow-[0_0_18px_rgba(0,162,255,0.4)]">+</span>
+            </summary>
+            <ul className="mt-3 space-y-2 text-sm text-ink-muted">
               <li>· The {item.format} file ({item.size})</li>
               <li>· Plain-language usage notes in the file itself</li>
               <li>· Free to use in personal and commercial work, no attribution required</li>
             </ul>
-          </AccordionItem>
-          <AccordionItem title="How to use">
-            <p className="max-w-3xl text-sm text-ink-muted">
+          </details>
+          <details className="group border-b border-line py-5">
+            <summary className="flex cursor-pointer list-none items-center justify-between text-base font-bold text-ink transition hover:text-accent-bright sm:text-lg [&::-webkit-details-marker]:hidden">
+              <span>How to use</span>
+              <span aria-hidden="true" className="ml-4 grid h-7 w-7 shrink-0 place-items-center rounded-full border border-accent/40 bg-accent/10 text-sm font-black text-accent transition group-open:rotate-45 group-open:bg-accent/20 group-open:shadow-[0_0_18px_rgba(0,162,255,0.4)]">+</span>
+            </summary>
+            <p className="mt-3 max-w-3xl text-sm text-ink-muted">
               Click the download button and the file opens directly. If your browser opens instead of saving, use
               <span className="mx-1 rounded-md border border-line bg-surface-ink px-2 py-0.5 font-mono text-xs">⌘/Ctrl+S</span>
               to save it.
             </p>
-          </AccordionItem>
-          <AccordionItem title="License">
-            <p className="max-w-3xl text-sm text-ink-muted">
+          </details>
+          <details className="group border-b border-line py-5">
+            <summary className="flex cursor-pointer list-none items-center justify-between text-base font-bold text-ink transition hover:text-accent-bright sm:text-lg [&::-webkit-details-marker]:hidden">
+              <span>License</span>
+              <span aria-hidden="true" className="ml-4 grid h-7 w-7 shrink-0 place-items-center rounded-full border border-accent/40 bg-accent/10 text-sm font-black text-accent transition group-open:rotate-45 group-open:bg-accent/20 group-open:shadow-[0_0_18px_rgba(0,162,255,0.4)]">+</span>
+            </summary>
+            <p className="mt-3 max-w-3xl text-sm text-ink-muted">
               Free to download, modify, and use in commercial projects. Do not redistribute as a paid product.
             </p>
-          </AccordionItem>
+          </details>
         </div>
       </section>
 

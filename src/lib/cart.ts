@@ -10,7 +10,6 @@ export interface CartItem {
 }
 
 const STORAGE_KEY = "dg-cart";
-const SAVED_KEY = "dg-saved-for-later";
 const PAYMENT_KEY = "dg-payment-method";
 const MAX_PRICE = 100000;
 const MAX_QUANTITY = 99;
@@ -44,7 +43,6 @@ const listeners = new Set<Listener>();
 // Cached snapshots — getSnapshot must return a stable reference, otherwise
 // useSyncExternalStore loops forever. We refresh these only inside `emit()`.
 let cartSnapshot: CartItem[] = [];
-let savedSnapshot: CartItem[] = [];
 let paymentSnapshot: PaymentMethod = "stripe";
 
 function isPaymentMethod(value: string): value is PaymentMethod {
@@ -55,7 +53,6 @@ function emit() {
   // Refresh snapshots from localStorage so getSnapshot returns a stable
   // reference between emits.
   cartSnapshot = readKey(STORAGE_KEY);
-  savedSnapshot = readKey(SAVED_KEY);
   if (typeof window !== "undefined") {
     try {
       const raw = window.localStorage.getItem(PAYMENT_KEY);
@@ -142,8 +139,6 @@ function writeKey(key: string, items: CartItem[]) {
 export const cart = {
   getSnapshot: () => cartSnapshot,
   getServerSnapshot: () => cartSnapshot, // server snapshot must be stable too
-  getSavedSnapshot: () => savedSnapshot,
-  getSavedServerSnapshot: () => savedSnapshot,
   getPaymentSnapshot: () => paymentSnapshot,
   getPaymentServerSnapshot: () => "stripe" as PaymentMethod,
   subscribe: (cb: Listener) => {
@@ -163,10 +158,6 @@ export const cart = {
     } else {
       items.push({ ...validated, quantity: requested });
     }
-    // If the item was previously saved, drop it from "saved for later" — it lives in the cart now.
-    const currentSaved = readKey(SAVED_KEY);
-    const saved = currentSaved.filter((i) => i.slug !== validated.slug);
-    if (saved.length !== currentSaved.length) writeKey(SAVED_KEY, saved);
     writeKey(STORAGE_KEY, items);
   },
   remove(slug: string) {
@@ -187,40 +178,6 @@ export const cart = {
   clear() {
     writeKey(STORAGE_KEY, []);
   },
-  saveForLater(slug: string) {
-    if (typeof slug !== "string" || slug.length === 0) return;
-    const items = readKey(STORAGE_KEY);
-    const target = items.find((i) => i.slug === slug);
-    if (!target) return;
-    const remaining = items.filter((i) => i.slug !== slug);
-    const saved = readKey(SAVED_KEY);
-    // Don't duplicate: replace any prior saved entry for this slug.
-    const deduped = saved.filter((i) => i.slug !== slug);
-    deduped.push({ ...target, quantity: 1 });
-    writeKey(SAVED_KEY, deduped);
-    writeKey(STORAGE_KEY, remaining);
-  },
-  moveToCart(slug: string) {
-    if (typeof slug !== "string" || slug.length === 0) return;
-    const saved = readKey(SAVED_KEY);
-    const target = saved.find((i) => i.slug === slug);
-    if (!target) return;
-    const remaining = saved.filter((i) => i.slug !== slug);
-    writeKey(SAVED_KEY, remaining);
-    // Re-add to cart via cart.add so quantity logic stays consistent.
-    cart.add({
-      slug: target.slug,
-      name: target.name,
-      price: target.price,
-      gradient: target.gradient,
-      tag: target.tag,
-      quantity: target.quantity
-    });
-  },
-  removeSaved(slug: string) {
-    if (typeof slug !== "string" || slug.length === 0) return;
-    writeKey(SAVED_KEY, readKey(SAVED_KEY).filter((i) => i.slug !== slug));
-  },
   setPaymentMethod(method: PaymentMethod) {
     if (!isPaymentMethod(method)) return;
     if (typeof window !== "undefined") {
@@ -239,11 +196,6 @@ export const cart = {
 
 export function useCart() {
   const items = useSyncExternalStore(cart.subscribe, cart.getSnapshot, cart.getServerSnapshot);
-  const savedForLater = useSyncExternalStore(
-    cart.subscribe,
-    cart.getSavedSnapshot,
-    cart.getSavedServerSnapshot
-  );
   const paymentMethod = useSyncExternalStore<PaymentMethod>(
     cart.subscribe,
     cart.getPaymentSnapshot,
@@ -251,7 +203,6 @@ export function useCart() {
   );
   return {
     items,
-    savedForLater,
     paymentMethod,
     add: (
       product: { slug: string; name: string; price: number; gradient: string; tag?: string },
@@ -268,13 +219,9 @@ export function useCart() {
     remove: cart.remove,
     updateQuantity: cart.updateQuantity,
     clear: cart.clear,
-    saveForLater: cart.saveForLater,
-    moveToCart: cart.moveToCart,
-    removeSaved: cart.removeSaved,
     setPaymentMethod: cart.setPaymentMethod,
     total: items.reduce((s, i) => s + i.price * i.quantity, 0),
-    count: items.reduce((s, i) => s + i.quantity, 0),
-    savedCount: savedForLater.length
+    count: items.reduce((s, i) => s + i.quantity, 0)
   };
 }
 
@@ -283,7 +230,6 @@ if (typeof window !== "undefined") {
   // Best-effort hydration; if emit() already ran (because we are reloading
   // after a write), this just re-validates against localStorage.
   cartSnapshot = readKey(STORAGE_KEY);
-  savedSnapshot = readKey(SAVED_KEY);
   try {
     const raw = window.localStorage.getItem(PAYMENT_KEY);
     paymentSnapshot = raw && isPaymentMethod(raw) ? raw : "stripe";
@@ -292,7 +238,7 @@ if (typeof window !== "undefined") {
   }
   // Cross-tab sync — when another tab updates the cart, refresh our snapshot.
   window.addEventListener("storage", (event) => {
-    if (event.key === STORAGE_KEY || event.key === SAVED_KEY || event.key === PAYMENT_KEY) {
+    if (event.key === STORAGE_KEY || event.key === PAYMENT_KEY) {
       emit();
     }
   });

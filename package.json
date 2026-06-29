@@ -8,7 +8,8 @@
     "build": "astro build",
     "preview": "astro preview --host 0.0.0.0",
     "check": "astro check",
-    "audit:ci": "npm audit --omit=dev --audit-level=moderate"
+    "audit:ci": "npm audit --omit=dev --audit-level=moderate",
+    "doctor": "npx react-doctor@latest"
   },
   "dependencies": {
     "@astrojs/react": "^4.3.0",
