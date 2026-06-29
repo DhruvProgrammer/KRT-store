@@ -329,33 +329,34 @@ export default function ProfileSection() {
                   {mockWishlist.length} saved
                 </span>
               </div>
-              <ul className="grid gap-3 sm:grid-cols-3">
-                {mockWishlist.map((item) => (
-                  <li key={item.name} className="rounded-2xl border border-line bg-surface/70 p-4">
-                    <div className="flex items-center gap-2">
-                      <span className="grid h-9 w-9 place-items-center rounded-xl border border-accent/30 bg-accent/10 text-accent">
-                        <HeartIcon />
-                      </span>
-                      <p className="text-sm font-black text-ink">{item.name}</p>
-                    </div>
-                    <p className="mt-2 text-[11px] font-black uppercase tracking-[0.18em] text-ink-muted">
-                      {item.category}
-                    </p>
-                    <div className="mt-3 flex items-center justify-between">
-                      <span className="text-base font-black text-accent drop-shadow-[0_0_8px_rgba(0,162,255,0.25)]">
-                        ${item.price}
-                      </span>
-                      <a
-                        href="/store"
-                        className="text-xs font-black uppercase tracking-[0.18em] text-ink-muted transition hover:text-accent"
-                      >
-                        View →
-                      </a>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-              {mockWishlist.length === 0 && (
+              {mockWishlist.length > 0 ? (
+                <ul className="grid gap-3 sm:grid-cols-3">
+                  {mockWishlist.map((item) => (
+                    <li key={item.name} className="rounded-2xl border border-line bg-surface/70 p-4">
+                      <div className="flex items-center gap-2">
+                        <span className="grid h-9 w-9 place-items-center rounded-xl border border-accent/30 bg-accent/10 text-accent">
+                          <HeartIcon />
+                        </span>
+                        <p className="text-sm font-black text-ink">{item.name}</p>
+                      </div>
+                      <p className="mt-2 text-[11px] font-black uppercase tracking-[0.18em] text-ink-muted">
+                        {item.category}
+                      </p>
+                      <div className="mt-3 flex items-center justify-between">
+                        <span className="text-base font-black text-accent drop-shadow-[0_0_8px_rgba(0,162,255,0.25)]">
+                          ${item.price}
+                        </span>
+                        <a
+                          href="/store"
+                          className="text-xs font-black uppercase tracking-[0.18em] text-ink-muted transition hover:text-accent"
+                        >
+                          View →
+                        </a>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
                 <p className="rounded-2xl border border-dashed border-line bg-surface/40 px-4 py-6 text-center text-sm text-ink-muted">
                   Your wishlist is empty. Browse the{" "}
                   <a href="/store" className="font-black text-accent transition hover:text-accent-bright">

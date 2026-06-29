@@ -68,13 +68,13 @@ export default function ShopFilter({ products, categories }: ShopFilterProps) {
               Categories
             </legend>
             <div className="flex flex-col gap-2">
-              <label className="flex cursor-pointer items-center gap-3 text-sm text-ink-muted">
+              <label className="flex min-h-[44px] cursor-pointer items-center gap-3 rounded-xl px-2 text-sm text-ink-muted transition hover:bg-surface/40">
                 <input
                   type="radio"
                   name="category"
                   checked={activeCategory === null}
                   onChange={() => setActiveCategory(null)}
-                  className="h-4 w-4 cursor-pointer border-line bg-surface text-accent focus:ring-accent"
+                  className="h-5 w-5 cursor-pointer border-line bg-surface text-accent focus:ring-accent"
                 />
                 <span className="flex-1">All categories</span>
                 <span className="text-[11px] font-bold text-ink-muted">{products.length}</span>
@@ -83,13 +83,13 @@ export default function ShopFilter({ products, categories }: ShopFilterProps) {
                 const count = products.filter((p) => p.category === c.slug).length;
                 const isActive = activeCategory === c.slug;
                 return (
-                  <label key={c.slug} className="flex cursor-pointer items-center gap-3 text-sm text-ink-muted">
+                  <label key={c.slug} className="flex min-h-[44px] cursor-pointer items-center gap-3 rounded-xl px-2 text-sm text-ink-muted transition hover:bg-surface/40">
                     <input
                       type="radio"
                       name="category"
                       checked={isActive}
                       onChange={() => setActiveCategory(c.slug)}
-                      className="h-4 w-4 cursor-pointer border-line bg-surface text-accent focus:ring-accent"
+                      className="h-5 w-5 cursor-pointer border-line bg-surface text-accent focus:ring-accent"
                     />
                     <span className="flex-1">{c.name}</span>
                     <span className="text-[11px] font-bold text-ink-muted">{count}</span>
@@ -105,7 +105,7 @@ export default function ShopFilter({ products, categories }: ShopFilterProps) {
               setActiveCategory(null);
               setSearch("");
             }}
-            className="text-xs font-black uppercase tracking-[0.2em] text-ink-muted transition hover:text-accent"
+            className="inline-flex min-h-[44px] items-center rounded-xl px-3 text-xs font-black uppercase tracking-[0.2em] text-ink-muted transition hover:text-accent"
           >
             Reset
           </button>

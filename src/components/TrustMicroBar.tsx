@@ -66,7 +66,7 @@ export default function TrustMicroBar({ variant = "compact" }: TrustMicroBarProp
         Lifetime updates
       </li>
       <li className={baseClass}>
-        <RefreshIcon />
+        <ShieldIcon />
         30-day refund
       </li>
     </ul>

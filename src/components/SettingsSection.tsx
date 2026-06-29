@@ -254,7 +254,7 @@ export default function SettingsSection() {
                 <fieldset className="space-y-3">
                   <legend className="text-sm font-bold text-ink">Sign-in method</legend>
                   <label className="flex items-center gap-3 rounded-2xl border border-accent/30 bg-accent/10 px-4 py-3 text-sm text-ink">
-                    <input type="radio" name="signin" defaultChecked className="h-4 w-4 cursor-pointer border-line bg-surface text-accent focus:ring-accent" />
+                    <input type="radio" name="signin" defaultChecked className="h-5 w-5 cursor-pointer border-line bg-surface text-accent focus:ring-accent" />
                     <span className="flex-1">Magic link by email</span>
                     <span className="text-[11px] font-black uppercase tracking-[0.18em] text-accent">Active</span>
                   </label>

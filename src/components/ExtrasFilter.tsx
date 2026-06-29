@@ -63,13 +63,13 @@ export default function ExtrasFilter({ items }: ExtrasFilterProps) {
               Type
             </legend>
             <div className="flex flex-col gap-2">
-              <label className="flex cursor-pointer items-center gap-3 text-sm text-ink-muted">
+              <label className="flex min-h-[44px] cursor-pointer items-center gap-3 rounded-xl px-2 text-sm text-ink-muted transition hover:bg-surface/40">
                 <input
                   type="radio"
                   name="extras-category"
                   checked={activeCategory === null}
                   onChange={() => setActiveCategory(null)}
-                  className="h-4 w-4 cursor-pointer border-line bg-surface text-accent focus:ring-accent"
+                  className="h-5 w-5 cursor-pointer border-line bg-surface text-accent focus:ring-accent"
                 />
                 <span className="flex-1">All types</span>
                 <span className="text-[11px] font-bold text-ink-muted">{items.length}</span>
@@ -80,14 +80,14 @@ export default function ExtrasFilter({ items }: ExtrasFilterProps) {
                 return (
                   <label
                     key={cat}
-                    className="flex cursor-pointer items-center gap-3 text-sm text-ink-muted"
+                    className="flex min-h-[44px] cursor-pointer items-center gap-3 rounded-xl px-2 text-sm text-ink-muted transition hover:bg-surface/40"
                   >
                     <input
                       type="radio"
                       name="extras-category"
                       checked={isActive}
                       onChange={() => setActiveCategory(cat)}
-                      className="h-4 w-4 cursor-pointer border-line bg-surface text-accent focus:ring-accent"
+                      className="h-5 w-5 cursor-pointer border-line bg-surface text-accent focus:ring-accent"
                     />
                     <span className="flex-1">{labelFor[cat] ?? cat}</span>
                     <span className="text-[11px] font-bold text-ink-muted">{count}</span>
@@ -103,7 +103,7 @@ export default function ExtrasFilter({ items }: ExtrasFilterProps) {
               setActiveCategory(null);
               setSearch("");
             }}
-            className="text-xs font-black uppercase tracking-[0.2em] text-ink-muted transition hover:text-accent"
+            className="inline-flex min-h-[44px] items-center rounded-xl px-3 text-xs font-black uppercase tracking-[0.2em] text-ink-muted transition hover:text-accent"
           >
             Reset
           </button>

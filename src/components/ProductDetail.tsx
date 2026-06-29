@@ -377,7 +377,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                         value={v.id}
                         checked={active}
                         onChange={() => setLicenseKey(v.id)}
-                        className="mt-1 h-4 w-4 cursor-pointer border-line bg-surface text-accent focus:ring-accent"
+                        className="mt-1 h-5 w-5 cursor-pointer border-line bg-surface text-accent focus:ring-accent"
                       />
                       <span className="flex-1">
                         <span className="flex flex-wrap items-baseline justify-between gap-2">

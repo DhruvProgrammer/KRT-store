@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   useCart,
   PAYMENT_METHODS,
@@ -166,7 +166,7 @@ function CartLine({
               type="checkbox"
               checked={selected}
               onChange={onToggleSelect}
-              className="h-4 w-4 cursor-pointer rounded border-line bg-surface-ink accent-accent"
+              className="h-5 w-5 cursor-pointer rounded border-line bg-surface-ink accent-accent"
               aria-label={`Select ${item.name} for checkout`}
             />
           </label>
@@ -210,7 +210,7 @@ function CartLine({
               <button
                 type="button"
                 onClick={() => remove(item.slug)}
-                className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.16em] text-ink-muted transition hover:text-red-400"
+                className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl px-2 text-xs font-bold uppercase tracking-[0.16em] text-ink-muted transition hover:text-red-400"
               >
                 <TrashIcon /> Delete
               </button>
@@ -220,7 +220,7 @@ function CartLine({
               <button
                 type="button"
                 onClick={() => saveForLater(item.slug)}
-                className="text-xs font-bold uppercase tracking-[0.16em] text-ink-muted transition hover:text-accent"
+                className="inline-flex min-h-[44px] items-center rounded-xl px-2 text-xs font-bold uppercase tracking-[0.16em] text-ink-muted transition hover:text-accent"
               >
                 Save for later
               </button>
@@ -258,14 +258,14 @@ function SavedRow({ item }: { item: CartItem }) {
       <button
         type="button"
         onClick={() => moveToCart(item.slug)}
-        className="rounded-full border border-accent/40 bg-accent/10 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-accent transition hover:bg-accent hover:text-white"
+        className="inline-flex min-h-[40px] items-center rounded-full border border-accent/40 bg-accent/10 px-4 py-2 text-[11px] font-black uppercase tracking-[0.18em] text-accent transition hover:bg-accent hover:text-white"
       >
         Move to cart
       </button>
       <button
         type="button"
         onClick={() => removeSaved(item.slug)}
-        className="text-[11px] font-black uppercase tracking-[0.18em] text-ink-muted transition hover:text-red-400"
+        className="inline-flex min-h-[40px] items-center rounded-xl px-2 text-[11px] font-black uppercase tracking-[0.18em] text-ink-muted transition hover:text-red-400"
         aria-label={`Remove ${item.name} from saved items`}
       >
         Remove
@@ -311,7 +311,7 @@ function PaymentMethodPicker({
                 value={method}
                 checked={active}
                 onChange={() => onSelect(method)}
-                className="h-4 w-4 cursor-pointer accent-accent"
+                className="h-5 w-5 cursor-pointer accent-accent"
               />
               <PaymentLogo method={method} />
               <span className="flex-1 text-sm font-bold text-ink">{paymentLabel(method)}</span>
@@ -363,6 +363,20 @@ export default function CartList() {
 
   // Selection state — Amazon-style multi-select for checkout. Defaults to all selected.
   const [selectedSlugs, setSelectedSlugs] = useState<Set<string>>(() => new Set(items.map((i) => i.slug)));
+
+  useEffect(() => {
+    const itemSlugs = new Set(items.map((i) => i.slug));
+    setSelectedSlugs((prev) => {
+      const next = new Set(prev);
+      for (const slug of itemSlugs) {
+        if (!next.has(slug)) next.add(slug);
+      }
+      for (const slug of next) {
+        if (!itemSlugs.has(slug)) next.delete(slug);
+      }
+      return next;
+    });
+  }, [items]);
   const toggleSelect = (slug: string) =>
     setSelectedSlugs((prev) => {
       const next = new Set(prev);
@@ -397,7 +411,11 @@ export default function CartList() {
             </a>
             <button
               type="button"
-              onClick={clear}
+              onClick={() => {
+                if (window.confirm("Clear all items from your cart? This cannot be undone.")) {
+                  clear();
+                }
+              }}
               className="rounded-full border border-line bg-surface/60 px-4 py-2 text-xs font-bold text-ink-muted transition hover:border-red-500/40 hover:text-red-400"
             >
               Clear cart
@@ -429,7 +447,7 @@ export default function CartList() {
                       setSelectedSlugs(new Set());
                     }
                   }}
-                  className="h-4 w-4 cursor-pointer rounded border-line bg-surface-ink accent-accent"
+                  className="h-5 w-5 cursor-pointer rounded border-line bg-surface-ink accent-accent"
                 />
                 <span className="text-ink">
                   {hasSelection

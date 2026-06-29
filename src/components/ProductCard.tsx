@@ -86,8 +86,8 @@ export default function ProductCard({ product }: ProductCardProps) {
                 aria-label={added ? `Added ${product.name} to cart` : `Add ${product.name} to cart`}
                 className={
                   added
-                    ? "inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-4 py-2.5 text-xs font-black uppercase tracking-[0.18em] text-emerald-300"
-                    : "inline-flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-4 py-2.5 text-xs font-black uppercase tracking-[0.18em] text-accent transition hover:border-accent hover:bg-accent hover:text-white hover:shadow-[0_0_18px_rgba(0,162,255,0.4)]"
+                    ? "inline-flex min-h-[44px] items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-emerald-300"
+                    : "inline-flex min-h-[44px] items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-accent transition hover:border-accent hover:bg-accent hover:text-white hover:shadow-[0_0_18px_rgba(0,162,255,0.4)]"
                 }
               >
                 {added ? <CheckIcon /> : <PlusIcon />}

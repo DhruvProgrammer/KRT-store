@@ -248,7 +248,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
         <p className="mt-4 max-w-2xl text-base leading-7 text-ink-muted">{subtitle}</p>
       </header>
 
-      <form onSubmit={onSubmit} noValidate className="space-y-6" autoComplete="off">
+      <form onSubmit={onSubmit} noValidate className="space-y-6">
         <div>
           <label htmlFor="email" className="mb-2 block text-sm font-bold text-ink">
             Email address
@@ -309,12 +309,12 @@ export default function AuthForm({ mode }: AuthFormProps) {
             <label className="flex items-center gap-2 text-ink-muted">
               <input
                 type="checkbox"
-                className="h-4 w-4 cursor-pointer rounded border-line bg-surface text-accent focus:ring-accent"
+                className="h-5 w-5 cursor-pointer rounded border-line bg-surface text-accent focus:ring-accent"
                 onChange={() => {}}
               />
               <span>Keep me signed in</span>
             </label>
-            <a href="/" className="font-black uppercase tracking-[0.18em] text-ink-muted transition hover:text-accent">
+            <a href="/#contact" className="font-black uppercase tracking-[0.18em] text-ink-muted transition hover:text-accent">
               Forgot password?
             </a>
           </div>

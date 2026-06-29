@@ -31,6 +31,9 @@ export default function SearchModal({
 }: SearchModalProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const scrollYRef = useRef(0);
 
   useEffect(() => {
     const openHandler = () => setOpen(true);
@@ -41,13 +44,46 @@ export default function SearchModal({
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") {
+        setOpen(false);
+        return;
+      }
+      if (e.key === "Tab" && dialogRef.current) {
+        const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     };
     window.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
+
+    scrollYRef.current = window.scrollY;
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollYRef.current}px`;
+    document.body.style.left = "0";
+    document.body.style.right = "0";
+    document.body.style.width = "100%";
+
+    const timer = setTimeout(() => inputRef.current?.focus(), 120);
+
     return () => {
       window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.right = "";
+      document.body.style.width = "";
+      window.scrollTo(0, scrollYRef.current);
+      clearTimeout(timer);
     };
   }, [open]);
 
@@ -95,6 +131,7 @@ export default function SearchModal({
         aria-hidden="true"
       />
       <div
+        ref={dialogRef}
         className={`fixed inset-x-0 top-0 z-50 max-h-[100dvh] origin-top overflow-y-auto overscroll-contain border-b border-line bg-bg-soft/95 shadow-[0_24px_60px_rgba(0,0,0,0.55)] backdrop-blur-xl transition-transform ${
           open ? "translate-y-0" : "-translate-y-full"
         }`}
@@ -110,7 +147,7 @@ export default function SearchModal({
               <path d="m20 20-3.5-3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
             <input
-              autoFocus
+              ref={inputRef}
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}

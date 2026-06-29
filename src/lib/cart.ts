@@ -164,8 +164,9 @@ export const cart = {
       items.push({ ...validated, quantity: requested });
     }
     // If the item was previously saved, drop it from "saved for later" — it lives in the cart now.
-    const saved = readKey(SAVED_KEY).filter((i) => i.slug !== validated.slug);
-    if (saved.length !== readKey(SAVED_KEY).length) writeKey(SAVED_KEY, saved);
+    const currentSaved = readKey(SAVED_KEY);
+    const saved = currentSaved.filter((i) => i.slug !== validated.slug);
+    if (saved.length !== currentSaved.length) writeKey(SAVED_KEY, saved);
     writeKey(STORAGE_KEY, items);
   },
   remove(slug: string) {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   useCart,
   PAYMENT_METHODS,
@@ -148,8 +148,10 @@ function UpiFields() {
 }
 
 function BitcoinFields() {
-  // Generate a deterministic-looking demo wallet address (prototype only).
-  const demoAddress = "bc1qkrt" + Math.random().toString(36).slice(2, 10) + "demo";
+  const demoAddress = useMemo(
+    () => "bc1qkrt" + Math.random().toString(36).slice(2, 10) + "demo",
+    []
+  );
   return (
     <div className="space-y-4">
       <div className="rounded-xl border border-[#F7931A]/30 bg-[#F7931A]/5 p-4 text-xs leading-relaxed text-ink-muted">
@@ -241,8 +243,7 @@ export default function CheckoutForm() {
         <ol className="mt-8 flex flex-wrap items-center gap-2 text-xs font-black uppercase tracking-[0.18em]" aria-label="Checkout progress">
           {[
             { id: 1, label: "Contact" },
-            { id: 2, label: "Payment" },
-            { id: 3, label: "Review" }
+            { id: 2, label: "Payment" }
           ].map((step, idx, arr) => (
             <li key={step.id} className="flex items-center gap-2">
               <span
@@ -266,11 +267,11 @@ export default function CheckoutForm() {
 
       <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_380px]">
         <Reveal delay={0.12}>
-          <form onSubmit={handleSubmit} className="space-y-6" autoComplete="off">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <fieldset>
               <legend className="mb-3 text-xs font-black uppercase tracking-[0.18em] text-ink-muted">Contact</legend>
               <label htmlFor="email" className="mb-2 block text-sm font-bold text-ink">Email address</label>
-              <input id="email" type="email" required placeholder="you@example.com" autoComplete="off" className={inputClass} />
+              <input id="email" type="email" required placeholder="you@example.com" autoComplete="email" className={inputClass} />
             </fieldset>
 
             <fieldset>
@@ -296,7 +297,7 @@ export default function CheckoutForm() {
                         value={method}
                         checked={active}
                         onChange={() => setPaymentMethod(method)}
-                        className="h-4 w-4 cursor-pointer accent-accent"
+                        className="h-5 w-5 cursor-pointer accent-accent"
                       />
                       <PaymentLogo method={method} />
                       <span className="flex-1 text-sm font-bold text-ink">{paymentLabel(method)}</span>
