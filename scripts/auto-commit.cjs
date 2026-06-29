@@ -21,46 +21,53 @@ let isProcessing = false;
 let queued = false;
 
 /* ── Helpers ── */
-function exec(cmd, args = [], opts = {}) {
-  return new Promise((resolve, reject) => {
-    const child = spawn(cmd, args, { stdio: "pipe", shell: true, ...opts });
+function exec(cmd, args, opts) {
+  return new Promise(function (resolve, reject) {
+    const child = spawn(cmd, args || [], { stdio: "pipe", shell: true, ...opts });
     let stdout = "", stderr = "";
-    child.stdout?.on("data", (d) => (stdout += d));
-    child.stderr?.on("data", (d) => (stderr += d));
-    child.on("close", (code) => {
-      if (code !== 0) reject(new Error(`${cmd} ${args.join(" ")} exited ${code}: ${stderr || stdout}`));
+    child.stdout.on("data", function(d) { stdout += d; });
+    child.stderr.on("data", function(d) { stderr += d; });
+    child.on("close", function(code) {
+      if (code !== 0) reject(new Error(cmd + " " + (args || []).join(" ") + " exited " + code + ": " + (stderr || stdout)));
       else resolve(stdout.trim());
     });
   });
 }
 
 function getChangedFiles(diffStat) {
-  const lines = diffStat.split("\n").filter((l) => l.includes("|") && !l.includes("changed"));
-  return lines.map((l) => l.trim().split(" ")[0]);
+  return diffStat.split("\n").filter(function(l) {
+    return l.includes("|") && !l.includes("changed");
+  }).map(function(l) {
+    return l.trim().split(" ")[0];
+  });
 }
 
 function determineScope(files) {
   if (files.length === 0) return "";
-  const dirs = files.map((f) => f.split("/")[0]).filter(Boolean);
+  const dirs = files.map(function(f) { return f.split("/")[0]; }).filter(Boolean);
   const counts = {};
-  for (const d of dirs) counts[d] = (counts[d] || 0) + 1;
-  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  for (var i = 0; i < dirs.length; i++) {
+    counts[dirs[i]] = (counts[dirs[i]] || 0) + 1;
+  }
+  const sorted = Object.entries(counts).sort(function(a, b) { return b[1] - a[1]; });
   if (sorted.length === 0) return "";
   if (sorted.length === 1) return sorted[0][0];
   if (sorted[0][0] === "src" && sorted.length > 1) {
-    const subDirs = files.filter((f) => f.startsWith("src/")).map((f) => f.split("/")[1]).filter(Boolean);
+    const subDirs = files.filter(function(f) { return f.startsWith("src/"); }).map(function(f) { return f.split("/")[1]; }).filter(Boolean);
     const subCounts = {};
-    for (const d of subDirs) subCounts[d] = (subCounts[d] || 0) + 1;
-    const subSorted = Object.entries(subCounts).sort((a, b) => b[1] - a[1]);
+    for (var i = 0; i < subDirs.length; i++) {
+      subCounts[subDirs[i]] = (subCounts[subDirs[i]] || 0) + 1;
+    }
+    const subSorted = Object.entries(subCounts).sort(function(a, b) { return b[1] - a[1]; });
     if (subSorted.length) return subSorted[0][0];
   }
   return sorted[0][0];
 }
 
 function determineType(files, diffStat) {
-  const extensions = files.map((f) => f.split(".").pop() || "");
-  const hasCss = extensions.some((e) => e.match(/css|scss|less/));
-  const isStyleOnly = hasCss && extensions.every((e) => e.match(/css|scss|less/));
+  const extensions = files.map(function(f) { return (f.split(".").pop() || ""); });
+  const hasCss = extensions.some(function(e) { return e.match(/css|scss|less/); });
+  const isStyleOnly = hasCss && extensions.every(function(e) { return e.match(/css|scss|less/); });
   if (isStyleOnly) return "style";
 
   const lowerDiff = diffStat.toLowerCase();
@@ -75,18 +82,18 @@ function determineType(files, diffStat) {
 }
 
 async function generateCommitMessage() {
-  const root = path.resolve(__dirname, "..");
-  const diffStat = await exec("git", ["-C", root, "diff", "--cached", "--stat"]).catch(() => "");
-  const files = getChangedFiles(diffStat);
+  var root = path.resolve(__dirname, "..");
+  var diffStat = await exec("git", ["-C", root, "diff", "--cached", "--stat"]).catch(function() { return ""; });
+  var files = getChangedFiles(diffStat);
 
   if (files.length === 0) return { subject: "chore: update files", body: "" };
 
-  const scope = determineScope(files);
-  const type = determineType(files, diffStat);
-  const count = files.length;
-  const plural = count > 1 ? "s" : "";
+  var scope = determineScope(files);
+  var type = determineType(files, diffStat);
+  var count = files.length;
+  var plural = count > 1 ? "s" : "";
 
-  let subject = "update";
+  var subject = "update";
   if (type === "style") subject = "style: update styling";
   else if (type === "fix") subject = "fix: resolve issue";
   else if (type === "refactor") subject = "refactor: simplify code";
@@ -94,17 +101,22 @@ async function generateCommitMessage() {
   else if (type === "test") subject = "test: add test coverage";
   else if (type === "feat") subject = "feat: add new feature";
   else if (type === "update") {
-    if (count === 1) subject = `update ${scope ? \`(${scope})\` : ""} ${files[0]}`;
-    else subject = \`update ${scope} (${count} file${plural})\`;
+    if (count === 1) subject = "update " + (scope ? "(" + scope + ") " : "") + files[0];
+    else subject = "update " + scope + " (" + count + " file" + plural + ")";
   }
 
   if (subject.length > COMMIT_MSG_MAX_LEN) {
     subject = subject.slice(0, COMMIT_MSG_MAX_LEN - 3) + "...";
   }
 
-  const bodyLines = [];
-  bodyLines.push(\`Changed files:\`, ...files.slice(0, 10).map((f) => \`  - ${f}\`), files.length > 10 ? \`  ... and ${files.length - 10} more\` : "");
-  bodyLines.push(``, "Reasoning:");
+  var bodyLines = [];
+  bodyLines.push("Changed files:");
+  for (var i = 0; i < Math.min(files.length, 10); i++) {
+    bodyLines.push("  - " + files[i]);
+  }
+  if (files.length > 10) bodyLines.push("  ... and " + (files.length - 10) + " more");
+  bodyLines.push("");
+  bodyLines.push("Reasoning:");
   if (type === "fix") bodyLines.push("  - Resolved a bug or error condition");
   else if (type === "refactor") bodyLines.push("  - Simplified or cleaned up existing code");
   else if (type === "style") bodyLines.push("  - Adjusted visual styling or formatting");
@@ -113,8 +125,8 @@ async function generateCommitMessage() {
   else if (type === "feat") bodyLines.push("  - Implemented new functionality");
   else if (type === "update") bodyLines.push("  - General update to existing code");
 
-  const body = bodyLines.filter(Boolean).join("\n");
-  return { subject, body };
+  var body = bodyLines.filter(Boolean).join("\n");
+  return { subject: subject, body: body };
 }
 
 async function pushIfChanged() {
@@ -122,8 +134,8 @@ async function pushIfChanged() {
   isProcessing = true;
 
   try {
-    const root = path.resolve(__dirname, "..");
-    const status = await exec("git", ["-C", root, "status", "--short"]);
+    var root = path.resolve(__dirname, "..");
+    var status = await exec("git", ["-C", root, "status", "--short"]);
     if (!status.trim()) {
       isProcessing = false;
       if (queued) { queued = false; }
@@ -134,39 +146,39 @@ async function pushIfChanged() {
 
     await exec("git", ["-C", root, "add", "."]);
 
-    const hasStaged = await exec("git", ["-C", root, "diff", "--cached", "--quiet"]).then(() => false).catch(() => true);
+    var hasStaged = await exec("git", ["-C", root, "diff", "--cached", "--quiet"]).then(function() { return false; }).catch(function() { return true; });
     if (!hasStaged) {
       isProcessing = false;
       if (queued) { queued = false; }
       return;
     }
 
-    const { subject, body } = await generateCommitMessage();
-    await exec("git", ["-C", root, "commit", "-m", subject, "-m", body]);
-    console.log("[auto-commit] Committed:", subject);
+    var msg = await generateCommitMessage();
+    await exec("git", ["-C", root, "commit", "-m", msg.subject, "-m", msg.body]);
+    console.log("[auto-commit] Committed:", msg.subject);
 
     console.log("[auto-commit] Pushing...");
     await exec("git", ["-C", root, "push"]);
-    console.log("[auto-commit] Pushed ✅");
+    console.log("[auto-commit] Pushed");
   } catch (err) {
     console.error("[auto-commit] Error:", err.message);
   } finally {
     isProcessing = false;
-    if (queued) { queued = false; setTimeout(() => pushIfChanged(), 1000); }
+    if (queued) { queued = false; setTimeout(function() { pushIfChanged(); }, 1000); }
   }
 }
 
 /* ── Watcher ── */
 function startWatch() {
-  console.log(\`[auto-commit] Watching ${WATCH_DIR} for changes...\`);
+  console.log("[auto-commit] Watching " + WATCH_DIR + " for changes...");
 
-  const onChange = (type, file) => {
+  function onChange(type, file) {
     if (file && (file.includes("node_modules") || file.includes(".git") || file.includes("dist"))) return;
     if (debounceTimer) clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => pushIfChanged(), DEBOUNCE_MS);
-  };
+    debounceTimer = setTimeout(function() { pushIfChanged(); }, DEBOUNCE_MS);
+  }
 
-  fs.watch(WATCH_DIR, { recursive: true }, (ev, filename) => {
+  fs.watch(WATCH_DIR, { recursive: true }, function(ev, filename) {
     onChange(ev, path.join(WATCH_DIR, filename));
   });
 }

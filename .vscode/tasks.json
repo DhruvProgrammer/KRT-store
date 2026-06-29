@@ -2,11 +2,11 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "🔄 Auto-commit & push (file watcher)",
+      "label": "🔄 Auto-push (every 10s)",
       "type": "shell",
       "command": "node",
-      "args": ["scripts/auto-commit.cjs"],
-      "detail": "Watches entire project for changes and auto-commits + pushes to origin/main",
+      "args": ["scripts/auto-push.cjs"],
+      "detail": "Checks for changes every 10s, auto-commits and pushes to origin/main",
       "group": {
         "kind": "build",
         "isDefault": true
@@ -21,9 +21,6 @@
         "close": false
       },
       "isBackground": true,
-      "runOptions": {
-        "runOn": "folderOpen"
-      },
       "problemMatcher": []
     },
     {
