@@ -5,8 +5,8 @@
       "label": "🔄 Auto-commit & push (file watcher)",
       "type": "shell",
       "command": "node",
-      "args": ["scripts/auto-commit.js"],
-      "detail": "Watches src/ for changes and auto-commits + pushes to origin/main",
+      "args": ["scripts/auto-commit.cjs"],
+      "detail": "Watches entire project for changes and auto-commits + pushes to origin/main",
       "group": {
         "kind": "build",
         "isDefault": true
