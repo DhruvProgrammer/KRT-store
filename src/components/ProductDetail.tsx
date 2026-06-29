@@ -16,25 +16,11 @@ function CheckIcon() {
   );
 }
 
-function PlusIcon() {
-  return (
-    <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 24 24" fill="none">
-      <path d="M12 5v14m-7-7h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}
-
 function CartIcon() {
   return (
     <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 24 24" fill="none">
       <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
-  );
-}
-
-function ZoomIcon() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-5 w-5"><path d="M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16zM21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
   );
 }
 
@@ -206,7 +192,9 @@ export default function ProductDetail({ product }: ProductDetailProps) {
   const [licenseKey, setLicenseKey] = useState<LicenseKey>("regular");
   const variant = variants.find((v) => v.id === licenseKey) ?? variants[0];
   const finalPrice = Math.round(product.price * variant.priceMultiplier);
-  const savings = Math.round(finalPrice * 0.4);
+  const bundlePrice = 149;
+  const bundleRetail = 249;
+  const bundleSavings = Math.round((1 - bundlePrice / bundleRetail) * 100);
 
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
@@ -224,7 +212,6 @@ export default function ProductDetail({ product }: ProductDetailProps) {
         });
       }
       setAdded(true);
-      window.dispatchEvent(new CustomEvent("krt:open-cart"));
       window.setTimeout(() => setAdded(false), 1800);
     } catch {
       /* ignore */
@@ -300,17 +287,10 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                   <span className="h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_8px_rgba(0,162,255,0.7)]" />
                   {activeShot.label}
                 </div>
-                <button
-                  type="button"
-                  aria-label="Zoom in"
-                  className="absolute bottom-4 right-4 grid h-11 w-11 place-items-center rounded-full border border-white/30 bg-black/30 text-white backdrop-blur-sm transition hover:bg-black/50"
-                >
-                  <ZoomIcon />
-                </button>
 
                 {/* Mobile horizontal thumbs */}
                 <div className="border-t border-line bg-bg-soft/90 p-2 sm:hidden">
-                  <ul className="flex gap-2 overflow-x-auto" aria-label="Product gallery">
+                  <ul className="flex snap-x gap-2 overflow-x-auto" aria-label="Product gallery">
                     {gallery.map((shot) => (
                       <li key={shot.id}>
                         <button
@@ -432,7 +412,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                   onChange={(event) => setQuantity(Math.max(1, Math.min(99, Number(event.target.value))))}
                   className="bg-transparent text-base font-black text-ink outline-none"
                 >
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20].map((n) => (
                     <option key={n} value={n}>
                       {n}
                     </option>
@@ -503,7 +483,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
         <aside className="mt-12 flex flex-col items-start justify-between gap-4 rounded-3xl border border-accent/30 bg-gradient-to-br from-accent/15 to-accent-bright/10 p-6 sm:flex-row sm:items-center sm:p-8">
           <div>
             <p className="text-[11px] font-black uppercase tracking-[0.18em] text-accent">
-              Bundle deal · save {savings === 0 ? "20%" : `${Math.round((savings / Math.max(1, product.price * 4.2)) * 100)}%`}
+              Bundle deal · save {bundleSavings}%
             </p>
             <h2 className="mt-2 text-2xl font-black tracking-[-0.05em] text-ink">
               The full KRT store Bundle
@@ -662,9 +642,9 @@ export default function ProductDetail({ product }: ProductDetailProps) {
               </dl>
               <a
                 href="#reviews"
-                className="mt-6 inline-flex items-center gap-2 rounded-full border border-line bg-surface/60 px-3 py-2 text-xs font-black uppercase tracking-[0.18em] text-ink-muted transition hover:border-accent/40 hover:text-accent"
+                className="mt-6 inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-4 py-2.5 text-xs font-black uppercase tracking-[0.18em] text-accent transition hover:bg-accent/20"
               >
-                Write a review →
+                Read reviews below
               </a>
             </div>
 

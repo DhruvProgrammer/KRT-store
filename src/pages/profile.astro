@@ -2,29 +2,16 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Navigation from "../components/Navigation.astro";
 import Footer from "../components/Footer";
-import Reveal from "../components/Reveal";
-import Button from "../components/Button";
+import ProfileSection from "../components/ProfileSection";
 
 const title = "Profile — KRT store";
-const description = "Account profiles are temporarily unavailable while we finalize the backend.";
+const description = "Your account overview, orders, downloads, and license keys.";
 ---
 
 <BaseLayout title={title} description={description} noindex={true}>
   <Navigation />
-  <main id="main" class="container mx-auto px-4 pt-12 pb-20 sm:px-6 lg:px-8">
-    <Reveal>
-      <div class="mx-auto max-w-lg text-center">
-        <p class="mb-5 text-xs font-black uppercase tracking-[0.28em] text-amber-300">Coming soon</p>
-        <h1 class="text-4xl font-black tracking-[-0.07em] text-ink sm:text-5xl">Profiles coming next.</h1>
-        <p class="mt-5 text-lg leading-8 text-ink-muted">
-          Account profiles, download history, and license keys will land once the backend ships.
-        </p>
-        <div class="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Button href="/store">Browse the store</Button>
-          <Button variant="secondary" href="/">Back home</Button>
-        </div>
-      </div>
-    </Reveal>
+  <main id="main">
+    <ProfileSection client:load />
   </main>
   <Footer client:load />
 </BaseLayout>

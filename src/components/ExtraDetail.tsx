@@ -191,7 +191,7 @@ export default function ExtraDetail({ item }: { item: ExtraItem }) {
           Want more like this?
         </h2>
         <p className="mt-2 text-sm text-ink-muted">
-          We've made {Math.max(6, 12)} extras — cheatsheets, swatches, starter files. Browse them all.
+          We've made {extras.length} extras — cheatsheets, swatches, starter files. Browse them all.
         </p>
         <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Button href="/extras">Open the extras library</Button>

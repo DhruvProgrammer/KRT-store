@@ -2,11 +2,10 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Navigation from "../components/Navigation.astro";
 import Footer from "../components/Footer";
-import Reveal from "../components/Reveal";
-import Button from "../components/Button";
+import AuthForm from "../components/AuthForm";
 
 const title = "Sign in — KRT store";
-const description = "Account sign-in is temporarily unavailable while we finalize the backend.";
+const description = "Sign in to your KRT store account to access downloads and license keys.";
 ---
 
 <BaseLayout title={title} description={description} noindex={true}>
@@ -19,20 +18,7 @@ const description = "Account sign-in is temporarily unavailable while we finaliz
     </nav>
 
     <div class="mx-auto max-w-xl">
-      <Reveal>
-        <div class="rounded-3xl border border-amber-400/30 bg-amber-400/10 p-10 text-center">
-          <p class="mb-2 text-xs font-black uppercase tracking-[0.28em] text-amber-300">Coming soon</p>
-          <h1 class="text-3xl font-black tracking-[-0.06em] text-ink sm:text-4xl">Sign-in is on the way.</h1>
-          <p class="mx-auto mt-4 max-w-md text-sm leading-7 text-ink-muted">
-            Account sign-in and order history are coming in a future release. In the meantime,
-            purchase links, downloads, and receipts are delivered straight to your inbox.
-          </p>
-          <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Button href="/store">Browse the store</Button>
-            <Button variant="secondary" href="/#contact">Get notified</Button>
-          </div>
-        </div>
-      </Reveal>
+      <AuthForm client:load mode="login" />
     </div>
   </main>
   <Footer client:load />
