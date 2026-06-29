@@ -332,7 +332,7 @@ export default function SettingsSection() {
                         type="button"
                         onClick={closeCardForm}
                         aria-label="Close add card form"
-                        className="grid h-9 w-9 place-items-center rounded-full border border-line bg-surface-ink text-ink-muted transition hover:bg-surface-bright hover:text-ink"
+                        className="grid h-11 w-11 place-items-center rounded-full border border-line bg-surface-ink text-ink-muted transition hover:bg-surface-bright hover:text-ink"
                       >
                         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-4 w-4">
                           <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />

@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(git -C \"C:\\\\Users\\\\MR.PC\\\\Desktop\\\\wp-bot\\\\design-goods\" ls-files)",
-      "Bash(git -C \"C:\\\\Users\\\\MR.PC\\\\Desktop\\\\wp-bot\\\\design-goods\" ls-files dist/)"
+      "Bash(git -C \"C:\\\\Users\\\\MR.PC\\\\Desktop\\\\wp-bot\\\\design-goods\" ls-files dist/)",
+      "Bash(npm run *)"
     ]
   }
 }

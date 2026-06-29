@@ -303,7 +303,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                 <button
                   type="button"
                   aria-label="Zoom in"
-                  className="absolute bottom-4 right-4 grid h-10 w-10 place-items-center rounded-full border border-white/30 bg-black/30 text-white backdrop-blur-sm transition hover:bg-black/50"
+                  className="absolute bottom-4 right-4 grid h-11 w-11 place-items-center rounded-full border border-white/30 bg-black/30 text-white backdrop-blur-sm transition hover:bg-black/50"
                 >
                   <ZoomIcon />
                 </button>
