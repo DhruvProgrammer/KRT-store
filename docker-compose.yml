@@ -1,0 +1,84 @@
+version: '3.9'
+
+services:
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+    container_name: krt-api-gateway
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - AUTH_SERVICE_URL=http://auth-service:3002
+      - CATALOG_SERVICE_URL=http://catalog-service:3003
+      - CART_SERVICE_URL=http://cart-service:3004
+      - ORDER_SERVICE_URL=http://order-service:3005
+      - PAYMENT_SERVICE_URL=http://payment-service:3006
+    depends_on:
+      - auth-service
+      - catalog-service
+      - cart-service
+      - order-service
+      - payment-service
+    networks:
+      - krt-network
+
+  auth-service:
+    build:
+      context: ./services/auth-service
+    container_name: krt-auth-service
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+      - JWT_SECRET=${JWT_SECRET:-krt-store-secret-key-dev}
+    networks:
+      - krt-network
+
+  catalog-service:
+    build:
+      context: ./services/catalog-service
+    container_name: krt-catalog-service
+    ports:
+      - "3003:3003"
+    environment:
+      - PORT=3003
+    networks:
+      - krt-network
+
+  cart-service:
+    build:
+      context: ./services/cart-service
+    container_name: krt-cart-service
+    ports:
+      - "3004:3004"
+    environment:
+      - PORT=3004
+    networks:
+      - krt-network
+
+  order-service:
+    build:
+      context: ./services/order-service
+    container_name: krt-order-service
+    ports:
+      - "3005:3005"
+    environment:
+      - PORT=3005
+    networks:
+      - krt-network
+
+  payment-service:
+    build:
+      context: ./services/payment-service
+    container_name: krt-payment-service
+    ports:
+      - "3006:3006"
+    environment:
+      - PORT=3006
+    networks:
+      - krt-network
+
+networks:
+  krt-network:
+    driver: bridge
