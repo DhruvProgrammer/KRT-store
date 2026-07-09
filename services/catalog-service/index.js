@@ -172,50 +172,37 @@ const categories = [
 
 // GET /products - List all products (with optional ?category= and ?search= filters)
 app.get('/products', (req, res) => {
-  try {
-    let result = [...products];
-    const { category, search } = req.query;
+  let result = [...products];
+  const { category, search } = req.query;
 
-    if (category) {
-      result = result.filter(p => p.category.toLowerCase() === category.toLowerCase());
-    }
-
-    if (search) {
-      const s = search.toLowerCase();
-      result = result.filter(p =>
-        p.name.toLowerCase().includes(s) ||
-        p.description.toLowerCase().includes(s) ||
-        p.category.toLowerCase().includes(s)
-      );
-    }
-
-    res.json({ products: result });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch products' });
+  if (category) {
+    result = result.filter(p => p.category.toLowerCase() === category.toLowerCase());
   }
+
+  if (search) {
+    const s = search.toLowerCase();
+    result = result.filter(p =>
+      p.name.toLowerCase().includes(s) ||
+      p.description.toLowerCase().includes(s) ||
+      p.category.toLowerCase().includes(s)
+    );
+  }
+
+  res.json({ products: result });
 });
 
 // GET /products/:slug - Get single product
 app.get('/products/:slug', (req, res) => {
-  try {
-    const { slug } = req.params;
-    const product = products.find(p => p.slug === slug);
-    if (!product) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
-    res.json({ product });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch product' });
+  const product = products.find(p => p.slug === req.params.slug);
+  if (!product) {
+    return res.status(404).json({ error: 'Product not found' });
   }
+  res.json({ product });
 });
 
 // GET /categories - List categories
 app.get('/categories', (req, res) => {
-  try {
-    res.json({ categories });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch categories' });
-  }
+  res.json({ categories });
 });
 
 const PORT = process.env.PORT || 3003;

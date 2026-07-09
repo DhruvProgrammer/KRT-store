@@ -2,6 +2,7 @@ node_modules
 dist
 .astro
 krt-website.zip
+package-lock.json
 .env
 .env.*
 !.env.example

@@ -26,95 +26,68 @@ function ensureUserId(req, res, next) {
 
 // GET / - Get cart for user (header x-user-id)
 app.get('/', ensureUserId, (req, res) => {
-  try {
-    const cart = getCart(req.userId);
-    res.json({ cart });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to retrieve cart' });
-  }
+  res.json({ cart: getCart(req.userId) });
 });
 
 // POST /items - Add item to cart
 app.post('/items', ensureUserId, (req, res) => {
-  try {
-    const { slug, name, price, quantity, image } = req.body;
-    if (!slug || price == null || !quantity || quantity < 1) {
-      return res.status(400).json({ error: 'slug, price, and quantity are required' });
-    }
-
-    const cart = getCart(req.userId);
-    const existing = cart.items.find(item => item.slug === slug);
-
-    if (existing) {
-      existing.quantity += Number(quantity);
-      existing.subtotal = existing.price * existing.quantity;
-    } else {
-      cart.items.push({
-        slug,
-        name: name || slug,
-        price: Number(price),
-        quantity: Number(quantity),
-        image: image || '',
-        subtotal: Number(price) * Number(quantity)
-      });
-    }
-
-    cart.updatedAt = new Date().toISOString();
-    res.status(201).json({ cart });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to add item to cart' });
+  const { slug, name, price, quantity, image } = req.body;
+  if (!slug || price == null || !quantity || quantity < 1) {
+    return res.status(400).json({ error: 'slug, price, and quantity are required' });
   }
+
+  const cart = getCart(req.userId);
+  const existing = cart.items.find(item => item.slug === slug);
+
+  if (existing) {
+    existing.quantity += Number(quantity);
+  } else {
+    cart.items.push({
+      slug,
+      name: name || slug,
+      price: Number(price),
+      quantity: Number(quantity),
+      image: image || ''
+    });
+  }
+
+  cart.updatedAt = new Date().toISOString();
+  res.status(201).json({ cart });
 });
 
 // PUT /items/:slug - Update quantity
 app.put('/items/:slug', ensureUserId, (req, res) => {
-  try {
-    const { slug } = req.params;
-    const { quantity } = req.body;
-    const cart = getCart(req.userId);
-    const item = cart.items.find(i => i.slug === slug);
+  const { slug } = req.params;
+  const { quantity } = req.body;
+  const cart = getCart(req.userId);
+  const item = cart.items.find(i => i.slug === slug);
 
-    if (!item) {
-      return res.status(404).json({ error: 'Item not found in cart' });
-    }
-
-    if (quantity == null || quantity < 1) {
-      return res.status(400).json({ error: 'Quantity must be at least 1' });
-    }
-
-    item.quantity = Number(quantity);
-    item.subtotal = item.price * item.quantity;
-    cart.updatedAt = new Date().toISOString();
-
-    res.json({ cart });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to update item quantity' });
+  if (!item) {
+    return res.status(404).json({ error: 'Item not found in cart' });
   }
+  if (quantity == null || quantity < 1) {
+    return res.status(400).json({ error: 'Quantity must be at least 1' });
+  }
+
+  item.quantity = Number(quantity);
+  cart.updatedAt = new Date().toISOString();
+  res.json({ cart });
 });
 
 // DELETE /items/:slug - Remove item
 app.delete('/items/:slug', ensureUserId, (req, res) => {
-  try {
-    const { slug } = req.params;
-    const cart = getCart(req.userId);
-    cart.items = cart.items.filter(i => i.slug !== slug);
-    cart.updatedAt = new Date().toISOString();
-    res.json({ cart });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to remove item from cart' });
-  }
+  const cart = getCart(req.userId);
+  cart.items = cart.items.filter(i => i.slug !== req.params.slug);
+  cart.updatedAt = new Date().toISOString();
+  res.json({ cart });
 });
 
 // DELETE / - Clear cart
 app.delete('/', ensureUserId, (req, res) => {
-  try {
-    const cart = getCart(req.userId);
-    cart.items = [];
-    cart.updatedAt = new Date().toISOString();
-    res.json({ cart });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to clear cart' });
-  }
+  const cart = getCart(req.userId);
+  cart.items = [];
+  cart.updatedAt = new Date().toISOString();
+  res.json({ cart });
 });
 
 const PORT = process.env.PORT || 3004;
