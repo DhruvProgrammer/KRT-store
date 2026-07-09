@@ -79,17 +79,6 @@ function EyeOffIcon() {
   );
 }
 
-interface PasswordInputProps {
-  id: string;
-  label: string;
-  value: string;
-  onChange: (next: string) => void;
-  required?: boolean;
-  placeholder?: string;
-  autoComplete?: string;
-  showStrength?: boolean;
-}
-
 function PasswordInput({
   id,
   label,
@@ -97,40 +86,21 @@ function PasswordInput({
   onChange,
   required = true,
   placeholder,
-  autoComplete = "current-password",
-  showStrength = false
-}: PasswordInputProps) {
+  autoComplete = "current-password"
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (next: string) => void;
+  required?: boolean;
+  placeholder?: string;
+  autoComplete?: string;
+}) {
   const [shown, setShown] = useState(false);
-
-  const meter = (() => {
-    if (!showStrength || value.length === 0) return null;
-    let score = 0;
-    if (value.length >= 8) score++;
-    if (value.length >= 12) score++;
-    if (/[A-Z]/.test(value)) score++;
-    if (/[0-9]/.test(value)) score++;
-    if (/[^A-Za-z0-9]/.test(value)) score++;
-    const levels = [
-      { label: "Too short", cls: "bg-red-500/70" },
-      { label: "Weak", cls: "bg-red-500/70" },
-      { label: "Okay", cls: "bg-amber-400/80" },
-      { label: "Good", cls: "bg-emerald-400/80" },
-      { label: "Strong", cls: "bg-emerald-300" },
-      { label: "Great", cls: "bg-emerald-300" }
-    ];
-    return { score, ...levels[Math.min(score, 5)] };
-  })();
 
   return (
     <label htmlFor={id} className="block">
-      <span className="mb-2 flex items-center justify-between gap-2">
-        <span className="text-sm font-bold text-ink">{label}</span>
-        {meter && (
-          <span className={`text-[11px] font-black uppercase tracking-[0.18em] ${meter.cls.replace("bg-", "text-")}`}>
-            {meter.label}
-          </span>
-        )}
-      </span>
+      <span className="mb-2 block text-sm font-bold text-ink">{label}</span>
       <div className="relative">
         <span className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-ink-muted">
           <LockIcon />
@@ -155,14 +125,6 @@ function PasswordInput({
           {shown ? <EyeOffIcon /> : <EyeIcon />}
         </button>
       </div>
-      {meter && (
-        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface-ink">
-          <div
-            className={`h-full transition-all ${meter.cls}`}
-            style={{ width: `${(meter.score / 5) * 100}%` }}
-          />
-        </div>
-      )}
     </label>
   );
 }
@@ -278,7 +240,6 @@ export default function AuthForm({ mode }: AuthFormProps) {
           value={password}
           onChange={setPassword}
           autoComplete={mode === "login" ? "current-password" : "new-password"}
-          showStrength={mode === "signup"}
         />
 
         {mode === "signup" && (
@@ -303,22 +264,6 @@ export default function AuthForm({ mode }: AuthFormProps) {
         <Button type="submit" className="w-full justify-center shadow-[0_0_28px_rgba(0,162,255,0.4)]" disabled={showErrors && !canSubmit}>
           {cta}
         </Button>
-
-        {mode === "login" && (
-          <div className="flex items-center justify-between text-xs">
-            <label className="flex items-center gap-2 text-ink-muted">
-              <input
-                type="checkbox"
-                className="h-5 w-5 cursor-pointer rounded border-line bg-surface text-accent focus:ring-accent"
-                onChange={() => {}}
-              />
-              <span>Keep me signed in</span>
-            </label>
-            <a href="/#contact" className="font-black uppercase tracking-[0.18em] text-ink-muted transition hover:text-accent">
-              Forgot password?
-            </a>
-          </div>
-        )}
 
         <p className="text-sm text-ink-muted">
           {switchPrompt}{" "}

@@ -1,0 +1,11 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import AdminPanel from "../components/admin/AdminPanel";
+
+const title = "Admin — KRT store";
+const description = "Admin panel for managing the store.";
+---
+
+<BaseLayout title={title} description={description} noindex>
+  <AdminPanel client:load />
+</BaseLayout>

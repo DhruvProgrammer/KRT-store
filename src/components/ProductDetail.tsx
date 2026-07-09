@@ -48,17 +48,6 @@ function RefreshIcon() {
   );
 }
 
-// Five gallery "shots" mocked by re-tinting the gradient with rotation/overlay
-function getGallery(gradient: string) {
-  return [
-    { id: "main", label: "Hero shot", kind: "hero", src: gradient },
-    { id: "ui", label: "UI view", kind: "ui", src: gradient },
-    { id: "alt", label: "Detail", kind: "alt", src: gradient },
-    { id: "mobile", label: "Mobile", kind: "mobile", src: gradient },
-    { id: "settings", label: "Settings", kind: "settings", src: gradient }
-  ];
-}
-
 function PlusGlyph({ open }: { open: boolean }) {
   return (
     <span
@@ -86,98 +75,17 @@ function Details({ title, open, children }: { title: string; open?: boolean; chi
 
 type LicenseKey = "regular" | "extended" | "team";
 
-interface Variant {
-  id: LicenseKey;
-  label: string;
-  description: string;
-  seats: number;
-  priceMultiplier: number;
-}
-
-const variants: Variant[] = [
-  {
-    id: "regular",
-    label: "Regular",
-    description: "Use in one project for yourself or a single client.",
-    seats: 1,
-    priceMultiplier: 1
-  },
-  {
-    id: "extended",
-    label: "Extended",
-    description: "Use on multiple projects, or for an entire client studio.",
-    seats: 5,
-    priceMultiplier: 2.6
-  },
-  {
-    id: "team",
-    label: "Team",
-    description: "Unlimited seats and priority developer support for one year.",
-    seats: 25,
-    priceMultiplier: 4.2
-  }
+const variants = [
+  { id: "regular" as LicenseKey, label: "Regular", description: "Use in one project for yourself or a single client.", seats: 1, priceMultiplier: 1 },
+  { id: "extended" as LicenseKey, label: "Extended", description: "Use on multiple projects, or for an entire client studio.", seats: 5, priceMultiplier: 2.6 },
+  { id: "team" as LicenseKey, label: "Team", description: "Unlimited seats and priority developer support for one year.", seats: 25, priceMultiplier: 4.2 }
 ];
-
-interface Review {
-  id: string;
-  author: string;
-  initials: string;
-  rating: number;
-  date: string;
-  title: string;
-  body: string;
-  verifiedBuyer: boolean;
-}
-
-function buildReviews(product: Product): Review[] {
-  // Seed deterministic reviews from the product slug + rating
-  const seedReviews: Review[] = [
-    {
-      id: "r1",
-      author: "Alex M.",
-      initials: "AM",
-      rating: Math.min(5, Math.round(product.rating)),
-      date: "2026-05-04",
-      title: "Worth every cent",
-      body:
-        "Integrated in under an hour. The documentation is clear and the maintainer actually replies.",
-      verifiedBuyer: true
-    },
-    {
-      id: "r2",
-      author: "Priya N.",
-      initials: "PN",
-      rating: Math.max(4, Math.min(5, Math.round(product.rating - 0.4))),
-      date: "2026-04-19",
-      title: "Solid for production",
-      body:
-        "Run it in a staging environment for a week and there were no surprises. Performance is excellent.",
-      verifiedBuyer: true
-    },
-    {
-      id: "r3",
-      author: "Tom B.",
-      initials: "TB",
-      rating: 4,
-      date: "2026-03-22",
-      title: "Good, with a small caveat",
-      body:
-        "Works well across browsers. One of the rule sets returned a false positive on our edge case; the team shipped a fix the next week.",
-      verifiedBuyer: true
-    }
-  ];
-  return seedReviews;
-}
 
 interface ProductDetailProps {
   product: Product;
 }
 
 export default function ProductDetail({ product }: ProductDetailProps) {
-  const gallery = getGallery(product.gradient);
-  const [activeShotId, setActiveShotId] = useState(gallery[0].id);
-  const activeShot = gallery.find((shot) => shot.id === activeShotId) ?? gallery[0];
-
   const [licenseKey, setLicenseKey] = useState<LicenseKey>("regular");
   const variant = variants.find((v) => v.id === licenseKey) ?? variants[0];
   const finalPrice = Math.round(product.price * variant.priceMultiplier);
@@ -189,123 +97,38 @@ export default function ProductDetail({ product }: ProductDetailProps) {
   const [added, setAdded] = useState(false);
 
   const handleAdd = () => {
-    try {
-      for (let i = 0; i < quantity; i += 1) {
-        cart.add({
-          slug: product.slug,
-          name: product.name,
-          price: finalPrice,
-          gradient: product.gradient,
-          tag: `${product.tag} · ${variant.label}`,
-          quantity: 1
-        });
-      }
-      setAdded(true);
-      window.setTimeout(() => setAdded(false), 1800);
-    } catch {
-      /* ignore */
+    for (let i = 0; i < quantity; i += 1) {
+      cart.add({
+        slug: product.slug,
+        name: product.name,
+        price: finalPrice,
+        gradient: product.gradient,
+        tag: `${product.tag} · ${variant.label}`,
+        quantity: 1
+      });
     }
+    setAdded(true);
+    window.setTimeout(() => setAdded(false), 1800);
   };
-
-  const reviews = buildReviews(product);
-  const ratingBreakdown = [5, 4, 3, 2, 1].map((stars) => {
-    const share =
-      stars === Math.round(product.rating)
-        ? 0.62
-        : stars === Math.round(product.rating) - 1 || stars === Math.round(product.rating) + 1
-        ? 0.18
-        : stars === 5
-        ? 0.12
-        : stars === 1
-        ? 0.04
-        : 0.02;
-    return { stars, share };
-  });
 
   const related = products
     .filter((p) => p.slug !== product.slug && p.category === product.category)
     .slice(0, 4);
-  const fallback = products.filter((p) => p.slug !== product.slug).slice(0, 4);
 
   return (
     <article>
-      {/* TOP: Gallery + Buy box (Amazon-style split) */}
       <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
-        {/* LEFT: gallery */}
         <Reveal>
-          <div className="flex gap-3">
-            {/* Vertical thumbnail strip */}
-            <ul className="hidden w-16 shrink-0 flex-col gap-2 sm:flex" aria-label="Product gallery">
-              {gallery.map((shot) => (
-                <li key={shot.id}>
-                  <button
-                    type="button"
-                    onClick={() => setActiveShotId(shot.id)}
-                    aria-current={activeShotId === shot.id ? "true" : undefined}
-                    aria-label={`Show ${shot.label}`}
-                    className={`relative block aspect-square w-full overflow-hidden rounded-xl border-2 transition ${
-                      activeShotId === shot.id
-                        ? "border-accent shadow-[0_0_18px_rgba(0,162,255,0.35)]"
-                        : "border-line/70 hover:border-accent/40"
-                    }`}
-                  >
-                    <div
-                      className="absolute inset-0"
-                      style={{
-                        background: shot.src,
-                        filter: shot.kind === "alt" ? "hue-rotate(45deg) brightness(0.92)" : "none",
-                        transform: shot.kind === "settings" ? "scale(1.05) translateY(-4%)" : "none"
-                      }}
-                      aria-hidden="true"
-                    />
-                  </button>
-                </li>
-              ))}
-            </ul>
-
-            {/* Main preview */}
-            <div className="flex-1">
-              <div className="group relative overflow-hidden rounded-[2rem] border border-line bg-bg-soft">
-                <div
-                  className="aspect-[4/3] sm:aspect-[16/10]"
-                  style={{ background: activeShot.src }}
-                  role="img"
-                  aria-label={`${product.name} preview — ${activeShot.label}`}
-                />
-                <div className="pointer-events-none absolute left-4 top-4 inline-flex items-center gap-2 rounded-full border border-white/30 bg-black/30 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-white backdrop-blur-sm">
-                  <span className="h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_8px_rgba(0,162,255,0.7)]" />
-                  {activeShot.label}
-                </div>
-
-                {/* Mobile horizontal thumbs */}
-                <div className="border-t border-line bg-bg-soft/90 p-2 sm:hidden">
-                  <ul className="flex snap-x gap-2 overflow-x-auto" aria-label="Product gallery">
-                    {gallery.map((shot) => (
-                      <li key={shot.id}>
-                        <button
-                          type="button"
-                          onClick={() => setActiveShotId(shot.id)}
-                          aria-current={activeShotId === shot.id ? "true" : undefined}
-                          className={`block h-12 w-12 shrink-0 overflow-hidden rounded-lg border-2 transition ${
-                            activeShotId === shot.id ? "border-accent" : "border-line/60"
-                          }`}
-                        >
-                          <div
-                            className="h-full w-full"
-                            style={{ background: shot.src }}
-                            aria-hidden="true"
-                          />
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
+          <div className="overflow-hidden rounded-[2rem] border border-line bg-bg-soft">
+            <div
+              className="aspect-[4/3] sm:aspect-[16/10]"
+              style={{ background: product.gradient }}
+              role="img"
+              aria-label={`${product.name} preview`}
+            />
           </div>
         </Reveal>
 
-        {/* RIGHT: Buy box */}
         <div>
           <Reveal delay={0.06}>
             <p className="text-sm font-bold uppercase tracking-[0.24em] text-ink-muted">
@@ -342,7 +165,6 @@ export default function ProductDetail({ product }: ProductDetailProps) {
           </Reveal>
 
           <Reveal delay={0.18}>
-            {/* License picker — visible button group (no dropdown per UX.md) */}
             <fieldset className="mt-8">
               <legend className="mb-3 text-xs font-black uppercase tracking-[0.18em] text-ink-muted">
                 Choose a license
@@ -387,7 +209,6 @@ export default function ProductDetail({ product }: ProductDetailProps) {
               </div>
             </fieldset>
 
-            {/* Quantity + Add to cart */}
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
               <label
                 className="flex items-center gap-2 rounded-2xl border border-line bg-surface/60 px-3 py-2 text-sm"
@@ -467,7 +288,6 @@ export default function ProductDetail({ product }: ProductDetailProps) {
         </div>
       </div>
 
-      {/* Bundle banner */}
       <Reveal>
         <aside className="mt-12 flex flex-col items-start justify-between gap-4 rounded-3xl border border-accent/30 bg-gradient-to-br from-accent/15 to-accent-bright/10 p-6 sm:flex-row sm:items-center sm:p-8">
           <div>
@@ -487,7 +307,6 @@ export default function ProductDetail({ product }: ProductDetailProps) {
         </aside>
       </Reveal>
 
-      {/* Specs + Tabs */}
       <Reveal delay={0.2}>
         <section className="mt-16 border-t border-line pt-10">
           <h2 className="mb-6 text-2xl font-black tracking-[-0.06em] text-ink">Product details</h2>
@@ -600,76 +419,6 @@ export default function ProductDetail({ product }: ProductDetailProps) {
         </section>
       </Reveal>
 
-      {/* Reviews */}
-      <Reveal delay={0.2}>
-        <section className="mt-16 border-t border-line pt-10">
-          <div className="grid gap-10 lg:grid-cols-[280px_1fr]">
-            <div>
-              <h2 className="text-2xl font-black tracking-[-0.06em] text-ink">Customer reviews</h2>
-              <div className="mt-3 flex items-center gap-3">
-                <span className="text-5xl font-black tracking-[-0.05em] text-ink">
-                  {product.rating.toFixed(1)}
-                </span>
-                <div className="space-y-1 text-sm text-ink-muted">
-                  <Stars value={product.rating} size="md" />
-                  <p>{product.reviewCount.toLocaleString()} ratings</p>
-                </div>
-              </div>
-              <dl className="mt-6 space-y-2">
-                {ratingBreakdown.map((row) => (
-                  <div key={row.stars} className="flex items-center gap-3 text-xs text-ink-muted">
-                    <dt className="w-12 shrink-0 font-black text-ink">{row.stars} star</dt>
-                    <dd className="h-2 flex-1 overflow-hidden rounded-full bg-line/40">
-                      <div
-                        className="h-full bg-amber-400"
-                        style={{ width: `${Math.round(row.share * 100)}%` }}
-                      />
-                    </dd>
-                    <span className="w-10 text-right">{Math.round(row.share * 100)}%</span>
-                  </div>
-                ))}
-              </dl>
-              <a
-                href="#reviews"
-                className="mt-6 inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-4 py-2.5 text-xs font-black uppercase tracking-[0.18em] text-accent transition hover:bg-accent/20"
-              >
-                Read reviews below
-              </a>
-            </div>
-
-            <ul className="space-y-4" id="reviews">
-              {reviews.map((review) => (
-                <li
-                  key={review.id}
-                  className="rounded-2xl border border-line bg-surface/60 p-5"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-accent to-accent-bright font-black text-ink-inverse">
-                      {review.initials}
-                    </span>
-                    <div className="text-sm">
-                      <p className="font-black text-ink">{review.author}</p>
-                      <p className="text-xs text-ink-muted">{review.date}</p>
-                    </div>
-                    {review.verifiedBuyer && (
-                      <span className="ml-auto rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-emerald-300">
-                        Verified buyer
-                      </span>
-                    )}
-                  </div>
-                  <div className="mt-3">
-                    <Stars value={review.rating} size="sm" />
-                    <p className="mt-2 text-sm font-black text-ink">{review.title}</p>
-                    <p className="mt-2 text-sm leading-7 text-ink-muted">{review.body}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
-      </Reveal>
-
-      {/* Related products */}
       <section className="mt-16 border-t border-line pt-10">
         <div className="mb-6 flex items-end justify-between gap-3">
           <div>
@@ -693,14 +442,13 @@ export default function ProductDetail({ product }: ProductDetailProps) {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {fallback.map((item) => (
+            {products.filter((p) => p.slug !== product.slug).slice(0, 4).map((item) => (
               <ProductCard key={item.slug} product={item} />
             ))}
           </div>
         )}
       </section>
 
-      {/* Repeat CTA per UX.md §9 */}
       <section className="mt-16 rounded-3xl border border-line bg-bg-soft/50 p-8 text-center sm:p-12">
         <h2 className="mt-3 text-2xl font-black tracking-[-0.05em] text-ink sm:text-3xl">
           Ready to ship {product.name}?

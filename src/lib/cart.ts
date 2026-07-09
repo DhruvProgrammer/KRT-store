@@ -11,7 +11,6 @@ export interface CartItem {
 
 const STORAGE_KEY = "dg-cart";
 const PAYMENT_KEY = "dg-payment-method";
-const MAX_PRICE = 100000;
 const MAX_QUANTITY = 99;
 const MIN_QUANTITY = 1;
 
@@ -25,23 +24,20 @@ export const PAYMENT_METHODS = [
 
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 
-const PAYMENT_LABELS: Record<PaymentMethod, string> = {
-  stripe: "Stripe",
-  card: "Credit / Debit card",
-  razorpay: "Razorpay",
-  upi: "UPI",
-  bitcoin: "Bitcoin"
-};
-
 export function paymentLabel(method: PaymentMethod): string {
-  return PAYMENT_LABELS[method] ?? method;
+  const labels: Record<PaymentMethod, string> = {
+    stripe: "Stripe",
+    card: "Credit / Debit card",
+    razorpay: "Razorpay",
+    upi: "UPI",
+    bitcoin: "Bitcoin"
+  };
+  return labels[method] ?? method;
 }
 
 type Listener = () => void;
 const listeners = new Set<Listener>();
 
-// Cached snapshots — getSnapshot must return a stable reference, otherwise
-// useSyncExternalStore loops forever. We refresh these only inside `emit()`.
 let cartSnapshot: CartItem[] = [];
 let paymentSnapshot: PaymentMethod = "stripe";
 
@@ -50,8 +46,6 @@ function isPaymentMethod(value: string): value is PaymentMethod {
 }
 
 function emit() {
-  // Refresh snapshots from localStorage so getSnapshot returns a stable
-  // reference between emits.
   cartSnapshot = readKey(STORAGE_KEY);
   if (typeof window !== "undefined") {
     try {
@@ -67,45 +61,19 @@ function emit() {
   }
 }
 
-function sanitizeGradient(value: unknown): string | null {
-  if (typeof value !== "string") return null;
-  const trimmed = value.trim();
-  if (trimmed.length === 0 || trimmed.length > 500) return null;
-  if (/<|>|javascript:|data:|@import|url\(|expression\(/i.test(trimmed)) return null;
-  return trimmed;
-}
-
-function sanitizeScalar(value: unknown, min: number, max: number): number | null {
-  const n = Number(value);
-  if (!Number.isFinite(n)) return null;
-  if (n < min || n > max) return null;
-  return n;
-}
-
 function validateItem(raw: unknown): CartItem | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
-
-  if (typeof r.slug !== "string" || r.slug.length === 0 || r.slug.length > 120) return null;
-  if (typeof r.name !== "string" || r.name.length === 0 || r.name.length > 200) return null;
-
-  const price = sanitizeScalar(r.price, 0, MAX_PRICE);
-  if (price === null) return null;
-
-  const quantity = sanitizeScalar(r.quantity, MIN_QUANTITY, MAX_QUANTITY);
-  if (quantity === null) return null;
-
-  const gradient = sanitizeGradient(r.gradient);
-  if (gradient === null) return null;
-
-  // Tag is optional; when present it must be a safe short string.
-  let tag: string | undefined;
-  if (typeof r.tag === "string") {
-    const t = r.tag.trim();
-    if (t.length > 0 && t.length <= 40 && !/<|>|javascript:/i.test(t)) tag = t;
-  }
-
-  return { slug: r.slug, name: r.name, price, quantity, gradient, tag };
+  if (typeof r.slug !== "string" || r.slug.length === 0) return null;
+  if (typeof r.name !== "string" || r.name.length === 0) return null;
+  const price = Number(r.price);
+  if (!Number.isFinite(price) || price < 0) return null;
+  const quantity = Number(r.quantity);
+  if (!Number.isFinite(quantity) || quantity < MIN_QUANTITY || quantity > MAX_QUANTITY) return null;
+  const gradient = typeof r.gradient === "string" ? r.gradient.trim() : "";
+  if (gradient.length === 0 || gradient.length > 500) return null;
+  const tag = typeof r.tag === "string" ? r.tag.trim().slice(0, 40) : undefined;
+  return { slug: r.slug, name: r.name, price, quantity, gradient, tag: tag || undefined };
 }
 
 function readKey(key: string): CartItem[] {
@@ -115,12 +83,7 @@ function readKey(key: string): CartItem[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    const items: CartItem[] = [];
-    for (const candidate of parsed) {
-      const valid = validateItem(candidate);
-      if (valid) items.push(valid);
-    }
-    return items;
+    return parsed.filter((c: unknown) => validateItem(c) !== null) as CartItem[];
   } catch {
     return [];
   }
@@ -166,12 +129,11 @@ export const cart = {
   },
   updateQuantity(slug: string, quantity: number) {
     if (typeof slug !== "string" || slug.length === 0) return;
-    const clamped = sanitizeScalar(quantity, MIN_QUANTITY, MAX_QUANTITY);
-    if (clamped === null) return;
+    const q = Math.max(MIN_QUANTITY, Math.min(MAX_QUANTITY, Math.round(quantity)));
     const items = readKey(STORAGE_KEY);
     const item = items.find((i) => i.slug === slug);
     if (item) {
-      item.quantity = clamped;
+      item.quantity = q;
       writeKey(STORAGE_KEY, items);
     }
   },

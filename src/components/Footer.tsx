@@ -30,7 +30,8 @@ const linkGroups = [
     links: [
       { href: "/#contact", label: "About KRT store" },
       { href: "/privacy", label: "Privacy" },
-      { href: "/terms", label: "Terms of service" }
+      { href: "/terms", label: "Terms of service" },
+      { href: "/admin", label: "Admin" }
     ]
   }
 ];
