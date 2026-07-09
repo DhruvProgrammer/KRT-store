@@ -43,142 +43,22 @@ function PaymentLogo({ method }: { method: PaymentMethod }) {
   return null;
 }
 
-/* ------------------------- Payment input blocks ----------------------- */
-function CardFields() {
-  return (
-    <div className="space-y-4">
-      <div>
-        <label htmlFor="name" className="mb-2 block text-sm font-bold text-ink">Name on card</label>
-        <input id="name" type="text" required autoComplete="off" placeholder="Jane Doe" className={inputClass} />
-      </div>
-      <div>
-        <label htmlFor="card" className="mb-2 block text-sm font-bold text-ink">Card number — do not enter real data</label>
-        <input
-          id="card"
-          type="text"
-          inputMode="numeric"
-          pattern="[0-9 ]*"
-          required
-          autoComplete="off"
-          placeholder="—"
-          className={inputClass}
-        />
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="expiry" className="mb-2 block text-sm font-bold text-ink">Expiry</label>
-          <input id="expiry" type="text" autoComplete="off" placeholder="MM/YY" className={inputClass} />
-        </div>
-        <div>
-          <label htmlFor="cvc" className="mb-2 block text-sm font-bold text-ink">CVC</label>
-          <input
-            id="cvc"
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            autoComplete="off"
-            placeholder="—"
-            className={inputClass}
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function StripeFields() {
-  return (
-    <div className="space-y-4">
-      <div className="rounded-xl border border-line bg-surface/40 p-4 text-xs leading-relaxed text-ink-muted">
-        <p className="mb-1 text-[11px] font-black uppercase tracking-[0.18em] text-accent">Stripe Checkout</p>
-        In production this opens <span className="font-bold text-ink">Stripe Elements / Checkout</span> — a PCI-compliant
-        embedded form. The prototype shows the same shape but skips real validation.
-      </div>
-      <div>
-        <label htmlFor="stripe-email" className="mb-2 block text-sm font-bold text-ink">Email (Stripe receipt)</label>
-        <input id="stripe-email" type="email" required placeholder="you@example.com" className={inputClass} />
-      </div>
-      <div>
-        <label htmlFor="stripe-card" className="mb-2 block text-sm font-bold text-ink">Card details</label>
-        <input
-          id="stripe-card"
-          type="text"
-          inputMode="numeric"
-          pattern="[0-9 ]*"
-          required
-          autoComplete="off"
-          placeholder="4242 4242 4242 4242 (test)"
-          className={inputClass}
-        />
-      </div>
-    </div>
-  );
-}
-
-function RazorpayFields() {
-  return (
-    <div className="space-y-4">
-      <div className="rounded-xl border border-line bg-surface/40 p-4 text-xs leading-relaxed text-ink-muted">
-        <p className="mb-1 text-[11px] font-black uppercase tracking-[0.18em] text-accent">Razorpay Checkout</p>
-        In production this opens the <span className="font-bold text-ink">Razorpay Standard Checkout</span> modal and
-        supports UPI, cards, netbanking, and wallets. The prototype skips the redirect.
-      </div>
-      <div>
-        <label htmlFor="rp-contact" className="mb-2 block text-sm font-bold text-ink">Mobile / Email</label>
-        <input id="rp-contact" type="text" required placeholder="9876543210 or you@example.com" className={inputClass} />
-      </div>
-    </div>
-  );
-}
-
-function UpiFields() {
-  return (
-    <div className="space-y-4">
-      <div className="rounded-xl border border-line bg-surface/40 p-4 text-xs leading-relaxed text-ink-muted">
-        <p className="mb-1 text-[11px] font-black uppercase tracking-[0.18em] text-accent">UPI</p>
-        Enter your UPI ID (e.g. <span className="font-mono text-ink">name@bank</span>). We'll send a collect request
-        to your UPI app — prototype only, no real request is made.
-      </div>
-      <div>
-        <label htmlFor="upi-id" className="mb-2 block text-sm font-bold text-ink">UPI ID</label>
-        <input id="upi-id" type="text" required placeholder="yourname@okbank" pattern="[a-zA-Z0-9._\-]+@[a-zA-Z]+" className={inputClass} />
-      </div>
-    </div>
-  );
-}
-
-function BitcoinFields() {
-  const demoAddress = useMemo(
-    () => "bc1qkrt" + Math.random().toString(36).slice(2, 10) + "demo",
-    []
-  );
-  return (
-    <div className="space-y-4">
-      <div className="rounded-xl border border-[#F7931A]/30 bg-[#F7931A]/5 p-4 text-xs leading-relaxed text-ink-muted">
-        <p className="mb-1 text-[11px] font-black uppercase tracking-[0.18em] text-[#F7931A]">Bitcoin</p>
-        Send the exact amount to the address below from your BTC wallet. The order auto-confirms after 1 blockchain
-        confirmation — prototype only, no on-chain check is made.
-      </div>
-      <div className="rounded-xl border border-line bg-bg-raised p-4">
-        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-ink-muted">Send BTC to</p>
-        <p className="mt-1 break-all font-mono text-sm text-ink">{demoAddress}</p>
-        <p className="mt-2 text-[10px] uppercase tracking-[0.18em] text-ink-muted">Network · Bitcoin (Mainnet)</p>
-      </div>
-      <div>
-        <label htmlFor="btc-tx" className="mb-2 block text-sm font-bold text-ink">Transaction ID (after sending)</label>
-        <input id="btc-tx" type="text" placeholder="Paste txid here" className={inputClass} />
-      </div>
-    </div>
-  );
-}
-
+/* ------------------------- Payment fields ----------------------- */
 function PaymentFields({ method }: { method: PaymentMethod }) {
-  if (method === "stripe") return <StripeFields />;
-  if (method === "card") return <CardFields />;
-  if (method === "razorpay") return <RazorpayFields />;
-  if (method === "upi") return <UpiFields />;
-  if (method === "bitcoin") return <BitcoinFields />;
-  return null;
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-ink-muted">
+        Payment via {paymentLabel(method)} — redirect to provider in production.
+      </p>
+      <input
+        id="payment-email"
+        type="email"
+        required
+        placeholder="you@example.com"
+        className={inputClass}
+      />
+    </div>
+  );
 }
 
 /* ------------------------------- Main --------------------------------- */
