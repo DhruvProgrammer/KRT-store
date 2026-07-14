@@ -244,6 +244,7 @@ export default function CheckoutForm() {
 
     clear();
     setSubmitted(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
