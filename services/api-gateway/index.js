@@ -13,7 +13,8 @@ const services = {
   cart: { target: process.env.CART_SERVICE_URL || 'http://localhost:3004', path: '/api/cart' },
   orders: { target: process.env.ORDER_SERVICE_URL || 'http://localhost:3005', path: '/api/orders' },
   payments: { target: process.env.PAYMENT_SERVICE_URL || 'http://localhost:3006', path: '/api/payments' },
-  notify: { target: process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:8000', path: '/api/notify' }
+  // ponytail: notification route is /notify/order, so keep the /notify segment in the target.
+  notify: { target: (process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:8000') + '/notify', path: '/api/notify' }
 };
 
 // Proxy each service
