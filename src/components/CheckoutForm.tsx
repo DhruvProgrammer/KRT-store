@@ -13,6 +13,33 @@ function formatPrice(cents: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents);
 }
 
+function getGuestId(): string {
+  let id = localStorage.getItem("dg-guest-id");
+  if (!id) {
+    id = "guest-" + Math.random().toString(36).slice(2);
+    localStorage.setItem("dg-guest-id", id);
+  }
+  return id;
+}
+
+function recordLocalOrder(order: { id: string }, email: string, itemCount: number, total: number): void {
+  try {
+    const key = "dg-orders";
+    const list = JSON.parse(localStorage.getItem(key) || "[]");
+    list.unshift({
+      id: order.id,
+      email,
+      items: itemCount,
+      total,
+      date: new Date().toISOString().slice(0, 10),
+      status: "paid"
+    });
+    localStorage.setItem(key, JSON.stringify(list.slice(0, 50)));
+  } catch {
+    /* non-fatal */
+  }
+}
+
 const inputClass =
   "h-12 w-full rounded-full border border-line bg-surface/60 px-5 text-sm text-ink placeholder-ink-muted outline-none transition focus:border-accent focus:bg-surface-bright focus:ring-1 focus:ring-accent";
 
@@ -108,6 +135,30 @@ export default function CheckoutForm() {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const email = (e.currentTarget.elements.namedItem("email") as HTMLInputElement | null)?.value || "";
+    const API_URL = import.meta.env.PUBLIC_API_URL || "http://localhost:3001";
+
+    // ponytail: best-effort receipt email. Gateway may be down (static demo) —
+    // never block the thank-you screen on the network call.
+    fetch(`${API_URL}/api/orders`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-user-id": getGuestId()
+      },
+      body: JSON.stringify({
+        email,
+        items: items.map((i) => ({ slug: i.slug, name: i.name, price: i.price, quantity: i.quantity })),
+        total,
+        paymentMethod
+      })
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.order) recordLocalOrder(data.order, email, items.length, total);
+      })
+      .catch(() => {});
+
     clear();
     setSubmitted(true);
   };

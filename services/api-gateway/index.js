@@ -12,7 +12,8 @@ const services = {
   catalog: { target: process.env.CATALOG_SERVICE_URL || 'http://localhost:3003', path: '/api/catalog' },
   cart: { target: process.env.CART_SERVICE_URL || 'http://localhost:3004', path: '/api/cart' },
   orders: { target: process.env.ORDER_SERVICE_URL || 'http://localhost:3005', path: '/api/orders' },
-  payments: { target: process.env.PAYMENT_SERVICE_URL || 'http://localhost:3006', path: '/api/payments' }
+  payments: { target: process.env.PAYMENT_SERVICE_URL || 'http://localhost:3006', path: '/api/payments' },
+  notify: { target: process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:8000', path: '/api/notify' }
 };
 
 // Proxy each service
