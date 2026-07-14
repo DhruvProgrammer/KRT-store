@@ -9,7 +9,6 @@ const app = express();
 // CORS headers and throws "Failed to fetch" instead of showing the real error.
 const corsOptions = { origin: '*', methods: ['GET','POST','PUT','DELETE','PATCH','OPTIONS'] };
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // explicit preflight for all routes
 
 // ponytail: no express.json() here — the gateway is a pure proxy. Parsing the
 // body consumes the stream before createProxyMiddleware forwards it, so

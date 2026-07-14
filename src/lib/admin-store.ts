@@ -58,26 +58,6 @@ export function deleteProduct(slug: string) {
   writeEdits(edits);
 }
 
-function defaultProduct(slug: string): Product {
-  return {
-    slug,
-    name: slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
-    category: "plugins",
-    tag: "New",
-    description: "",
-    longDescription: "",
-    price: 0,
-    features: [],
-    compatibility: [],
-    version: "v1.0.0",
-    fileSize: "1.0 MB",
-    gradient: "linear-gradient(135deg, #8e99a8 0%, #3d4654 100%)",
-    highlights: [{ label: "Coming", value: "soon" }],
-    rating: 0,
-    reviewCount: 0
-  };
-}
-
 export function getCategories(): Category[] {
   const edits = readEdits();
   const overrides = (edits.categories as Record<string, Partial<Category>>) || {};

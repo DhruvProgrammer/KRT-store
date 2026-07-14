@@ -38,5 +38,4 @@ export const categories: Category[] = [
   }
 ];
 
-export const categoryBySlug = (slug: string) =>
-  categories.find((category) => category.slug === slug);
+

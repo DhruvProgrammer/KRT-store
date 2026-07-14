@@ -155,10 +155,7 @@ export const cart = {
       }
     }
     emit();
-  },
-  getPaymentMethod: (): PaymentMethod => paymentSnapshot,
-  total: () => cartSnapshot.reduce((s, i) => s + i.price * i.quantity, 0),
-  count: () => cartSnapshot.reduce((s, i) => s + i.quantity, 0)
+  }
 };
 
 export function useCart() {

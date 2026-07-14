@@ -343,6 +343,4 @@ export const products: Product[] = [
 }
 ];
 
-export const productBySlug = (slug: string) => products.find((p) => p.slug === slug);
 
-export const productsByCategory = (category: string) => products.filter((p) => p.category === category);

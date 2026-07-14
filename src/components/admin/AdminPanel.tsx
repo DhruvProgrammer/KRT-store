@@ -6,10 +6,6 @@ import type { Category } from "../../data/categories";
 
 type Tab = "dashboard" | "products" | "categories" | "extras" | "orders";
 
-function notch(text: string) {
-  return text.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
 function Notify({ message, type, onDone }: { message: string; type?: "success" | "error"; onDone: () => void }) {
   useEffect(() => { const t = setTimeout(onDone, 2200); return () => clearTimeout(t); }, [onDone]);
   const cls = type === "error"
