@@ -72,18 +72,81 @@ function PaymentLogo({ method }: { method: PaymentMethod }) {
 
 /* ------------------------- Payment fields ----------------------- */
 function PaymentFields({ method }: { method: PaymentMethod }) {
+  if (method === "stripe") {
+    return (
+      <p className="text-sm leading-relaxed text-ink-muted">
+        Safe and secure checkout via Stripe. You will be redirected to Stripe to finalize your payment.
+      </p>
+    );
+  }
+  if (method === "razorpay") {
+    return (
+      <p className="text-sm leading-relaxed text-ink-muted">
+        Safe and secure checkout via Razorpay. You will be redirected to Razorpay to finalize your payment.
+      </p>
+    );
+  }
+  if (method === "bitcoin") {
+    return (
+      <p className="text-sm leading-relaxed text-ink-muted">
+        Payment via Bitcoin. The Bitcoin wallet address and invoice will be displayed upon order submission.
+      </p>
+    );
+  }
+  if (method === "upi") {
+    return (
+      <div className="space-y-4">
+        <p className="text-sm leading-relaxed text-ink-muted">
+          Pay directly using your UPI application. Please enter your Virtual Payment Address (UPI ID) below:
+        </p>
+        <input
+          id="upi-id"
+          type="text"
+          required
+          placeholder="username@bank"
+          className={inputClass}
+        />
+      </div>
+    );
+  }
+  // card
   return (
     <div className="space-y-4">
-      <p className="text-sm text-ink-muted">
-        Payment via {paymentLabel(method)} — redirect to provider in production.
+      <p className="text-sm leading-relaxed text-ink-muted">
+        Credit or debit card payment. All card details are processed securely.
       </p>
-      <input
-        id="payment-email"
-        type="email"
-        required
-        placeholder="you@example.com"
-        className={inputClass}
-      />
+      <div className="space-y-3">
+        <input
+          id="card-name"
+          type="text"
+          required
+          placeholder="Cardholder name"
+          className={inputClass}
+        />
+        <input
+          id="card-number"
+          type="text"
+          required
+          placeholder="Card number (4111 2222 3333 4444)"
+          className={inputClass}
+        />
+        <div className="grid grid-cols-2 gap-3">
+          <input
+            id="card-expiry"
+            type="text"
+            required
+            placeholder="MM/YY"
+            className={inputClass}
+          />
+          <input
+            id="card-cvc"
+            type="text"
+            required
+            placeholder="CVC"
+            className={inputClass}
+          />
+        </div>
+      </div>
     </div>
   );
 }
@@ -138,8 +201,13 @@ export default function CheckoutForm() {
     const email = (e.currentTarget.elements.namedItem("email") as HTMLInputElement | null)?.value || "";
     const API_URL = import.meta.env.PUBLIC_API_URL || "http://localhost:3001";
 
-    // ponytail: best-effort receipt email. Gateway may be down (static demo) —
-    // never block the thank-you screen on the network call.
+    console.log("[Checkout] Submitting order. API_URL:", API_URL, "Payload:", {
+      email,
+      items: items.map((i) => ({ slug: i.slug, name: i.name, price: i.price, quantity: i.quantity })),
+      total,
+      paymentMethod
+    });
+
     fetch(`${API_URL}/api/orders`, {
       method: "POST",
       headers: {
@@ -153,11 +221,26 @@ export default function CheckoutForm() {
         paymentMethod
       })
     })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (data?.order) recordLocalOrder(data.order, email, items.length, total);
+      .then((r) => {
+        console.log("[Checkout] Fetch response status:", r.status);
+        if (!r.ok) {
+          console.error("[Checkout] Fetch returned non-ok status:", r.status);
+          alert(`Order API error: Status code ${r.status}`);
+        }
+        return r.ok ? r.json() : null;
       })
-      .catch(() => {});
+      .then((data) => {
+        console.log("[Checkout] Order created response data:", data);
+        if (data?.order) {
+          recordLocalOrder(data.order, email, items.length, total);
+        } else {
+          console.error("[Checkout] Order data was empty or invalid in response.");
+        }
+      })
+      .catch((err) => {
+        console.error("[Checkout] Fetch error caught:", err);
+        alert(`Network connection failed: ${err.message || err}`);
+      });
 
     clear();
     setSubmitted(true);
@@ -202,7 +285,7 @@ export default function CheckoutForm() {
             <fieldset>
               <legend className="mb-3 text-xs font-black uppercase tracking-[0.18em] text-ink-muted">Contact</legend>
               <label htmlFor="email" className="mb-2 block text-sm font-bold text-ink">Email address</label>
-              <input id="email" type="email" required placeholder="you@example.com" autoComplete="email" className={inputClass} />
+              <input id="email" name="email" type="email" required placeholder="you@example.com" autoComplete="email" className={inputClass} />
             </fieldset>
 
             <fieldset>

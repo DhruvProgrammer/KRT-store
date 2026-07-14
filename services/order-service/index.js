@@ -15,8 +15,12 @@ const NOTIFICATION_SERVICE_URL = process.env.NOTIFICATION_SERVICE_URL || 'http:/
 const NOTIFY_TOKEN = process.env.NOTIFY_TOKEN || '';
 const STORE_NAME = process.env.STORE_NAME || 'KRT Store';
 
-function notifyCustomer(order) {
-  if (!order.email) return;
+async function notifyCustomer(order) {
+  console.log('[order-service] notifyCustomer triggered for order:', order.id, 'email:', order.email);
+  if (!order.email) {
+    console.log('[order-service] Skipping notification: No email address provided in order.');
+    return;
+  }
   const payload = {
     email: order.email,
     order_id: order.id,
@@ -25,11 +29,23 @@ function notifyCustomer(order) {
     store_name: STORE_NAME,
     created_at: order.createdAt
   };
-  fetch(`${NOTIFICATION_SERVICE_URL}/notify/order`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-notify-token': NOTIFY_TOKEN },
-    body: JSON.stringify(payload)
-  }).catch(err => console.error('[order] notify failed:', err.message));
+  console.log('[order-service] Calling notification-service with payload:', JSON.stringify(payload));
+  try {
+    const res = await fetch(`${NOTIFICATION_SERVICE_URL}/notify/order`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-notify-token': NOTIFY_TOKEN },
+      body: JSON.stringify(payload)
+    });
+    const body = await res.text();
+    if (res.ok) {
+      console.log('[order-service] ✅ Email sent successfully. Response:', body);
+    } else {
+      console.error('[order-service] ❌ notification-service returned error:', res.status, body);
+    }
+  } catch (err) {
+    console.error('[order-service] ❌ try-catch: fetch to notification-service threw an exception:', err.message);
+    console.error('[order-service]    Full error:', err);
+  }
 }
 
 // In-memory array for orders
@@ -51,8 +67,10 @@ function ensureUserId(req, res, next) {
 
 // POST / - Create order
 app.post('/', ensureUserId, (req, res) => {
+  console.log('[order-service] POST / received request. Body:', JSON.stringify(req.body));
   const { items, shippingAddress, paymentIntentId, email } = req.body;
   if (!items || !Array.isArray(items) || items.length === 0) {
+    console.log('[order-service] Invalid request: items array is required/empty');
     return res.status(400).json({ error: 'Items array is required' });
   }
 

@@ -3,7 +3,13 @@ const { createProxyMiddleware } = require('http-proxy-middleware');
 const cors = require('cors');
 
 const app = express();
-app.use(cors());
+
+// CORS must be applied to ALL responses including proxy errors.
+// Without this, if the backend is down the browser gets a 502 with no
+// CORS headers and throws "Failed to fetch" instead of showing the real error.
+const corsOptions = { origin: '*', methods: ['GET','POST','PUT','DELETE','PATCH','OPTIONS'] };
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // explicit preflight for all routes
 
 // ponytail: no express.json() here — the gateway is a pure proxy. Parsing the
 // body consumes the stream before createProxyMiddleware forwards it, so
@@ -31,11 +37,16 @@ Object.entries(services).forEach(([name, config]) => {
         [`^${config.path}`]: ''
       },
       onError: (err, req, res) => {
-        console.error(`[Gateway] Proxy error for ${name}:`, err.message);
-        res.status(502).json({ error: `Service ${name} unavailable` });
+        console.error(`[Gateway] ❌ Proxy error for ${name}:`, err.message);
+        // Always set CORS headers on error so the browser can read the response
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.status(502).json({ error: `Service ${name} unavailable`, detail: err.message });
       },
-      onProxyReq: (proxyReq, req, res) => {
-        console.log(`[Gateway] ${req.method} ${req.path} -> ${name}`);
+      onProxyReq: (proxyReq, req) => {
+        console.log(`[Gateway] → ${req.method} ${req.path} → ${name} (${config.target})`);
+      },
+      onProxyRes: (proxyRes, req) => {
+        console.log(`[Gateway] ← ${req.method} ${req.path} ← ${name} status:${proxyRes.statusCode}`);
       }
     })
   );
