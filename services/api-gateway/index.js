@@ -14,7 +14,6 @@ app.options('*', cors(corsOptions)); // explicit preflight for all routes
 // ponytail: no express.json() here — the gateway is a pure proxy. Parsing the
 // body consumes the stream before createProxyMiddleware forwards it, so
 // backends (e.g. order-service) get an empty body and receipts never send.
-
 // Service targets
 const services = {
   auth: { target: process.env.AUTH_SERVICE_URL || 'http://localhost:3002', path: '/api/auth' },
