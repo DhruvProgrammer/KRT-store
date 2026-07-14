@@ -1,5 +1,10 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
+// ponytail: load NOTIFY_TOKEN/STORE_NAME from the notification service's .env
+// (single source of truth) so order-service works even when not launched via
+// the .ps1 injector. Dotenv won't override vars already in process.env (docker injects them).
+require('dotenv').config({ path: path.join(__dirname, '../notification-service/.env') });
 
 const app = express();
 app.use(cors());

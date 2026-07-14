@@ -150,6 +150,7 @@ async def notify_order(o: OrderNotification, x_notify_token: str = Header("")):
     html = render_invoice(o)
     try:
         send_email(o.email, f"Your {o.store_name} order #{o.order_id} — receipt", html)
+        print(f"[notify] receipt sent to {o.email} (order {o.order_id})")
     except Exception as exc:  # ponytail: log, never crash the caller's checkout
         print(f"[notify] email send failed: {exc}")
         raise HTTPException(status_code=502, detail="email send failed")
