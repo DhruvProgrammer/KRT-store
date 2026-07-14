@@ -99,9 +99,14 @@ function writeKey(key: string, items: CartItem[]) {
   emit();
 }
 
+// ponytail: SSR has no localStorage, so the server always renders an empty
+// cart. getServerSnapshot MUST return this stable empty array (never the
+// populated client snapshot) or React throws a hydration mismatch on every
+// cart/checkout page. After hydration, getSnapshot returns the real cart.
+const EMPTY_CART: CartItem[] = [];
 export const cart = {
   getSnapshot: () => cartSnapshot,
-  getServerSnapshot: () => cartSnapshot, // server snapshot must be stable too
+  getServerSnapshot: () => EMPTY_CART,
   getPaymentSnapshot: () => paymentSnapshot,
   getPaymentServerSnapshot: () => "stripe" as PaymentMethod,
   subscribe: (cb: Listener) => {

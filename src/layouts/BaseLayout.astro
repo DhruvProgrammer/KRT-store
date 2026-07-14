@@ -78,9 +78,11 @@ const websiteSchema = {
     -->
     <!-- ponytail: connect-src must allow the API gateway origin, otherwise the
          browser blocks the checkout fetch to :3001 (cross-origin from :4321) and
-         no order/receipt email is ever sent. -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' http://localhost:3001; frame-src 'none'; base-uri 'self'; form-action 'self';" />
-    <meta http-equiv="X-Frame-Options" content="DENY" />
+         no order/receipt email is ever sent. frame-ancestors 'none' is the
+         working replacement for the X-Frame-Options <meta> (which browsers ignore
+         in meta form and only warn about). -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' http://localhost:3001; frame-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';" />
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
     <meta http-equiv="Permissions-Policy" content="accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()" />
