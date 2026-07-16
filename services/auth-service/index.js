@@ -2,15 +2,8 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const Database = require('better-sqlite3');
-const fetch = require('node-fetch');
-
-const app = express();
-app.use(cors());
-app.use(express.json());
-
-const JWT_SECRET = process.env.JWT_SECRET || 'krt-store-secret-key-dev';
-const NOTIFICATION_SERVICE_URL = process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:8000';
-const NOTIFY_TOKEN = process.env.NOTIFY_TOKEN || 'brunogoyal';
+const crypto = require('crypto');
+const path = require('path');
 
 // Initialize SQLite database
 const db = new Database('auth.db');
