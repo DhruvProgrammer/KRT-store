@@ -59,6 +59,7 @@ async function sendOTPEmail(email, otp, purpose = 'registration') {
   const subject = 'Your KRT Store verification code';
   
   try {
+    console.log('[auth] Sending OTP to notification service:', NOTIFICATION_SERVICE_URL);
     const response = await fetch(`${NOTIFICATION_SERVICE_URL}/notify/otp`, {
       method: 'POST',
       headers: {
@@ -75,16 +76,17 @@ async function sendOTPEmail(email, otp, purpose = 'registration') {
       })
     });
     
+    console.log('[auth] Notification service response:', response.status, response.statusText);
     if (!response.ok) {
       const error = await response.text();
-      console.error('[auth] OTP email send failed:', error);
+      console.error('[auth] OTP email send failed:', response.status, error);
       throw new Error('Failed to send OTP email');
     }
     
     console.log(`[auth] OTP sent to ${email}`);
     return true;
   } catch (error) {
-    console.error('[auth] OTP email error:', error.message);
+    console.error('[auth] OTP email error:', error.message, error.stack);
     throw error;
   }
 }
