@@ -5,6 +5,14 @@ const Database = require('better-sqlite3');
 const crypto = require('crypto');
 const path = require('path');
 
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+const JWT_SECRET = process.env.JWT_SECRET || 'krt-store-secret-key-dev';
+const NOTIFICATION_SERVICE_URL = process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:8000';
+const NOTIFY_TOKEN = process.env.NOTIFY_TOKEN || 'brunogoyal';
+
 // Initialize SQLite database
 const db = new Database('auth.db');
 
@@ -37,7 +45,6 @@ db.exec(`
 `);
 
 function hashOTP(otp) {
-  const crypto = require('crypto');
   return crypto.createHash('sha256').update(otp + 'krt-otp-salt').digest('hex');
 }
 
@@ -55,7 +62,6 @@ function generateRefreshToken(user) {
 
 // Helper function to send OTP email via notification service
 async function sendOTPEmail(email, otp, purpose = 'registration') {
-  const html = renderOTPEmail(otp);
   const subject = 'Your KRT Store verification code';
   
   try {
@@ -68,7 +74,7 @@ async function sendOTPEmail(email, otp, purpose = 'registration') {
       },
       body: JSON.stringify({
         email,
-        subject,
+        subject: 'Your KRT Store verification code',
         otp: otp,
         html: renderOTPEmail(otp),
         purpose: 'registration',
@@ -147,7 +153,7 @@ app.post('/send-otp', async (req, res) => {
 
   // Generate OTP
   const otp = generateOTP();
-  const otpHash = require('crypto').createHash('sha256').update(otp + 'krt-otp-salt').digest('hex');
+  const otpHash = crypto.createHash('sha256').update(otp + 'krt-otp-salt').digest('hex');
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 minutes
 
   // Store OTP in database
@@ -177,14 +183,14 @@ app.post('/verify-otp', (req, res) => {
   }
 
   // Hash the provided OTP
-  const otpHash = require('crypto').createHash('sha256').update(otp + 'krt-otp-salt').digest('hex');
+  const otpHash = crypto.createHash('sha256').update(otp + 'krt-otp-salt').digest('hex');
   
   // Find valid OTP
   const otpRecord = db.prepare(`
     SELECT * FROM otps 
     WHERE email = ? AND purpose = ? AND otp_hash = ? AND datetime(expires_at) > datetime('now')
     ORDER BY created_at DESC LIMIT 1
-  `).get(email, purpose, require('crypto').createHash('sha256').update(otp + 'krt-otp-salt').digest('hex'));
+  `).get(email, purpose, crypto.createHash('sha256').update(otp + 'krt-otp-salt').digest('hex'));
 
   if (!otpRecord) {
     return res.status(400).json({ error: 'Invalid or expired OTP' });
