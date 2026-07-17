@@ -112,8 +112,8 @@ async function parseJson(res: Response): Promise<any> {
 
 export default function AuthForm({ mode: initialMode, method }: AuthFormProps) {
   const [mode, setMode] = useState<"login" | "signup">(initialMode === "signup" ? "signup" : "login");
-  const [loginOtp, setLoginOtp] = useState(initialMode === "login" && initialMethod === "otp");
-  const [loginMagicLink, setLoginMagicLink] = useState(initialMode === "login" && initialMethod === "magic-link");
+  const [loginOtp, setLoginOtp] = useState(initialMode === "login" && method === "otp");
+  const [loginMagicLink, setLoginMagicLink] = useState(initialMode === "login" && method === "magic-link");
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [magicLinkResendCooldown, setMagicLinkResendCooldown] = useState(0);
   const [otpSent, setOtpSent] = useState(false);
