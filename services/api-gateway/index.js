@@ -31,6 +31,10 @@ Object.entries(services).forEach(([name, config]) => {
     createProxyMiddleware({
       target: config.target,
       changeOrigin: true,
+      // ponytail: fail fast on a hung upstream instead of hanging the browser
+      // until a 504. Auth itself bounds its mailer call to 8s, so this is a backstop.
+      proxyTimeout: 12000,
+      timeout: 12000,
       pathRewrite: {
         [`^${config.path}`]: ''
       },
