@@ -472,9 +472,10 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
 
   const canSubmit = isValidEmail && (mode === "login" ? password.length > 0 : mode === "signup" ? signupLengthOK && signupMatchOK && firstNameOK : otp.length === 6);
 
-  const heading = mode === "login" ? "Sign in" : otpMode ? "Verify your email" : "Create your account";
-  const subtitle = mode === "login" ? "Enter the email and password you signed up with." : otpMode ? "We've sent a 6-digit code to your email." : "Enter your details. We'll send a verification code to your email.";
-  const cta = mode === "login" ? "Sign in" : otpMode ? (otpSent ? "Verify code" : "Send code") : "Create account";
+  const isLoginOtp = mode === "login" && loginOtp;
+  const heading = isLoginOtp ? (otpSent ? "Enter your sign-in code" : "Sign in with a code") : mode === "login" ? "Sign in" : otpMode ? "Verify your email" : "Create your account";
+  const subtitle = isLoginOtp ? (otpSent ? "We've sent a 6-digit code to your email." : "We'll email you a 6-digit code — no password needed.") : mode === "login" ? "Enter the email and password you signed up with." : otpMode ? "We've sent a 6-digit code to your email." : "Enter your details. We'll send a verification code to your email.";
+  const cta = isLoginOtp ? (otpSent ? "Verify code" : "Send code") : mode === "login" ? "Sign in" : otpMode ? (otpSent ? "Verify code" : "Send code") : "Create account";
   const switchPrompt = mode === "login" ? "Don't have an account?" : otpMode ? "Back to login" : "Already have an account?";
   const switchAction = mode === "login" ? () => { setMode("signup"); setOtpMode(false); setOtpSent(false); } : otpMode ? () => { setMode("login"); setOtpMode(false); setOtpSent(false); } : () => { setMode("login"); };
 
@@ -547,7 +548,7 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
       const res = await fetch(`${API_URL}/api/auth/send-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: trimmedEmail, purpose: "registration" }),
+        body: JSON.stringify({ email: trimmedEmail, purpose: loginOtp ? "login" : "registration" }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to resend OTP");
@@ -665,7 +666,15 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
         <p className="mt-4 max-w-2xl text-base leading-7 text-ink-muted">{subtitle}</p>
       </header>
 
-      <form onSubmit={e => { e.preventDefault(); if (mode === "login") handleLogin(); else if (otpMode && !otpSent) handleSendOtp(); else if (mode === "otp") handleVerifyOtp(); else if (mode === "signup") handleSignup(); }} noValidate className="space-y-6">
+      <form onSubmit={e => {
+        e.preventDefault();
+        if (mode === "login" && loginOtp && !otpSent) handleSendLoginOtp();
+        else if (mode === "login" && loginOtp && otpSent) handleLoginOtp();
+        else if (mode === "login") handleLogin();
+        else if (otpMode && !otpSent) handleSendOtp();
+        else if (mode === "otp") handleVerifyOtp();
+        else if (mode === "signup") handleSignup();
+      }} noValidate className="space-y-6">
         <div>
           <label htmlFor="email" className="mb-2 block text-sm font-bold text-ink">Email address</label>
           <div className="relative">
@@ -674,8 +683,25 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
           </div>
         </div>
 
-        {mode === "login" && (
+        {mode === "login" && !loginOtp && (
           <PasswordInput id="password" label="Password" value={password} onChange={setPassword} autoComplete="current-password" />
+        )}
+
+        {mode === "login" && loginOtp && (
+          <>
+            <div>
+              <label className="mb-2 block text-sm font-bold text-ink">Sign-in code</label>
+              <OtpInput value={otp} onChange={setOtp} />
+            </div>
+            {otpSent && (
+              <div className="flex items-center justify-between text-sm">
+                <p className="text-ink-muted">Code expires in 10 minutes.</p>
+                <button type="button" disabled={otpResendCooldown > 0 || loading} onClick={resendOtp} className="text-xs font-black uppercase tracking-[0.18em] text-accent transition hover:text-accent-bright disabled:opacity-40">
+                  {otpResendCooldown > 0 ? `Resend in ${otpResendCooldown}s` : "Resend code"}
+                </button>
+              </div>
+            )}
+          </>
         )}
 
         {mode === "otp" && (
@@ -753,8 +779,16 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
         </Button>
 
         <p className="text-sm text-ink-muted">
-          {mode === "login" ? "Don&apos;t have an account?" : "Already have an account? "}<button type="button" onClick={() => { if (mode === "login") { setMode("signup"); setOtpMode(false); } else { setMode("login"); setOtpMode(false); setOtpSent(false); }} className="font-black text-accent transition hover:text-accent-bright">{mode === "login" ? "Create account →" : "← Back to sign in"}</button>
+          {mode === "login" ? "Don&apos;t have an account?" : "Already have an account? "}<button type="button" onClick={() => { if (mode === "login") { setMode("signup"); setOtpMode(false); } else { setMode("login"); setOtpMode(false); setOtpSent(false); } }} className="font-black text-accent transition hover:text-accent-bright">{mode === "login" ? "Create account →" : "← Back to sign in"}</button>
         </p>
+
+        {mode === "login" && (
+          <p className="text-sm text-ink-muted">
+            <button type="button" onClick={() => { setLoginOtp(v => !v); setOtpSent(false); setOtp(""); setErrorMessage(""); }} className="font-black text-accent transition hover:text-accent-bright">
+              {loginOtp ? "← Use password instead" : "Sign in with a code instead →"}
+            </button>
+          </p>
+        )}
       </form>
 
       <p className="mt-8 rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4 text-xs leading-relaxed text-amber-100">
