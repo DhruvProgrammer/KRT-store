@@ -112,7 +112,7 @@ async function parseJson(res: Response): Promise<any> {
 export default function AuthForm({ mode: initialMode }: AuthFormProps) {
   const [mode, setMode] = useState<"login" | "signup">(initialMode === "signup" ? "signup" : "login");
   const [loginOtp, setLoginOtp] = useState(false);
-  const [signupMagicLink, setSignupMagicLink] = useState(false);
+  const [loginMagicLink, setLoginMagicLink] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [magicLinkResendCooldown, setMagicLinkResendCooldown] = useState(0);
   const [otpSent, setOtpSent] = useState(false);
@@ -162,7 +162,7 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
       if (!firstNameOK) errors.push("First name is required.");
     }
     if (mode === "signup" && otpSent && otp.length !== 6) errors.push("Enter the 6-digit code.");
-    if (mode === "signup" && signupMagicLink && magicLinkSent && magicToken.length !== 64) errors.push("Invalid magic link.");
+    if (mode === "login" && loginMagicLink && magicLinkSent && magicToken.length !== 64) errors.push("Invalid magic link.");
   }
 
   const canSubmit = isValidEmail && (
@@ -171,11 +171,11 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
         ? otpSent
           ? otp.length === 6
           : true
+        : loginMagicLink
+        ? magicLinkSent
+          ? magicToken.length === 64
+          : true
         : password.length > 0
-      : signupMagicLink && magicLinkSent
-      ? magicToken.length === 64
-      : signupMagicLink && !magicLinkSent
-      ? true
       : otpSent
       ? otp.length === 6
       : signupLengthOK && signupMatchOK && firstNameOK
@@ -183,24 +183,21 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
 
   const isLoginOtp = mode === "login" && loginOtp;
   const isSignupVerify = mode === "signup" && otpSent;
-  const isSignupMagic = mode === "signup" && signupMagicLink && magicLinkSent;
-  const isSignupMagicStart = mode === "signup" && signupMagicLink && !magicLinkSent;
+  const isLoginMagic = mode === "login" && loginMagicLink && magicLinkSent;
+  const isLoginMagicStart = mode === "login" && loginMagicLink && !magicLinkSent;
   const heading = isLoginOtp
     ? (otpSent ? "Enter your sign-in code" : "Sign in with a code")
     : mode === "login" ? "Sign in"
-      : isSignupVerify ? "Verify your email"
-      : isSignupMagic ? "Verify your email" : isSignupMagicStart ? "Check your email" : "Create your account";
+      : isLoginMagic ? "Verify your email" : isLoginMagicStart ? "Check your email" : "Sign in";
   const subtitle = isLoginOtp
     ? (otpSent ? "We've sent a 6-digit code to your email." : "We'll email you a 6-digit code — no password needed.")
     : mode === "login" ? "Enter the email and password you signed up with."
-      : isSignupVerify ? "We've sent a 6-digit code to your email."
-      : isSignupMagic ? "We've sent a sign-in link to your email. Click the link to verify."
-      : isSignupMagicStart ? "We've sent a magic link to your email. Click the link to verify your account." : "Enter your details. We'll email you a verification code to confirm your account.";
+      : isLoginMagic ? "We've sent a sign-in link to your email. Click the link to sign in."
+      : isLoginMagicStart ? "We've sent a magic link to your email. Click the link to sign in." : "Enter your details. We'll email you a verification code to confirm your account.";
   const cta = isLoginOtp
     ? (otpSent ? "Verify code" : "Send code")
     : mode === "login" ? "Sign in"
-      : isSignupVerify ? "Verify & create account"
-      : isSignupMagic ? "Verify link" : isSignupMagicStart ? "Send magic link" : "Create account";
+      : loginMagicLink && magicLinkSent ? "Verify link" : loginMagicLink && !magicLinkSent ? "Send magic link" : "Sign in";
 
   if (submitted) {
     const isLogin = submitted === "login";
@@ -240,10 +237,10 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
     } finally {
       setLoading(false);
     }
-  };
+};
 
-  // Signup: send magic link for passwordless sign-up
-  const handleSignupMagicLink = async () => {
+  // Login: send magic link
+  const handleSendLoginMagicLink = async () => {
     setShowErrors(true);
     if (!isValidEmail || loading) return;
     setLoading(true);
@@ -317,8 +314,8 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
     }
   };
 
-  // Signup: verify magic link token
-  const handleVerifyMagicLink = async () => {
+  // Login: verify magic link token
+  const handleLoginVerifyMagicLink = async () => {
     setShowErrors(true);
     if (magicToken.length !== 64 || loading) return;
     setLoading(true);
@@ -333,7 +330,7 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
       if (!res.ok) throw new Error(data?.error || `Request failed (status ${res.status})`);
       localStorage.setItem("accessToken", data.accessToken);
       localStorage.setItem("refreshToken", data.refreshToken);
-      setSubmitted("signup");
+      setSubmitted("login");
     } catch (err: unknown) {
       setErrorMessage(err instanceof Error ? err.message : "Invalid or expired magic link");
     } finally {
@@ -437,9 +434,9 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
         e.preventDefault();
         if (mode === "login" && loginOtp && !otpSent) handleSendLoginOtp();
         else if (mode === "login" && loginOtp && otpSent) handleLoginOtp();
+        else if (mode === "login" && loginMagicLink && !magicLinkSent) handleSendLoginMagicLink();
+        else if (mode === "login" && loginMagicLink && magicLinkSent) handleLoginVerifyMagicLink();
         else if (mode === "login") handleLogin();
-        else if (mode === "signup" && signupMagicLink && !magicLinkSent) handleSignupMagicLink();
-        else if (mode === "signup" && signupMagicLink && magicLinkSent) handleVerifyMagicLink();
         else if (mode === "signup" && !otpSent) handleSignupSendOtp();
         else if (mode === "signup" && otpSent) handleSignup();
       }} noValidate className="space-y-6">
