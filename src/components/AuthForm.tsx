@@ -438,6 +438,8 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
         if (mode === "login" && loginOtp && !otpSent) handleSendLoginOtp();
         else if (mode === "login" && loginOtp && otpSent) handleLoginOtp();
         else if (mode === "login") handleLogin();
+        else if (mode === "signup" && signupMagicLink && !magicLinkSent) handleSignupMagicLink();
+        else if (mode === "signup" && signupMagicLink && magicLinkSent) handleVerifyMagicLink();
         else if (mode === "signup" && !otpSent) handleSignupSendOtp();
         else if (mode === "signup" && otpSent) handleSignup();
       }} noValidate className="space-y-6">
@@ -455,7 +457,7 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
 
         {mode === "login" && loginOtp && otpBlock}
 
-        {mode === "signup" && !otpSent && (
+        {mode === "signup" && !signupMagicLink && !otpSent && (
           <>
             <div>
               <label htmlFor="password" className="mb-2 block text-sm font-bold text-ink">Password <span className="text-red-400">*</span></label>
@@ -489,7 +491,55 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
           </>
         )}
 
-        {mode === "signup" && otpSent && otpBlock}
+        {mode === "signup" && !otpSent && signupMagicLink && !magicLinkSent && (
+          <>
+            <p className="text-sm text-ink-muted">We'll send a magic link to your email. Click the link to verify and create your account.</p>
+          </>
+        )}
+
+        {mode === "signup" && !otpSent && !signupMagicLink && (
+          <div className="mt-4 text-center">
+            <p className="text-sm text-ink-muted mb-3">Or sign up with a magic link</p>
+            <button type="button" onClick={() => { setSignupMagicLink(true); setOtpSent(false); setErrorMessage(""); }} className="font-black text-accent transition hover:text-accent-bright">Authorize by email →</button>
+          </div>
+        )}
+
+        {mode === "signup" && !otpSent && signupMagicLink && !magicLinkSent && (
+          <button type="submit" className="w-full justify-center shadow-[0_0_28px_rgba(0,162,255,0.4)]" disabled={loading || showErrors && !canSubmit}>
+            {loading ? (
+              <>
+                <svg className="mr-2 h-4 w-4 animate-spin" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                Send magic link…
+              </>
+            ) : (
+              "Send magic link"
+            )}
+          </button>
+        )}
+
+        {mode === "signup" && signupMagicLink && magicLinkSent && (
+          <>
+            <p className="text-sm text-ink-muted">Check your email and click the magic link. The link expires in 15 minutes.</p>
+            <div className="flex items-center justify-between text-sm">
+              <p className="text-ink-muted">Link expires in 15 minutes.</p>
+              <button type="button" disabled={magicLinkResendCooldown > 0 || loading} onClick={handleSendMagicLink} className="text-xs font-black uppercase tracking-[0.18em] text-accent transition hover:text-accent-bright disabled:opacity-40">
+                {magicLinkResendCooldown > 0 ? `Resend in ${magicLinkResendCooldown}s` : "Resend link"}
+              </button>
+            </div>
+          </>
+        )}
+
+        {mode === "signup" && !signupMagicLink && otpSent && otpBlock}
+
+        {mode === "signup" && signupMagicLink && magicLinkSent && (
+          <>
+            <div>
+              <label className="mb-2 block text-sm font-bold text-ink">Magic link token</label>
+              <input type="text" value={magicToken} onChange={e => setMagicToken(e.target.value)} placeholder="Paste the token from the magic link URL" className="h-12 w-full rounded-full border border-line bg-surface/60 px-5 text-sm text-ink placeholder-ink-muted outline-none transition focus:border-accent focus:bg-surface-bright focus:ring-1 focus:ring-accent" />
+            </div>
+            <button type="button" onClick={() => { setSignupMagicLink(false); setMagicLinkSent(false); setMagicToken(""); setErrorMessage(""); }} className="text-sm text-accent transition hover:text-accent-bright">← Back to password sign-up</button>
+          </>
+        )}
 
         {errors.length > 0 && (
           <ul className="space-y-1 rounded-2xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-200" role="alert">
