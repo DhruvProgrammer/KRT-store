@@ -415,5 +415,12 @@ app.get('/me', (req, res) => {
   }
 });
 
+// ponytail: never leak HTML stack traces to API clients — always respond JSON.
+app.use((err, req, res, next) => {
+  console.error('[auth] Unhandled error:', err);
+  if (res.headersSent) return next(err);
+  res.status(500).json({ error: err?.message || 'Internal server error' });
+});
+
 const PORT = process.env.PORT || 3002;
 app.listen(PORT, () => console.log(`Auth Service running on port ${PORT}`));

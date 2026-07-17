@@ -137,5 +137,12 @@ app.get('/:id', ensureUserId, (req, res) => {
   res.json({ order });
 });
 
+// ponytail: never leak HTML stack traces to API clients — always respond JSON.
+app.use((err, req, res, next) => {
+  console.error('[order-service] Unhandled error:', err);
+  if (res.headersSent) return next(err);
+  res.status(500).json({ error: err?.message || 'Internal server error' });
+});
+
 const PORT = process.env.PORT || 3005;
 app.listen(PORT, () => console.log(`Order Service running on port ${PORT}`));
