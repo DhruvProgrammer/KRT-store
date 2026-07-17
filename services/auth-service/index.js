@@ -85,6 +85,10 @@ async function sendOTPEmail(email, otp, purpose = 'registration') {
 
   try {
     console.log('[auth] Sending OTP to notification service:', NOTIFICATION_SERVICE_URL);
+    // ponytail: bound the email call so a slow/hanging mailer can't hang the
+    // whole signup/checkout request until the gateway 504s.
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
     const response = await fetch(`${NOTIFICATION_SERVICE_URL}/notify/otp`, {
       method: 'POST',
       headers: {
@@ -98,8 +102,10 @@ async function sendOTPEmail(email, otp, purpose = 'registration') {
         html: renderOTPEmail(otp, purpose),
         purpose,
         store_name: 'KRT Store'
-      })
+      }),
+      signal: controller.signal
     });
+    clearTimeout(timeout);
     
     console.log('[auth] Notification service response:', response.status, response.statusText);
     if (!response.ok) {

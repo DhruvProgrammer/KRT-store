@@ -204,7 +204,7 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
         body: JSON.stringify({ email: trimmedEmail, purpose: "registration" }),
       });
       const data = await parseJson(res);
-      if (!res.ok) throw new Error(data.error || "Failed to send code");
+      if (!res.ok) throw new Error(data?.error || `Request failed (status ${res.status})`);
       setOtpSent(true);
       setOtpResendCooldown(60);
     } catch (err: unknown) {
@@ -224,7 +224,7 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
         body: JSON.stringify({ email: trimmedEmail, purpose: loginOtp ? "login" : "registration" }),
       });
       const data = await parseJson(res);
-      if (!res.ok) throw new Error(data.error || "Failed to resend OTP");
+      if (!res.ok) throw new Error(data?.error || `Request failed (status ${res.status})`);
       setOtpResendCooldown(60);
       setErrorMessage("");
     } catch (err: unknown) {
@@ -254,7 +254,7 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
         }),
       });
       const data = await parseJson(res);
-      if (!res.ok) throw new Error(data.error || "Registration failed");
+      if (!res.ok) throw new Error(data?.error || `Request failed (status ${res.status})`);
       localStorage.setItem("accessToken", data.accessToken);
       localStorage.setItem("refreshToken", data.refreshToken);
       setSubmitted("signup");
@@ -277,7 +277,7 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
         body: JSON.stringify({ email: trimmedEmail, purpose: "login" }),
       });
       const data = await parseJson(res);
-      if (!res.ok) throw new Error(data.error || "Failed to send code");
+      if (!res.ok) throw new Error(data?.error || `Request failed (status ${res.status})`);
       setOtpSent(true);
       setOtpResendCooldown(60);
     } catch (err: unknown) {
@@ -299,7 +299,7 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
         body: JSON.stringify({ email: trimmedEmail, otp }),
       });
       const data = await parseJson(res);
-      if (!res.ok) throw new Error(data.error || "Invalid code");
+      if (!res.ok) throw new Error(data?.error || `Request failed (status ${res.status})`);
       localStorage.setItem("accessToken", data.accessToken);
       localStorage.setItem("refreshToken", data.refreshToken);
       setSubmitted("login");
@@ -321,7 +321,7 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
         body: JSON.stringify({ email: trimmedEmail, password }),
       });
       const data = await parseJson(res);
-      if (!res.ok) throw new Error(data.error || "Login failed");
+      if (!res.ok) throw new Error(data?.error || `Request failed (status ${res.status})`);
       localStorage.setItem("accessToken", data.accessToken);
       localStorage.setItem("refreshToken", data.refreshToken);
       setSubmitted("login");
@@ -456,3 +456,4 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
     </Reveal>
   );
 }
+
