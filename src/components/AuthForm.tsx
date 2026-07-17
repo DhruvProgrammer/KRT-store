@@ -155,8 +155,14 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
 
   const canSubmit = isValidEmail && (
     mode === "login"
-      ? (loginOtp ? otp.length === 6 : password.length > 0)
-      : (otpSent ? otp.length === 6 : signupLengthOK && signupMatchOK && firstNameOK)
+      ? loginOtp
+        ? otpSent
+          ? otp.length === 6
+          : true
+        : password.length > 0
+      : otpSent
+      ? otp.length === 6
+      : signupLengthOK && signupMatchOK && firstNameOK
   );
 
   const isLoginOtp = mode === "login" && loginOtp;
