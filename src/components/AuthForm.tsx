@@ -137,6 +137,13 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
     }
   }, [otpResendCooldown]);
 
+  useEffect(() => {
+    if (magicLinkResendCooldown > 0) {
+      const timer = setInterval(() => setMagicLinkResendCooldown(c => c - 1), 1000);
+      return () => clearInterval(timer);
+    }
+  }, [magicLinkResendCooldown]);
+
   const trimmedEmail = email.trim();
   const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail);
   const signupLengthOK = password.length >= 8;
