@@ -57,7 +57,7 @@ function StarIcon({ className = "h-3 w-3 text-amber-400" }: { className?: string
 const inputClass = "h-12 w-full rounded-full border border-line bg-surface/60 pl-12 pr-5 text-sm text-ink placeholder-ink-muted outline-none transition focus:border-accent focus:bg-surface-bright focus:ring-1 focus:ring-accent aria-[invalid=true]:border-red-400/60";
 
 interface AuthFormProps {
-  mode: "login" | "signup" | "otp";
+  mode: "login" | "signup";
   method?: "password" | "otp" | "magic-link";
 }
 
