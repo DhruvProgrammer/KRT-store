@@ -5,23 +5,20 @@ import Footer from "../components/Footer";
 import AuthForm from "../components/AuthForm";
 
 const title = "Sign in with a code — KRT store";
-const description = "Sign in with a 6-digit code sent to your email.";
+const description = "Enter your email and we'll send you a 6-digit sign-in code.";
 ---
 
-<BaseLayout title={title} description={description} noindex={true}>
+<BaseLayout title={title} description={description}>
   <Navigation />
-  <main id="main" class="container mx-auto px-4 pt-6 pb-20 sm:px-6 lg:px-8">
-    <nav class="mb-6 flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-ink-muted" aria-label="Breadcrumb">
+  <main id="main">
+    <nav class="container mx-auto flex flex-wrap items-center gap-2 px-4 pt-6 text-xs font-bold uppercase tracking-[0.18em] text-ink-muted sm:px-6 lg:px-8" aria-label="Breadcrumb">
       <a href="/" class="transition hover:text-ink">Home</a>
       <span aria-hidden="true">/</span>
       <a href="/login" class="transition hover:text-ink">Sign in</a>
       <span aria-hidden="true">/</span>
       <span class="text-ink">With a code</span>
     </nav>
-
-    <div class="mx-auto max-w-xl">
-      <AuthForm client:load mode="login" />
-    </div>
+    <AuthForm client:load mode="login" method="otp" />
   </main>
   <Footer client:load />
 </BaseLayout>
