@@ -58,6 +58,7 @@ const inputClass = "h-12 w-full rounded-full border border-line bg-surface/60 pl
 
 interface AuthFormProps {
   mode: "login" | "signup" | "otp";
+  method?: "password" | "otp" | "magic-link";
 }
 
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://localhost:3001";
@@ -109,10 +110,10 @@ async function parseJson(res: Response): Promise<any> {
   }
 }
 
-export default function AuthForm({ mode: initialMode }: AuthFormProps) {
+export default function AuthForm({ mode: initialMode, method }: AuthFormProps) {
   const [mode, setMode] = useState<"login" | "signup">(initialMode === "signup" ? "signup" : "login");
-  const [loginOtp, setLoginOtp] = useState(false);
-  const [loginMagicLink, setLoginMagicLink] = useState(false);
+  const [loginOtp, setLoginOtp] = useState(initialMode === "login" && initialMethod === "otp");
+  const [loginMagicLink, setLoginMagicLink] = useState(initialMode === "login" && initialMethod === "magic-link");
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [magicLinkResendCooldown, setMagicLinkResendCooldown] = useState(0);
   const [otpSent, setOtpSent] = useState(false);
