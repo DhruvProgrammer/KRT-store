@@ -14,6 +14,24 @@ app.use(express.json());
 const NOTIFICATION_SERVICE_URL = process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:8000';
 const NOTIFY_TOKEN = process.env.NOTIFY_TOKEN || '';
 const STORE_NAME = process.env.STORE_NAME || 'KRT Store';
+const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || 'http://localhost:3002';
+
+// ponytail: checkout requires a verified email OTP. Verified server-side here
+// (not trusted from the client) by asking auth-service to consume the code.
+async function verifyCheckoutOtp(email, otp) {
+  if (!email || !otp) return false;
+  try {
+    const res = await fetch(`${AUTH_SERVICE_URL}/verify-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, otp, purpose: 'checkout' })
+    });
+    return res.ok;
+  } catch (err) {
+    console.error('[order-service] OTP verify call failed:', err.message);
+    return false;
+  }
+}
 
 async function notifyCustomer(order) {
   console.log('[order-service] notifyCustomer triggered for order:', order.id, 'email:', order.email);
@@ -66,12 +84,21 @@ function ensureUserId(req, res, next) {
 }
 
 // POST / - Create order
-app.post('/', ensureUserId, (req, res) => {
+app.post('/', ensureUserId, async (req, res) => {
   console.log('[order-service] POST / received request. Body:', JSON.stringify(req.body));
-  const { items, shippingAddress, paymentIntentId, email } = req.body;
+  const { items, shippingAddress, paymentIntentId, email, otp } = req.body;
   if (!items || !Array.isArray(items) || items.length === 0) {
     console.log('[order-service] Invalid request: items array is required/empty');
     return res.status(400).json({ error: 'Items array is required' });
+  }
+
+  // Require a verified email OTP before accepting the order.
+  if (!email || !otp) {
+    return res.status(400).json({ error: 'Email and verification code are required' });
+  }
+  const otpOk = await verifyCheckoutOtp(email, otp);
+  if (!otpOk) {
+    return res.status(400).json({ error: 'Invalid or expired verification code' });
   }
 
   const order = {
