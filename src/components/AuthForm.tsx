@@ -512,7 +512,7 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
         </Button>
 
         <p className="text-sm text-ink-muted">
-          {mode === "login" ? "Don&apos;t have an account?" : "Already have an account? "}<button type="button" onClick={() => { setMode(mode === "login" ? "signup" : "login"); setLoginOtp(false); setSignupMagicLink(false); setOtpSent(false); setMagicLinkSent(false); setOtp(""); setMagicToken(""); setShowErrors(false); setErrorMessage(""); }} className="font-black text-accent transition hover:text-accent-bright">{mode === "login" ? "Create account →" : "← Back to sign in"}</button>
+          {mode === "login" ? "Don&apos;t have an account?" : "Already have an account? "}<button type="button" onClick={() => { setMode(mode === "login" ? "signup" : "login"); setLoginOtp(false); setLoginMagicLink(false); setOtpSent(false); setMagicLinkSent(false); setOtp(""); setMagicToken(""); setShowErrors(false); setErrorMessage(""); }} className="font-black text-accent transition hover:text-accent-bright">{mode === "login" ? "Create account →" : "← Back to sign in"}</button>
         </p>
 
         {mode === "login" && (
@@ -523,17 +523,25 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
           </p>
         )}
 
-        {mode === "signup" && !signupMagicLink && (
+        {mode === "login" && !loginMagicLink && (
           <p className="text-sm text-ink-muted">
-            <button type="button" onClick={() => { setSignupMagicLink(true); setOtpSent(false); setOtp(""); setErrorMessage(""); }} className="font-black text-accent transition hover:text-accent-bright">
-              Sign up with a magic link instead →
+            <button type="button" onClick={() => { setLoginMagicLink(true); setOtpSent(false); setOtp(""); setErrorMessage(""); }} className="font-black text-accent transition hover:text-accent-bright">
+              Sign in with a magic link instead →
             </button>
           </p>
         )}
 
-        {mode === "signup" && signupMagicLink && !magicLinkSent && (
+        {mode === "login" && loginMagicLink && !magicLinkSent && (
           <p className="text-sm text-ink-muted">
-            <button type="button" onClick={() => { setSignupMagicLink(false); setErrorMessage(""); }} className="font-black text-accent transition hover:text-accent-bright">
+            <button type="button" onClick={() => { setLoginMagicLink(false); setErrorMessage(""); }} className="font-black text-accent transition hover:text-accent-bright">
+              ← Use password instead
+            </button>
+          </p>
+        )}
+
+        {mode === "login" && loginMagicLink && magicLinkSent && (
+          <p className="text-sm text-ink-muted">
+            <button type="button" onClick={() => { setLoginMagicLink(false); setMagicLinkSent(false); setMagicToken(""); setErrorMessage(""); }} className="font-black text-accent transition hover:text-accent-bright">
               ← Use password instead
             </button>
           </p>
