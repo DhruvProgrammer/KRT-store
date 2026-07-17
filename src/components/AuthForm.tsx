@@ -113,6 +113,8 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
   const [mode, setMode] = useState<"login" | "signup">(initialMode === "signup" ? "signup" : "login");
   const [loginOtp, setLoginOtp] = useState(false);
   const [signupMagicLink, setSignupMagicLink] = useState(false);
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [magicLinkResendCooldown, setMagicLinkResendCooldown] = useState(0);
   const [otpSent, setOtpSent] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
