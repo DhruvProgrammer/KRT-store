@@ -162,6 +162,7 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
       if (!firstNameOK) errors.push("First name is required.");
     }
     if (mode === "signup" && otpSent && otp.length !== 6) errors.push("Enter the 6-digit code.");
+    if (mode === "signup" && signupMagicLink && magicLinkSent && magicToken.length !== 64) errors.push("Invalid magic link.");
   }
 
   const canSubmit = isValidEmail && (
@@ -171,6 +172,10 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
           ? otp.length === 6
           : true
         : password.length > 0
+      : signupMagicLink && magicLinkSent
+      ? magicToken.length === 64
+      : signupMagicLink && !magicLinkSent
+      ? true
       : otpSent
       ? otp.length === 6
       : signupLengthOK && signupMatchOK && firstNameOK
@@ -178,18 +183,24 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
 
   const isLoginOtp = mode === "login" && loginOtp;
   const isSignupVerify = mode === "signup" && otpSent;
+  const isSignupMagic = mode === "signup" && signupMagicLink && magicLinkSent;
+  const isSignupMagicStart = mode === "signup" && signupMagicLink && !magicLinkSent;
   const heading = isLoginOtp
     ? (otpSent ? "Enter your sign-in code" : "Sign in with a code")
     : mode === "login" ? "Sign in"
-      : isSignupVerify ? "Verify your email" : "Create your account";
+      : isSignupVerify ? "Verify your email"
+      : isSignupMagic ? "Verify your email" : isSignupMagicStart ? "Check your email" : "Create your account";
   const subtitle = isLoginOtp
     ? (otpSent ? "We've sent a 6-digit code to your email." : "We'll email you a 6-digit code — no password needed.")
     : mode === "login" ? "Enter the email and password you signed up with."
-      : isSignupVerify ? "We've sent a 6-digit code to your email." : "Enter your details. We'll email you a verification code to confirm your account.";
+      : isSignupVerify ? "We've sent a 6-digit code to your email."
+      : isSignupMagic ? "We've sent a sign-in link to your email. Click the link to verify."
+      : isSignupMagicStart ? "We've sent a magic link to your email. Click the link to verify your account." : "Enter your details. We'll email you a verification code to confirm your account.";
   const cta = isLoginOtp
     ? (otpSent ? "Verify code" : "Send code")
     : mode === "login" ? "Sign in"
-      : isSignupVerify ? "Verify & create account" : "Create account";
+      : isSignupVerify ? "Verify & create account"
+      : isSignupMagic ? "Verify link" : isSignupMagicStart ? "Send magic link" : "Create account";
 
   if (submitted) {
     const isLogin = submitted === "login";
