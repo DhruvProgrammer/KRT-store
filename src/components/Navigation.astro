@@ -327,5 +327,8 @@ const searchExtras: SearchExtra[] = extras.map((e) => ({
     } else {
       init();
     }
+
+    // Re-initialize on Astro View Transitions
+    document.addEventListener("astro:after-swap", init);
   })();
 </script>
