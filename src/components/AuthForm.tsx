@@ -221,6 +221,30 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
     }
   };
 
+  // Signup: send magic link for passwordless sign-up
+  const handleSendMagicLink = async () => {
+    setShowErrors(true);
+    if (!isValidEmail || loading) return;
+    setLoading(true);
+    setErrorMessage("");
+    try {
+      const res = await fetch(`${API_URL}/api/auth/send-magic-link`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: trimmedEmail }),
+      });
+      const data = await parseJson(res);
+      if (!res.ok) throw new Error(data?.error || `Request failed (status ${res.status})`);
+      setMagicLinkSent(true);
+      setMagicLinkResendCooldown(60);
+      setErrorMessage("");
+    } catch (err: unknown) {
+      setErrorMessage(err instanceof Error ? err.message : "Failed to send magic link");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const resendOtp = async () => {
     if (otpResendCooldown > 0) return;
     setLoading(true);
