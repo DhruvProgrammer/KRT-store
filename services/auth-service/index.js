@@ -62,8 +62,10 @@ function generateRefreshToken(user) {
 
 // Helper function to send OTP email via notification service
 async function sendOTPEmail(email, otp, purpose = 'registration') {
-  const subject = 'Your KRT Store verification code';
-  
+  const subject = purpose === 'login'
+    ? 'Your KRT Store sign-in code'
+    : 'Your KRT Store verification code';
+
   try {
     console.log('[auth] Sending OTP to notification service:', NOTIFICATION_SERVICE_URL);
     const response = await fetch(`${NOTIFICATION_SERVICE_URL}/notify/otp`, {
@@ -74,10 +76,10 @@ async function sendOTPEmail(email, otp, purpose = 'registration') {
       },
       body: JSON.stringify({
         email,
-        subject: 'Your KRT Store verification code',
+        subject,
         otp: otp,
-        html: renderOTPEmail(otp),
-        purpose: 'registration',
+        html: renderOTPEmail(otp, purpose),
+        purpose,
         store_name: 'KRT Store'
       })
     });
@@ -97,7 +99,14 @@ async function sendOTPEmail(email, otp, purpose = 'registration') {
   }
 }
 
-function renderOTPEmail(otp) {
+function renderOTPEmail(otp, purpose = 'registration') {
+  const isLogin = purpose === 'login';
+  const eyebrow = isLogin ? 'Sign-in verification' : 'Email verification';
+  const title = isLogin ? 'Confirm your sign-in' : 'Verify your email';
+  const intro = isLogin
+    ? 'Use the code below to finish signing in to your account. This code expires in 10 minutes.'
+    : 'Use the code below to complete your registration. This code expires in 10 minutes.';
+
   return `<!doctype html>
 <html lang="en">
 <body style="margin:0;background:#0f1218;padding:32px 0;font-family:Inter,'Segoe UI',system-ui,sans-serif;">
@@ -105,13 +114,13 @@ function renderOTPEmail(otp) {
     <tr>
       <td style="padding:28px 32px;background:linear-gradient(135deg,#00a2ff,#0078ff);">
         <p style="margin:0;color:#fff;font-size:20px;font-weight:900;letter-spacing:-0.04em;">KRT Store</p>
-        <p style="margin:4px 0 0;color:#e0f2ff;font-size:12px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;">Email verification</p>
+        <p style="margin:4px 0 0;color:#e0f2ff;font-size:12px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;">${eyebrow}</p>
       </td>
     </tr>
     <tr>
       <td style="padding:28px 32px;">
-        <p style="margin:0 0 4px;color:#f1f5f9;font-size:22px;font-weight:900;letter-spacing:-0.03em;">Verify your email</p>
-        <p style="margin:0;color:#94a3b8;font-size:14px;">Use the code below to complete your registration. This code expires in 10 minutes.</p>
+        <p style="margin:0 0 4px;color:#f1f5f9;font-size:22px;font-weight:900;letter-spacing:-0.03em;">${title}</p>
+        <p style="margin:0;color:#94a3b8;font-size:14px;">${intro}</p>
         <div style="margin:24px 0;text-align:center;">
           <span style="display:inline-block;padding:16px 32px;background:#1f2430;border:1px solid #2a3140;border-radius:14px;color:#00a2ff;font-size:32px;font-weight:900;letter-spacing:0.3em;font-family:monospace;">${otp}</span>
         </div>
@@ -143,11 +152,16 @@ app.post('/send-otp', async (req, res) => {
     return res.status(400).json({ error: 'Invalid email format' });
   }
 
-  // Check if user already exists (for registration)
+  // Check if user already exists (for registration) or must exist (for login)
   if (purpose === 'registration') {
     const existingUser = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
     if (existingUser) {
       return res.status(409).json({ error: 'User with this email already exists' });
+    }
+  } else if (purpose === 'login') {
+    const existingUser = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+    if (!existingUser) {
+      return res.status(404).json({ error: 'No account found for this email' });
     }
   }
 
@@ -301,6 +315,50 @@ app.post('/login', (req, res) => {
       phone: user.phone,
       rating: user.rating,
       role: user.role 
+    },
+    accessToken,
+    refreshToken
+  });
+});
+
+// POST /login-otp - Passwordless sign-in via OTP (returns JWT)
+app.post('/login-otp', (req, res) => {
+  const { email, otp } = req.body;
+
+  if (!email || !otp) {
+    return res.status(400).json({ error: 'Email and OTP are required' });
+  }
+
+  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+  if (!user) {
+    return res.status(404).json({ error: 'No account found for this email' });
+  }
+
+  const otpHash = crypto.createHash('sha256').update(otp + 'krt-otp-salt').digest('hex');
+  const otpRecord = db.prepare(`
+    SELECT * FROM otps
+    WHERE email = ? AND purpose = 'login' AND otp_hash = ? AND datetime(expires_at) > datetime('now')
+    ORDER BY created_at DESC LIMIT 1
+  `).get(email, otpHash);
+
+  if (!otpRecord) {
+    return res.status(400).json({ error: 'Invalid or expired OTP' });
+  }
+
+  db.prepare('DELETE FROM otps WHERE id = ?').run(otpRecord.id);
+
+  const accessToken = generateAccessToken(user);
+  const refreshToken = generateRefreshToken(user);
+
+  res.json({
+    user: {
+      id: user.id,
+      email: user.email,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      phone: user.phone,
+      rating: user.rating,
+      role: user.role
     },
     accessToken,
     refreshToken
