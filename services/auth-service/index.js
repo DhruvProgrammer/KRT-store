@@ -42,6 +42,16 @@ db.exec(`
 
   CREATE INDEX IF NOT EXISTS idx_otps_email_purpose ON otps(email, purpose);
   CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+
+  CREATE TABLE IF NOT EXISTS magic_links (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL,
+    token_hash TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    used INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+  CREATE INDEX IF NOT EXISTS idx_magic_links_email ON magic_links(email);
 `);
 
 function hashOTP(otp) {
@@ -75,6 +85,100 @@ function verifyPassword(password, stored) {
   const a = Buffer.from(hash, 'hex');
   const b = Buffer.from(derived, 'hex');
   return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+function verifyPassword(password, stored) {
+  if (!stored || !stored.includes(':')) return stored === password;
+  const [salt, hash] = stored.split(':');
+  const derived = crypto.scryptSync(password, salt, 64).toString('hex');
+  const a = Buffer.from(hash, 'hex');
+  const b = Buffer.from(derived, 'hex');
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+function generateMagicToken() {
+  return crypto.randomBytes(32).toString('hex');
+}
+
+function hashMagicToken(token) {
+  return crypto.createHash('sha256').update(token + 'krt-magic-salt').digest('hex');
+}
+
+// Helper function to send magic link email via notification service
+async function sendMagicLinkEmail(email, token, purpose = 'signin') {
+  const subject = 'Your KRT Store sign-in link';
+  const magicLink = `${process.env.FRONTEND_URL || 'http://localhost:4321'}/auth/verify-magic?token=${token}&email=${encodeURIComponent(email)}`;
+
+  try {
+    console.log('[auth] Sending magic link to notification service:', NOTIFICATION_SERVICE_URL);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    const response = await fetch(`${NOTIFICATION_SERVICE_URL}/notify/magic-link`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-notify-token': NOTIFY_TOKEN
+      },
+      body: JSON.stringify({
+        email,
+        subject,
+        token,
+        html: renderMagicLinkEmail(magicLink, email),
+        purpose,
+        store_name: 'KRT Store'
+      }),
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+
+    console.log('[auth] Notification service response:', response.status, response.statusText);
+    if (!response.ok) {
+      const error = await response.text();
+      console.error('[auth] Magic link email send failed:', response.status, error);
+      throw new Error('Failed to send magic link email');
+    }
+
+    console.log(`[auth] Magic link sent to ${email}`);
+    return true;
+  } catch (error) {
+    console.error('[auth] Magic link email error:', error.message, error.stack);
+    throw error;
+  }
+}
+
+function renderMagicLinkEmail(magicLink, email) {
+  return `<!doctype html>
+<html lang="en">
+<body style="margin:0;background:#0f1218;padding:32px 0;font-family:Inter,'Segoe UI',system-ui,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;background:#161a22;border:1px solid #2a3140;border-radius:20px;overflow:hidden;">
+    <tr>
+      <td style="padding:28px 32px;background:linear-gradient(135deg,#00a2ff,#0078ff);">
+        <p style="margin:0;color:#fff;font-size:20px;font-weight:900;letter-spacing:-0.04em;">KRT Store</p>
+        <p style="margin:4px 0 0;color:#e0f2ff;font-size:12px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;">Sign in with magic link</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:28px 32px;">
+        <p style="margin:0 0 4px;color:#f1f5f9;font-size:22px;font-weight:900;letter-spacing:-0.03em;">Sign in to your account</p>
+        <p style="margin:0;color:#94a3b8;font-size:14px;">Click the button below to sign in securely. This link expires in 15 minutes.</p>
+        <div style="margin:24px 0;text-align:center;">
+          <a href="${magicLink}" style="display:inline-block;padding:16px 32px;background:#00a2ff;color:#0f1218;font-size:16px;font-weight:900;text-decoration:none;border-radius:12px;letter-spacing:0.02em;">Sign in to KRT Store</a>
+        </div>
+        <p style="margin:24px 0 0;padding:16px 18px;background:#1f2430;border:1px solid #2a3140;border-radius:14px;color:#94a3b8;font-size:13px;line-height:1.6;">
+          If you didn't request this link, you can safely ignore this email. The link will expire automatically.
+          <br><br>
+          <strong>Link:</strong> ${magicLink}
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:20px 32px;border-top:1px solid #2a3140;color:#64748b;font-size:12px;text-align:center;">
+        © KRT Store. This is an automated sign-in email.
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
 }
 
 // Helper function to send OTP email via notification service
@@ -374,6 +478,92 @@ app.post('/login-otp', (req, res) => {
   }
 
   db.prepare('DELETE FROM otps WHERE id = ?').run(otpRecord.id);
+
+  const accessToken = generateAccessToken(user);
+  const refreshToken = generateRefreshToken(user);
+
+  res.json({
+    user: {
+      id: user.id,
+      email: user.email,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      phone: user.phone,
+      rating: user.rating,
+      role: user.role
+    },
+    accessToken,
+    refreshToken
+  });
+});
+
+// POST /send-magic-link - Send magic link for passwordless sign-in
+app.post('/send-magic-link', async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ error: 'Email is required' });
+  }
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ error: 'Invalid email format' });
+  }
+
+  // Check if user exists (only registered users can use magic links)
+  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+  if (!user) {
+    // Don't reveal if email exists — return generic success for security
+    return res.json({ success: true, message: 'If the email exists, a sign-in link has been sent' });
+  }
+
+  // Generate and store magic link token
+  const token = generateMagicToken();
+  const tokenHash = hashMagicToken(token);
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 minutes
+
+  db.prepare(`
+    INSERT INTO magic_links (email, token_hash, expires_at)
+    VALUES (?, ?, ?)
+  `).run(email, tokenHash, expiresAt);
+
+  // Send magic link email
+  try {
+    await sendMagicLinkEmail(email, token, 'signin');
+    res.json({ success: true, message: 'If the email exists, a sign-in link has been sent' });
+  } catch (error) {
+    // Clean up on email failure
+    db.prepare('DELETE FROM magic_links WHERE email = ?').run(email);
+    return res.status(500).json({ error: 'Failed to send magic link email' });
+  }
+});
+
+// POST /verify-magic-link - Verify magic link and return JWT
+app.post('/verify-magic-link', (req, res) => {
+  const { email, token } = req.body;
+
+  if (!email || !token) {
+    return res.status(400).json({ error: 'Email and token are required' });
+  }
+
+  const tokenHash = hashMagicToken(token);
+  const magicLink = db.prepare(`
+    SELECT * FROM magic_links
+    WHERE email = ? AND token_hash = ? AND expires_at > datetime('now') AND used = 0
+    ORDER BY created_at DESC LIMIT 1
+  `).get(email, tokenHash);
+
+  if (!magicLink) {
+    return res.status(400).json({ error: 'Invalid or expired magic link' });
+  }
+
+  // Mark as used
+  db.prepare('UPDATE magic_links SET used = 1 WHERE id = ?').run(magicLink.id);
+
+  // Get user
+  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' });
+  }
 
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
