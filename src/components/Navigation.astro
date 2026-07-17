@@ -204,120 +204,128 @@ const searchExtras: SearchExtra[] = extras.map((e) => ({
 
 <script is:inline>
   (function () {
-    // ============ Cart badge sync ============
-    const STORAGE_KEY = "dg-cart";
-    const BAD = /<|>|javascript:|data:|@import|url\(|expression\(/i;
-    const MAX_QTY = 99;
+    const init = () => {
+      // ============ Cart badge sync ============
+      const STORAGE_KEY = "dg-cart";
+      const BAD = /<|>|javascript:|data:|@import|url\(|expression\(/i;
+      const MAX_QTY = 99;
 
-    const validateGradient = (v) => {
-      if (typeof v !== "string") return false;
-      const t = v.trim();
-      if (t.length === 0 || t.length > 500) return false;
-      return !BAD.test(t);
-    };
-    const safeNumber = (v, min, max) => {
-      const n = Number(v);
-      return Number.isFinite(n) && n >= min && n <= max;
-    };
-    const validateItem = (raw) => {
-      if (!raw || typeof raw !== "object") return false;
-      if (typeof raw.slug !== "string" || raw.slug.length === 0 || raw.slug.length > 120) return false;
-      if (typeof raw.name !== "string" || raw.name.length === 0 || raw.name.length > 200) return false;
-      if (!safeNumber(raw.price, 0, 100000)) return false;
-      if (!safeNumber(raw.quantity, 1, MAX_QTY)) return false;
-      return validateGradient(raw.gradient);
-    };
+      const validateGradient = (v) => {
+        if (typeof v !== "string") return false;
+        const t = v.trim();
+        if (t.length === 0 || t.length > 500) return false;
+        return !BAD.test(t);
+      };
+      const safeNumber = (v, min, max) => {
+        const n = Number(v);
+        return Number.isFinite(n) && n >= min && n <= max;
+      };
+      const validateItem = (raw) => {
+        if (!raw || typeof raw !== "object") return false;
+        if (typeof raw.slug !== "string" || raw.slug.length === 0 || raw.slug.length > 120) return false;
+        if (typeof raw.name !== "string" || raw.name.length === 0 || raw.name.length > 200) return false;
+        if (!safeNumber(raw.price, 0, 100000)) return false;
+        if (!safeNumber(raw.quantity, 1, MAX_QTY)) return false;
+        return validateGradient(raw.gradient);
+      };
 
-    const readItems = () => {
-      try {
-        const raw = window.localStorage.getItem(STORAGE_KEY);
-        if (!raw) return [];
-        const items = JSON.parse(raw);
-        if (!Array.isArray(items)) return [];
-        const valid = items.filter(validateItem);
-        return valid;
-      } catch (e) {
-        return [];
-      }
-    };
-
-    const readCount = () =>
-      readItems().reduce((sum, item) => sum + Number(item.quantity || 0), 0);
-
-    const updateBadges = () => {
-      const count = readCount();
-      document.querySelectorAll("[data-cart-count]").forEach((b) => {
-        const text = b.querySelector("[data-cart-count-text]");
-        if (text) text.textContent = String(count);
-        b.classList.toggle("hidden", count === 0);
-        b.classList.toggle("grid", count > 0);
-      });
-    };
-
-    updateBadges();
-    window.addEventListener("cart:update", updateBadges);
-    window.addEventListener("storage", (event) => {
-      if (event.key === STORAGE_KEY) updateBadges();
-    });
-
-    // ============ Search open (button + shortcut) ============
-    const openSearch = () => window.dispatchEvent(new CustomEvent("krt:open-search"));
-    document.querySelectorAll("[data-open-search]").forEach((btn) =>
-      btn.addEventListener("click", (event) => {
-        event.preventDefault();
-        openSearch();
-      })
-    );
-    document.addEventListener("keydown", (event) => {
-      if ((event.key === "k" || event.key === "K") && (event.metaKey || event.ctrlKey)) {
-        event.preventDefault();
-        openSearch();
-      }
-    });
-
-    // ============ Mobile menu toggle ============
-    const panel = document.querySelector("[data-mobile-panel]");
-    const trigger = document.querySelector("[data-mobile-trigger]");
-    if (panel) {
-      const setOpen = (open) => {
-        panel.classList.toggle("hidden", !open);
-        if (trigger) {
-          trigger.setAttribute("aria-expanded", String(open));
-          trigger.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+      const readItems = () => {
+        try {
+          const raw = window.localStorage.getItem(STORAGE_KEY);
+          if (!raw) return [];
+          const items = JSON.parse(raw);
+          if (!Array.isArray(items)) return [];
+          const valid = items.filter(validateItem);
+          return valid;
+        } catch (e) {
+          return [];
         }
       };
-      const toggleOpen = () => setOpen(panel.classList.contains("hidden"));
-      if (trigger) {
-        trigger.addEventListener("click", (event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          toggleOpen();
+
+      const readCount = () =>
+        readItems().reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+
+      const updateBadges = () => {
+        const count = readCount();
+        document.querySelectorAll("[data-cart-count]").forEach((b) => {
+          const text = b.querySelector("[data-cart-count-text]");
+          if (text) text.textContent = String(count);
+          b.classList.toggle("hidden", count === 0);
+          b.classList.toggle("grid", count > 0);
         });
-      }
-      window.addEventListener("krt:toggle-menu", toggleOpen);
-      panel.querySelectorAll("a").forEach((anchor) =>
-        anchor.addEventListener("click", () => setOpen(false))
+      };
+
+      updateBadges();
+      window.addEventListener("cart:update", updateBadges);
+      window.addEventListener("storage", (event) => {
+        if (event.key === STORAGE_KEY) updateBadges();
+      });
+
+      // ============ Search open (button + shortcut) ============
+      const openSearch = () => window.dispatchEvent(new CustomEvent("krt:open-search"));
+      document.querySelectorAll("[data-open-search]").forEach((btn) =>
+        btn.addEventListener("click", (event) => {
+          event.preventDefault();
+          openSearch();
+        })
       );
       document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape" && !panel.classList.contains("hidden")) {
-          setOpen(false);
+        if ((event.key === "k" || event.key === "K") && (event.metaKey || event.ctrlKey)) {
+          event.preventDefault();
+          openSearch();
         }
       });
-      // Close menu when tapping outside (mobile UX).
-      document.addEventListener("click", (event) => {
-        if (panel.classList.contains("hidden")) return;
-        const target = event.target;
-        if (!(target instanceof Node)) return;
-        if (panel.contains(target)) return;
-        if (trigger && trigger.contains(target)) return;
-        setOpen(false);
-      });
-      // Auto-close the mobile panel if the viewport grows past the md breakpoint.
-      const mq = window.matchMedia("(min-width: 768px)");
-      const onMq = (e) => {
-        if (e.matches) setOpen(false);
-      };
-      mq.addEventListener("change", onMq);
+
+      // ============ Mobile menu toggle ============
+      const panel = document.querySelector("[data-mobile-panel]");
+      const trigger = document.querySelector("[data-mobile-trigger]");
+      if (panel) {
+        const setOpen = (open) => {
+          panel.classList.toggle("hidden", !open);
+          if (trigger) {
+            trigger.setAttribute("aria-expanded", String(open));
+            trigger.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+          }
+        };
+        const toggleOpen = () => setOpen(panel.classList.contains("hidden"));
+        if (trigger) {
+          trigger.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            toggleOpen();
+          });
+        }
+        window.addEventListener("krt:toggle-menu", toggleOpen);
+        panel.querySelectorAll("a").forEach((anchor) =>
+          anchor.addEventListener("click", () => setOpen(false))
+        );
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape" && !panel.classList.contains("hidden")) {
+            setOpen(false);
+          }
+        });
+        // Close menu when tapping outside (mobile UX).
+        document.addEventListener("click", (event) => {
+          if (panel.classList.contains("hidden")) return;
+          const target = event.target;
+          if (!(target instanceof Node)) return;
+          if (panel.contains(target)) return;
+          if (trigger && trigger.contains(target)) return;
+          setOpen(false);
+        });
+        // Auto-close the mobile panel if the viewport grows past the md breakpoint.
+        const mq = window.matchMedia("(min-width: 768px)");
+        const onMq = (e) => {
+          if (e.matches) setOpen(false);
+        };
+        mq.addEventListener("change", onMq);
+      }
+    };
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", init);
+    } else {
+      init();
     }
   })();
 </script>
