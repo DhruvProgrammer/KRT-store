@@ -67,6 +67,7 @@ services:
       - "3005:3005"
     environment:
       - PORT=3005
+      - AUTH_SERVICE_URL=http://auth-service:3002
       - NOTIFICATION_SERVICE_URL=http://notification-service:8000
       - NOTIFY_TOKEN=${NOTIFY_TOKEN:-}
       - STORE_NAME=${STORE_NAME:-KRT Store}
