@@ -98,6 +98,17 @@ function RatingStars({ value, onChange }: { value: number; onChange: (v: number)
   );
 }
 
+// ponytail: tolerate non-JSON error bodies (e.g. an HTML stack trace from a
+// backend crash) so the UI shows a readable message instead of a JSON.parse throw.
+async function parseJson(res: Response): Promise<any> {
+  const text = await res.text();
+  try {
+    return text ? JSON.parse(text) : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function AuthForm({ mode: initialMode }: AuthFormProps) {
   const [mode, setMode] = useState<"login" | "signup">(initialMode === "signup" ? "signup" : "login");
   const [loginOtp, setLoginOtp] = useState(false);
@@ -192,7 +203,7 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: trimmedEmail, purpose: "registration" }),
       });
-      const data = await res.json();
+      const data = await parseJson(res);
       if (!res.ok) throw new Error(data.error || "Failed to send code");
       setOtpSent(true);
       setOtpResendCooldown(60);
@@ -212,7 +223,7 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: trimmedEmail, purpose: loginOtp ? "login" : "registration" }),
       });
-      const data = await res.json();
+      const data = await parseJson(res);
       if (!res.ok) throw new Error(data.error || "Failed to resend OTP");
       setOtpResendCooldown(60);
       setErrorMessage("");
@@ -242,7 +253,7 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
           otp,
         }),
       });
-      const data = await res.json();
+      const data = await parseJson(res);
       if (!res.ok) throw new Error(data.error || "Registration failed");
       localStorage.setItem("accessToken", data.accessToken);
       localStorage.setItem("refreshToken", data.refreshToken);
@@ -265,7 +276,7 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: trimmedEmail, purpose: "login" }),
       });
-      const data = await res.json();
+      const data = await parseJson(res);
       if (!res.ok) throw new Error(data.error || "Failed to send code");
       setOtpSent(true);
       setOtpResendCooldown(60);
@@ -287,7 +298,7 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: trimmedEmail, otp }),
       });
-      const data = await res.json();
+      const data = await parseJson(res);
       if (!res.ok) throw new Error(data.error || "Invalid code");
       localStorage.setItem("accessToken", data.accessToken);
       localStorage.setItem("refreshToken", data.refreshToken);
@@ -309,7 +320,7 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: trimmedEmail, password }),
       });
-      const data = await res.json();
+      const data = await parseJson(res);
       if (!res.ok) throw new Error(data.error || "Login failed");
       localStorage.setItem("accessToken", data.accessToken);
       localStorage.setItem("refreshToken", data.refreshToken);
