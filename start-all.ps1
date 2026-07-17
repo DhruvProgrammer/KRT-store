@@ -30,6 +30,10 @@ Start-Process powershell -WindowStyle Normal `
   -WorkingDirectory (Join-Path $root "services/api-gateway") `
   -ArgumentList "-NoExit", "-Command", "node index.js"
 
+Start-Process powershell -WindowStyle Normal `
+  -WorkingDirectory (Join-Path $root "services/auth-service") `
+  -ArgumentList "-NoExit", "-Command", "node index.js"
+
 # Give the backend a moment to boot before starting the storefront.
 Start-Sleep -Seconds 3
 
