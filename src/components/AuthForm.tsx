@@ -99,8 +99,7 @@ function RatingStars({ value, onChange }: { value: number; onChange: (v: number)
 }
 
 export default function AuthForm({ mode: initialMode }: AuthFormProps) {
-  const [mode, setMode] = useState<"login" | "signup" | "otp">(initialMode);
-  const [otpMode, setOtpMode] = useState(false);
+  const [mode, setMode] = useState<"login" | "signup">(initialMode === "signup" ? "signup" : "login");
   const [loginOtp, setLoginOtp] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [email, setEmail] = useState("");
@@ -133,25 +132,36 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
   const errors: string[] = [];
   if (showErrors) {
     if (!isValidEmail) errors.push("Enter a valid email address.");
-    if (mode === "signup" && !signupLengthOK) errors.push("Password must be at least 8 characters.");
-    if (mode === "signup" && !signupMatchOK) errors.push("Passwords do not match.");
     if (mode === "login" && !loginOtp && password.length < 1) errors.push("Enter your password.");
     if (mode === "login" && loginOtp && otp.length !== 6) errors.push("Enter the 6-digit code.");
-    if (mode === "signup" && !firstNameOK) errors.push("First name is required.");
+    if (mode === "signup" && !otpSent) {
+      if (!signupLengthOK) errors.push("Password must be at least 8 characters.");
+      if (!signupMatchOK) errors.push("Passwords do not match.");
+      if (!firstNameOK) errors.push("First name is required.");
+    }
+    if (mode === "signup" && otpSent && otp.length !== 6) errors.push("Enter the 6-digit code.");
   }
 
   const canSubmit = isValidEmail && (
-    mode === "login" ? (loginOtp ? otp.length === 6 : password.length > 0)
-      : mode === "signup" ? signupLengthOK && signupMatchOK && firstNameOK
-        : otp.length === 6
+    mode === "login"
+      ? (loginOtp ? otp.length === 6 : password.length > 0)
+      : (otpSent ? otp.length === 6 : signupLengthOK && signupMatchOK && firstNameOK)
   );
 
   const isLoginOtp = mode === "login" && loginOtp;
-  const heading = isLoginOtp ? (otpSent ? "Enter your sign-in code" : "Sign in with a code") : mode === "login" ? "Sign in" : otpMode ? "Verify your email" : "Create your account";
-  const subtitle = isLoginOtp ? (otpSent ? "We've sent a 6-digit code to your email." : "We'll email you a 6-digit code — no password needed.") : mode === "login" ? "Enter the email and password you signed up with." : otpMode ? "We've sent a 6-digit code to your email." : "Enter your details. We'll send a verification code to your email.";
-  const cta = isLoginOtp ? (otpSent ? "Verify code" : "Send code") : mode === "login" ? "Sign in" : otpMode ? (otpSent ? "Verify code" : "Send code") : "Create account";
-  const switchPrompt = mode === "login" ? "Don't have an account?" : otpMode ? "Back to login" : "Already have an account?";
-  const switchAction = mode === "login" ? () => { setMode("signup"); setOtpMode(false); setOtpSent(false); } : otpMode ? () => { setMode("login"); setOtpMode(false); setOtpSent(false); } : () => { setMode("login"); };
+  const isSignupVerify = mode === "signup" && otpSent;
+  const heading = isLoginOtp
+    ? (otpSent ? "Enter your sign-in code" : "Sign in with a code")
+    : mode === "login" ? "Sign in"
+      : isSignupVerify ? "Verify your email" : "Create your account";
+  const subtitle = isLoginOtp
+    ? (otpSent ? "We've sent a 6-digit code to your email." : "We'll email you a 6-digit code — no password needed.")
+    : mode === "login" ? "Enter the email and password you signed up with."
+      : isSignupVerify ? "We've sent a 6-digit code to your email." : "Enter your details. We'll email you a verification code to confirm your account.";
+  const cta = isLoginOtp
+    ? (otpSent ? "Verify code" : "Send code")
+    : mode === "login" ? "Sign in"
+      : isSignupVerify ? "Verify & create account" : "Create account";
 
   if (submitted) {
     const isLogin = submitted === "login";
@@ -170,9 +180,10 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
     );
   }
 
-  const handleSendOtp = async () => {
+  // Signup step 1 → request the verification code (step 2 reveals the input).
+  const handleSignupSendOtp = async () => {
     setShowErrors(true);
-    if (!isValidEmail) return;
+    if (!canSubmit || loading) return;
     setLoading(true);
     setErrorMessage("");
     try {
@@ -182,34 +193,11 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
         body: JSON.stringify({ email: trimmedEmail, purpose: "registration" }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to send OTP");
+      if (!res.ok) throw new Error(data.error || "Failed to send code");
       setOtpSent(true);
       setOtpResendCooldown(60);
-      setErrorMessage("");
     } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : "Failed to send OTP");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async () => {
-    setShowErrors(true);
-    if (otp.length !== 6) return;
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_URL}/api/auth/verify-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: trimmedEmail, otp, purpose: "registration" }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Invalid OTP");
-      // OTP verified, switch to registration form
-      setMode("signup");
-      setErrorMessage("");
-    } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : "Invalid or expired OTP");
+      setErrorMessage(err instanceof Error ? err.message : "Failed to send code");
     } finally {
       setLoading(false);
     }
@@ -235,6 +223,7 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
     }
   };
 
+  // Signup step 2 → register (server verifies the code and creates the user).
   const handleSignup = async () => {
     setShowErrors(true);
     if (!canSubmit || loading) return;
@@ -332,10 +321,27 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
     }
   };
 
+  const otpBlock = (
+    <>
+      <div>
+        <label className="mb-2 block text-sm font-bold text-ink">Verification code</label>
+        <OtpInput value={otp} onChange={setOtp} />
+      </div>
+      {otpSent && (
+        <div className="flex items-center justify-between text-sm">
+          <p className="text-ink-muted">Code expires in 10 minutes.</p>
+          <button type="button" disabled={otpResendCooldown > 0 || loading} onClick={resendOtp} className="text-xs font-black uppercase tracking-[0.18em] text-accent transition hover:text-accent-bright disabled:opacity-40">
+            {otpResendCooldown > 0 ? `Resend in ${otpResendCooldown}s` : "Resend code"}
+          </button>
+        </div>
+      )}
+    </>
+  );
+
   return (
     <Reveal>
       <header className="mb-8 border-b border-line pb-8">
-        <p className="mb-3 text-xs font-black uppercase tracking-[0.28em] text-accent">{mode === "login" ? "Sign in" : otpMode ? "Verify email" : "Create account"}</p>
+        <p className="mb-3 text-xs font-black uppercase tracking-[0.28em] text-accent">{mode === "login" ? "Sign in" : "Create account"}</p>
         <h1 className="text-3xl font-black tracking-[-0.06em] text-ink sm:text-5xl">{heading}</h1>
         <p className="mt-4 max-w-2xl text-base leading-7 text-ink-muted">{subtitle}</p>
       </header>
@@ -345,9 +351,8 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
         if (mode === "login" && loginOtp && !otpSent) handleSendLoginOtp();
         else if (mode === "login" && loginOtp && otpSent) handleLoginOtp();
         else if (mode === "login") handleLogin();
-        else if (otpMode && !otpSent) handleSendOtp();
-        else if (mode === "otp") handleVerifyOtp();
-        else if (mode === "signup") handleSignup();
+        else if (mode === "signup" && !otpSent) handleSignupSendOtp();
+        else if (mode === "signup" && otpSent) handleSignup();
       }} noValidate className="space-y-6">
         <div>
           <label htmlFor="email" className="mb-2 block text-sm font-bold text-ink">Email address</label>
@@ -361,42 +366,18 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
           <PasswordInput id="password" label="Password" value={password} onChange={setPassword} autoComplete="current-password" />
         )}
 
-        {mode === "login" && loginOtp && (
+        {mode === "login" && loginOtp && otpBlock}
+
+        {mode === "signup" && !otpSent && (
           <>
             <div>
-              <label className="mb-2 block text-sm font-bold text-ink">Sign-in code</label>
-              <OtpInput value={otp} onChange={setOtp} />
+              <label htmlFor="password" className="mb-2 block text-sm font-bold text-ink">Password <span className="text-red-400">*</span></label>
+              <PasswordInput id="password" label="Password" value={password} onChange={setPassword} autoComplete="new-password" />
             </div>
-            {otpSent && (
-              <div className="flex items-center justify-between text-sm">
-                <p className="text-ink-muted">Code expires in 10 minutes.</p>
-                <button type="button" disabled={otpResendCooldown > 0 || loading} onClick={resendOtp} className="text-xs font-black uppercase tracking-[0.18em] text-accent transition hover:text-accent-bright disabled:opacity-40">
-                  {otpResendCooldown > 0 ? `Resend in ${otpResendCooldown}s` : "Resend code"}
-                </button>
-              </div>
-            )}
-          </>
-        )}
-
-        {mode === "otp" && (
-          <>
             <div>
-              <label className="mb-2 block text-sm font-bold text-ink">Verification code</label>
-              <OtpInput value={otp} onChange={setOtp} />
+              <label htmlFor="confirm" className="mb-2 block text-sm font-bold text-ink">Confirm password <span className="text-red-400">*</span></label>
+              <PasswordInput id="confirm" label="Confirm password" value={confirm} onChange={setConfirm} placeholder="Re-enter password" autoComplete="new-password" />
             </div>
-            {otpSent && (
-              <div className="flex items-center justify-between text-sm">
-                <p className="text-ink-muted">Code expires in 10 minutes.</p>
-                <button type="button" disabled={otpResendCooldown > 0 || loading} onClick={resendOtp} className="text-xs font-black uppercase tracking-[0.18em] text-accent transition hover:text-accent-bright disabled:opacity-40">
-                  {otpResendCooldown > 0 ? `Resend in ${otpResendCooldown}s` : "Resend code"}
-                </button>
-              </div>
-            )}
-          </>
-        )}
-
-        {mode === "signup" && (
-          <>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label htmlFor="first_name" className="mb-2 block text-sm font-bold text-ink">First name <span className="text-red-400">*</span></label>
@@ -418,16 +399,10 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
               <label className="mb-2 block text-sm font-bold text-ink">Rate our website (optional)</label>
               <RatingStars value={rating} onChange={setRating} />
             </div>
-            <div>
-              <label htmlFor="confirm" className="mb-2 block text-sm font-bold text-ink">Confirm password <span className="text-red-400">*</span></label>
-              <PasswordInput id="confirm" label="Confirm password" value={confirm} onChange={setConfirm} placeholder="Re-enter password" autoComplete="new-password" />
-            </div>
-            <div>
-              <label htmlFor="otp" className="mb-2 block text-sm font-bold text-ink">Verification code <span className="text-red-400">*</span></label>
-              <OtpInput value={otp} onChange={setOtp} />
-            </div>
           </>
         )}
+
+        {mode === "signup" && otpSent && otpBlock}
 
         {errors.length > 0 && (
           <ul className="space-y-1 rounded-2xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-200" role="alert">
@@ -451,7 +426,7 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
         </Button>
 
         <p className="text-sm text-ink-muted">
-          {mode === "login" ? "Don&apos;t have an account?" : "Already have an account? "}<button type="button" onClick={() => { if (mode === "login") { setMode("signup"); setOtpMode(false); } else { setMode("login"); setOtpMode(false); setOtpSent(false); } }} className="font-black text-accent transition hover:text-accent-bright">{mode === "login" ? "Create account →" : "← Back to sign in"}</button>
+          {mode === "login" ? "Don&apos;t have an account?" : "Already have an account? "}<button type="button" onClick={() => { setMode(mode === "login" ? "signup" : "login"); setLoginOtp(false); setOtpSent(false); setOtp(""); setShowErrors(false); setErrorMessage(""); }} className="font-black text-accent transition hover:text-accent-bright">{mode === "login" ? "Create account →" : "← Back to sign in"}</button>
         </p>
 
         {mode === "login" && (
@@ -464,8 +439,8 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
       </form>
 
       <p className="mt-8 rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4 text-xs leading-relaxed text-amber-100">
-        <strong className="block text-[11px] font-black uppercase tracking-[0.18em] text-amber-300">Prototype note</strong>
-        This is a UI prototype — no real authentication is wired up. In production the password would be hashed with bcrypt or argon2 on the server, never stored in plaintext.
+        <strong className="block text-[11px] font-black uppercase tracking-[0.18em] text-amber-300">Note</strong>
+        Passwords are hashed with scrypt on the server. This storefront is a UI prototype of the sign-up / sign-in / checkout flow.
       </p>
     </Reveal>
   );
