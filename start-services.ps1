@@ -21,6 +21,10 @@ Start-Process powershell -WindowStyle Normal `
   -ArgumentList "-NoExit", "-Command", ".\.venv\Scripts\Activate.ps1; uvicorn main:app --port 8000"
 
 Start-Process powershell -WindowStyle Normal `
+  -WorkingDirectory (Join-Path $root "services/auth-service") `
+  -ArgumentList "-NoExit", "-Command", "node index.js"
+
+Start-Process powershell -WindowStyle Normal `
   -WorkingDirectory (Join-Path $root "services/order-service") `
   -ArgumentList "-NoExit", "-Command", "node index.js"
 

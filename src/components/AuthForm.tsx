@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Button from "./Button";
 import Reveal from "./Reveal";
+import OtpInput from "./OtpInput";
 
 function MailIcon() {
   return (

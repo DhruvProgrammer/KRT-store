@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   useCart,
   PAYMENT_METHODS,
@@ -8,6 +8,7 @@ import {
 import Button from "./Button";
 import Reveal from "./Reveal";
 import TrustMicroBar from "./TrustMicroBar";
+import OtpInput from "./OtpInput";
 
 function formatPrice(cents: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents);
@@ -155,6 +156,63 @@ function PaymentFields({ method }: { method: PaymentMethod }) {
 export default function CheckoutForm() {
   const { items, total, count, clear, paymentMethod, setPaymentMethod } = useCart();
   const [submitted, setSubmitted] = useState(false);
+  const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpResendCooldown, setOtpResendCooldown] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    if (otpResendCooldown > 0) {
+      const t = setInterval(() => setOtpResendCooldown(c => c - 1), 1000);
+      return () => clearInterval(t);
+    }
+  }, [otpResendCooldown]);
+
+  const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  const API_URL = import.meta.env.PUBLIC_API_URL || "http://localhost:3001";
+
+  const sendCode = async () => {
+    if (!isValidEmail) return;
+    setLoading(true);
+    setErrorMessage("");
+    try {
+      const res = await fetch(`${API_URL}/api/auth/send-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), purpose: "checkout" })
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.error || "Failed to send code");
+      setOtpSent(true);
+      setOtpResendCooldown(60);
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : "Failed to send code");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resendCode = async () => {
+    if (otpResendCooldown > 0) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/auth/send-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), purpose: "checkout" })
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.error || "Failed to resend code");
+      setOtpResendCooldown(60);
+      setErrorMessage("");
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : "Failed to resend code");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (submitted) {
     return (
@@ -196,55 +254,50 @@ export default function CheckoutForm() {
     );
   }
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const email = (e.currentTarget.elements.namedItem("email") as HTMLInputElement | null)?.value || "";
+    setErrorMessage("");
+
+    if (!isValidEmail) {
+      setErrorMessage("Enter a valid email address.");
+      return;
+    }
+    if (!otpSent || otp.length !== 6) {
+      setErrorMessage("Verify your email with the 6-digit code before placing the order.");
+      return;
+    }
+
     const API_URL = import.meta.env.PUBLIC_API_URL || "http://localhost:3001";
-
-    console.log("[Checkout] Submitting order. API_URL:", API_URL, "Payload:", {
-      email,
-      items: items.map((i) => ({ slug: i.slug, name: i.name, price: i.price, quantity: i.quantity })),
-      total,
-      paymentMethod
-    });
-
-    fetch(`${API_URL}/api/orders`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-user-id": getGuestId()
-      },
-      body: JSON.stringify({
-        email,
-        items: items.map((i) => ({ slug: i.slug, name: i.name, price: i.price, quantity: i.quantity })),
-        total,
-        paymentMethod
-      })
-    })
-      .then((r) => {
-        console.log("[Checkout] Fetch response status:", r.status);
-        if (!r.ok) {
-          console.error("[Checkout] Fetch returned non-ok status:", r.status);
-          alert(`Order API error: Status code ${r.status}`);
-        }
-        return r.ok ? r.json() : null;
-      })
-      .then((data) => {
-        console.log("[Checkout] Order created response data:", data);
-        if (data?.order) {
-          recordLocalOrder(data.order, email, items.length, total);
-        } else {
-          console.error("[Checkout] Order data was empty or invalid in response.");
-        }
-      })
-      .catch((err) => {
-        console.error("[Checkout] Fetch error caught:", err);
-        alert(`Network connection failed: ${err.message || err}`);
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/orders`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-id": getGuestId()
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+          otp,
+          items: items.map((i) => ({ slug: i.slug, name: i.name, price: i.price, quantity: i.quantity })),
+          total,
+          paymentMethod
+        })
       });
-
-    clear();
-    setSubmitted(true);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.order) {
+        setErrorMessage(data?.error || `Order failed (status ${res.status})`);
+        return;
+      }
+      recordLocalOrder(data.order, email.trim(), items.length, total);
+      clear();
+      setSubmitted(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? `Network connection failed: ${err.message}` : "Network connection failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -286,7 +339,45 @@ export default function CheckoutForm() {
             <fieldset>
               <legend className="mb-3 text-xs font-black uppercase tracking-[0.18em] text-ink-muted">Contact</legend>
               <label htmlFor="email" className="mb-2 block text-sm font-bold text-ink">Email address</label>
-              <input id="email" name="email" type="email" required placeholder="you@example.com" autoComplete="email" className={inputClass} />
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                placeholder="you@example.com"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className={inputClass}
+              />
+              <div className="mt-4">
+                {!otpSent ? (
+                  <button
+                    type="button"
+                    onClick={sendCode}
+                    disabled={!isValidEmail || loading}
+                    className="text-sm font-black text-accent transition hover:text-accent-bright disabled:opacity-40"
+                  >
+                    {loading ? "Sending…" : "Email me a verification code →"}
+                  </button>
+                ) : (
+                  <div className="space-y-3">
+                    <label className="block text-sm font-bold text-ink">Verification code</label>
+                    <OtpInput value={otp} onChange={setOtp} />
+                    <div className="flex items-center justify-between text-sm">
+                      <p className="text-ink-muted">Code expires in 10 minutes.</p>
+                      <button
+                        type="button"
+                        disabled={otpResendCooldown > 0 || loading}
+                        onClick={resendCode}
+                        className="text-xs font-black uppercase tracking-[0.18em] text-accent transition hover:text-accent-bright disabled:opacity-40"
+                      >
+                        {otpResendCooldown > 0 ? `Resend in ${otpResendCooldown}s` : "Resend code"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </fieldset>
 
             <fieldset>
@@ -334,8 +425,11 @@ export default function CheckoutForm() {
             </fieldset>
 
             <div className="border-t border-line pt-5">
-              <Button type="submit" className="w-full justify-center shadow-[0_0_28px_rgba(0,162,255,0.4)]">
-                Pay {formatPrice(total)} via {paymentLabel(paymentMethod)}
+              {errorMessage && (
+                <p className="mb-3 rounded-2xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-200" role="alert">{errorMessage}</p>
+              )}
+              <Button type="submit" className="w-full justify-center shadow-[0_0_28px_rgba(0,162,255,0.4)]" disabled={loading}>
+                {loading ? "Placing order…" : `Pay ${formatPrice(total)} via ${paymentLabel(paymentMethod)}`}
               </Button>
               <a
                 href="/cart"
