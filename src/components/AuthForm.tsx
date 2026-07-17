@@ -124,6 +124,7 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
   const [phone, setPhone] = useState("");
   const [rating, setRating] = useState(0);
   const [otp, setOtp] = useState("");
+  const [magicToken, setMagicToken] = useState("");
   const [otpResendCooldown, setOtpResendCooldown] = useState(0);
   const [showErrors, setShowErrors] = useState(false);
   const [submitted, setSubmitted] = useState<"login" | "signup" | null>(null);
@@ -300,6 +301,30 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
       setSubmitted("signup");
     } catch (err: unknown) {
       setErrorMessage(err instanceof Error ? err.message : "Registration failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Signup: verify magic link token
+  const handleVerifyMagicLink = async () => {
+    setShowErrors(true);
+    if (magicToken.length !== 64 || loading) return;
+    setLoading(true);
+    setErrorMessage("");
+    try {
+      const res = await fetch(`${API_URL}/api/auth/verify-magic-link`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: trimmedEmail, token: magicToken }),
+      });
+      const data = await parseJson(res);
+      if (!res.ok) throw new Error(data?.error || `Request failed (status ${res.status})`);
+      localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem("refreshToken", data.refreshToken);
+      setSubmitted("signup");
+    } catch (err: unknown) {
+      setErrorMessage(err instanceof Error ? err.message : "Invalid or expired magic link");
     } finally {
       setLoading(false);
     }
