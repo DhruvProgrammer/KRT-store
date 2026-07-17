@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import Button from "./Button";
 import Reveal from "./Reveal";
-import TrustMicroBar from "./TrustMicroBar";
 
 function MailIcon() {
   return (
@@ -38,14 +37,6 @@ function EyeOffIcon() {
   );
 }
 
-function StarIcon() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" className="h-3 w-3 text-amber-400">
-      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-    </svg>
-  );
-}
-
 function PhoneIcon() {
   return (
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -54,359 +45,69 @@ function PhoneIcon() {
   );
 }
 
-function UserIcon() {
+function StarIcon() {
   return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-      <circle cx="12" cy="7" r="4" />
-    </svg>
-  );
-}
-
-function UserPlusIcon() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <line x1="19" y1="9" x2="19" y2="9" />
-      <line x1="22" y1="6" x2="22" y2="6" />
-    </svg>
-  );
-}
-
-function ShieldCheckIcon() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-      <path d="M9 12l2 2 4-4" />
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" className="h-3 w-3 text-amber-400">
+      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
     </svg>
   );
 }
 
 const inputClass = "h-12 w-full rounded-full border border-line bg-surface/60 pl-12 pr-5 text-sm text-ink placeholder-ink-muted outline-none transition focus:border-accent focus:bg-surface-bright focus:ring-1 focus:ring-accent aria-[invalid=true]:border-red-400/60";
 
-export type AuthMode = "login" | "signup" | "otp" | "verify";
-
 interface AuthFormProps {
-  mode: AuthMode;
-  onModeChange?: (mode: AuthMode) => void;
+  mode: "login" | "signup" | "otp";
 }
 
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://localhost:3001";
 
-export default function AuthForm({ mode: initialMode, onModeChange }: AuthFormProps) {
-  const [mode, setMode] = useState<AuthMode>(initialMode);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [rating, setRating] = useState(0);
-  const [otp, setOtp] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
-  const [showErrors, setShowErrors] = useState(false);
-  const [submitted, setSubmitted] = useState<"login" | "signup" | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-
-  // OTP flow state
-  const [otpMode, setOtpMode] = useState(false);
-  const [otpSent, setOtpSent] = useState(false);
-  const [otp, setOtp] = useState("");
-  const [otpResendCooldown, setOtpResendCooldown] = useState(0);
-
-  useEffect(() => {
-    if (otpResendCooldown > 0) {
-      const timer = setInterval(() => setOtpResendCooldown(c => c - 1), 1000);
-      return () => clearInterval(timer);
-    }
-  }, [otpResendCooldown]);
-
-  const trimmedEmail = email.trim();
-  const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail);
-  const signupLengthOK = password.length >= 8;
-  const signupMatchOK = password === confirm;
-  const firstNameOK = firstName.trim().length > 0;
-
-  const errors: string[] = [];
-  if (showErrors) {
-    if (!isValidEmail) errors.push("Enter a valid email address.");
-    if (mode === "signup" && !signupLengthOK) errors.push("Password must be at least 8 characters.");
-    if (mode === "signup" && !signupMatchOK) errors.push("Passwords do not match.");
-    if (mode === "login" && password.length < 1) errors.push("Enter your password.");
-    if (otpMode && !firstNameOK) errors.push("First name is required.");
-  }
-
-  const canSubmit =
-    isValidEmail &&
-    (mode === "login" ? password.length > 0 : 
-      mode === "otp" ? otp.length === 6 :
-      signupLengthOK && signupMatchOK && firstNameOK);
-
-  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setShowErrors(true);
-    setErrorMessage("");
-    if (!canSubmit || loading) return;
-
-    setLoading(true);
-
-    try {
-      if (mode === "login") {
-        const res = await fetch(`${API_URL}/api/auth/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: trimmedEmail, password }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Login failed");
-        localStorage.setItem("accessToken", data.accessToken);
-        localStorage.setItem("refreshToken", data.refreshToken);
-        setSubmitted("login");
-      } else if (otpMode && !otpSent) {
-        // Send OTP
-        const res = await fetch(`${API_URL}/api/auth/send-otp`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: trimmedEmail, purpose: "registration" }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed to send OTP");
-        setOtpSent(true);
-        setOtpResendCooldown(60);
-      } else if (otpMode && otpSent && mode !== "verify") {
-        // Verify OTP
-        const res = await fetch(`${API_URL}/api/auth/verify-otp`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: trimmedEmail, otp, purpose: "registration" }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Invalid OTP");
-        // Switch to registration form with verified email
-        setMode("signup");
-      } else if (mode === "signup") {
-        // Full registration with OTP
-        const res = await fetch(`${API_URL}/api/auth/register`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: trimmedEmail,
-            password,
-            first_name: firstName,
-            last_name: lastName,
-            phone: phone || undefined,
-            rating: rating || undefined,
-            otp,
-          }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Registration failed");
-        localStorage.setItem("accessToken", data.accessToken);
-        localStorage.setItem("refreshToken", data.refreshToken);
-        setSubmitted("signup");
-      }
-    } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : "Something went wrong");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const sendOtp = async () => {
-    setShowErrors(true);
-    if (!isValidEmail) return;
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_URL}/api/auth/send-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: trimmedEmail, purpose: "registration" }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to send OTP");
-      setOtpMode(true);
-      setOtpSent(true);
-      setOtpResendCooldown(60);
-      setErrorMessage("");
-    } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : "Failed to send OTP");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const resendOtp = async () => {
-    if (otpResendCooldown > 0) return;
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_URL}/api/auth/send-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: trimmedEmail, purpose: "registration" }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to resend OTP");
-      setOtpResendCooldown(60);
-      setErrorMessage("");
-    } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : "Failed to resend OTP");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const verifyOtp = async () => {
-    setShowErrors(true);
-    if (otp.length !== 6) return;
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_URL}/api/auth/verify-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: trimmedEmail, otp, purpose: "registration" }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Invalid OTP");
-      // OTP verified, now show registration form with verified email
-      setOtpMode(false);
-      setMode("signup");
-      setErrorMessage("");
-    } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : "Invalid or expired OTP");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSignup = async () => {
-    setShowErrors(true);
-    if (!canSubmit || loading) return;
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_URL}/api/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: trimmedEmail,
-          password,
-          first_name: firstName,
-          last_name: lastName || undefined,
-          phone: phone || undefined,
-          rating: rating || undefined,
-          otp,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Registration failed");
-      localStorage.setItem("accessToken", data.accessToken);
-      localStorage.setItem("refreshToken", data.refreshToken);
-      setSubmitted("signup");
-    } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : "Registration failed");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLogin = async () => {
-    setShowErrors(true);
-    if (!canSubmit || loading) return;
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_URL}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: trimmedEmail, password }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Login failed");
-      localStorage.setItem("accessToken", data.accessToken);
-      localStorage.setItem("refreshToken", data.refreshToken);
-      setSubmitted("login");
-    } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : "Login failed");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (mode === "login") handleLogin();
-    else if (otpMode && !otpSent) sendOtp();
-    else if (otpMode && otpSent) verifyOtp();
-    else if (mode === "signup") handleSignup();
-  };
-
-  if (submitted) {
-    const isLogin = submitted === "login";
-    return (
-      <Reveal>
-        <div className="rounded-3xl border border-emerald-400/30 bg-emerald-400/10 p-10 text-center">
-          <p className="mb-2 text-xs font-black uppercase tracking-[0.28em] text-emerald-300">
-            {isLogin ? "Signed in" : "Account created"}
-          </p>
-          <h1 className="text-3xl font-black tracking-[-0.06em] text-ink sm:text-4xl">
-            {isLogin ? "Welcome back." : "Welcome to the store."}
-          </h1>
-          <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-ink-muted">
-            Signed in as <strong className="text-ink">{trimmedEmail}</strong>.
-          </p>
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Button href="/profile">Open profile</Button>
-            <Button variant="secondary" href="/store">Browse the store</Button>
-          </div>
-        </div>
-      </Reveal>
-    );
-  }
-
-  // OTP Input Component
-  function OtpInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-    return (
-      <div className="flex gap-2 sm:gap-3">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <input
-            key={i}
-            type="text"
-            maxLength={1}
-            value={value[i] || ""}
-            onChange={(e) => {
-              const next = value.slice(0, i) + e.target.value + value.slice(i + 1);
-              onChange(next);
-              if (e.target.value && i < 5) {
-                (document.getElementById(`otp-${i + 1}`) as HTMLInputElement)?.focus();
-              }
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Backspace" && !e.currentTarget.value && i > 0) {
-                (document.getElementById(`otp-${i - 1}`) as HTMLInputElement)?.focus();
-              }
-            }}
-            id={`otp-${i}`}
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            maxLength={1}
-            className="h-12 w-12 sm:w-14 rounded-xl border border-line bg-surface/60 text-center text-2xl font-black text-ink outline-none transition focus:border-accent focus:bg-surface-bright focus:ring-1 focus:ring-accent"
-            autoComplete="one-time-code"
-          />
-        ))}
+function OtpInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="flex gap-2 sm:gap-3">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <input
+          key={i}
+          id={`otp-${i}`}
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          maxLength={1}
+          value={value[i] || ""}
+          onChange={(e) => {
+            const next = value.slice(0, i) + e.target.value + value.slice(i + 1);
+            onChange(next);
+            if (e.target.value && i < 5) {
+              (document.getElementById(`otp-${i + 1}`) as HTMLInputElement)?.focus();
+            }
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Backspace" && !e.currentTarget.value && i > 0) {
+              (document.getElementById(`otp-${i - 1}`) as HTMLInputElement)?.focus();
+            }
+          }}
+          className="h-12 w-12 sm:w-14 rounded-xl border border-line bg-surface/60 text-center text-2xl font-black text-ink outline-none transition focus:border-accent focus:bg-surface-bright focus:ring-1 focus:ring-accent"
+          autoComplete="one-time-code"
+        />
+      ))}
     </div>
   );
 }
 
-function PasswordInput({ ... }: { ... }) {
-  // ... existing PasswordInput component
+function PasswordInput({ id, label, value, onChange, placeholder, autoComplete }: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  autoComplete?: string;
+}) {
   const [shown, setShown] = useState(false);
   return (
     <label htmlFor={id} className="block">
       <span className="mb-2 block text-sm font-bold text-ink">{label}</span>
       <div className="relative">
         <span className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-ink-muted"><LockIcon /></span>
-        <input id={id} type={shown ? "text" : "password"} required={required} placeholder={placeholder} autoComplete={autoComplete} value={value} onChange={(e) => onChange(e.target.value)} className="h-12 w-full rounded-full border border-line bg-surface/60 pl-12 pr-12 text-sm text-ink placeholder-ink-muted outline-none transition focus:border-accent focus:bg-surface-bright focus:ring-1 focus:ring-accent" />
+        <input id={id} type={shown ? "text" : "password"} required placeholder={placeholder} autoComplete={autoComplete} value={value} onChange={(e) => onChange(e.target.value)} className="h-12 w-full rounded-full border border-line bg-surface/60 pl-12 pr-12 text-sm text-ink placeholder-ink-muted outline-none transition focus:border-accent focus:bg-surface-bright focus:ring-1 focus:ring-accent" />
         <button type="button" onClick={() => setShown(v => !v)} aria-label={shown ? "Hide password" : "Show password"} aria-pressed={shown} className="absolute right-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-md text-ink-muted transition hover:bg-surface-bright hover:text-ink">{shown ? <EyeOffIcon /> : <EyeIcon />}</button>
       </div>
     </label>
@@ -423,7 +124,7 @@ function RatingStars({ value, onChange }: { value: number; onChange: (v: number)
         >
           <StarIcon className={`h-5 w-5 ${i < value ? "text-amber-400" : "text-ink-muted"}`} />
         </button>
-      )}
+      ))}
     </div>
   );
 }
@@ -441,7 +142,6 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
   const [phone, setPhone] = useState("");
   const [rating, setRating] = useState(0);
   const [otp, setOtp] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
   const [otpResendCooldown, setOtpResendCooldown] = useState(0);
   const [showErrors, setShowErrors] = useState(false);
   const [submitted, setSubmitted] = useState<"login" | "signup" | null>(null);
@@ -466,11 +166,16 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
     if (!isValidEmail) errors.push("Enter a valid email address.");
     if (mode === "signup" && !signupLengthOK) errors.push("Password must be at least 8 characters.");
     if (mode === "signup" && !signupMatchOK) errors.push("Passwords do not match.");
-    if (mode === "login" && password.length < 1) errors.push("Enter your password.");
+    if (mode === "login" && !loginOtp && password.length < 1) errors.push("Enter your password.");
+    if (mode === "login" && loginOtp && otp.length !== 6) errors.push("Enter the 6-digit code.");
     if (mode === "signup" && !firstNameOK) errors.push("First name is required.");
   }
 
-  const canSubmit = isValidEmail && (mode === "login" ? password.length > 0 : mode === "signup" ? signupLengthOK && signupMatchOK && firstNameOK : otp.length === 6);
+  const canSubmit = isValidEmail && (
+    mode === "login" ? (loginOtp ? otp.length === 6 : password.length > 0)
+      : mode === "signup" ? signupLengthOK && signupMatchOK && firstNameOK
+        : otp.length === 6
+  );
 
   const isLoginOtp = mode === "login" && loginOtp;
   const heading = isLoginOtp ? (otpSent ? "Enter your sign-in code" : "Sign in with a code") : mode === "login" ? "Sign in" : otpMode ? "Verify your email" : "Create your account";
@@ -718,9 +423,7 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
                 </button>
               </div>
             )}
-          </div>
-        </div>
-        </>}
+          </>
         )}
 
         {mode === "signup" && (
