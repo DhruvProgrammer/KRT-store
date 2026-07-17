@@ -60,6 +60,23 @@ function generateRefreshToken(user) {
   return jwt.sign({ userId: user.id }, JWT_SECRET + '_refresh', { expiresIn: '7d' });
 }
 
+// ponytail: passwords hashed with native scrypt — no extra dependency.
+// Stored as "salt:hex64". Legacy plaintext rows (no ':') still verify during migration.
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const derived = crypto.scryptSync(password, salt, 64).toString('hex');
+  return `${salt}:${derived}`;
+}
+
+function verifyPassword(password, stored) {
+  if (!stored || !stored.includes(':')) return stored === password;
+  const [salt, hash] = stored.split(':');
+  const derived = crypto.scryptSync(password, salt, 64).toString('hex');
+  const a = Buffer.from(hash, 'hex');
+  const b = Buffer.from(derived, 'hex');
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
 // Helper function to send OTP email via notification service
 async function sendOTPEmail(email, otp, purpose = 'registration') {
   const subject = purpose === 'login'
@@ -182,9 +199,14 @@ app.post('/send-otp', async (req, res) => {
     await sendOTPEmail(email, otp, purpose);
     res.json({ success: true, message: 'OTP sent successfully' });
   } catch (error) {
-    // Clean up OTP on email failure
-    db.prepare('DELETE FROM otps WHERE email = ? AND purpose = ?').run(email, purpose);
-    return res.status(500).json({ error: 'Failed to send OTP email' });
+    // ponytail: in dev, email delivery is optional — keep the OTP and surface it
+    // so signup/login still works locally without a configured mailer.
+    if (process.env.NODE_ENV === 'production') {
+      db.prepare('DELETE FROM otps WHERE email = ? AND purpose = ?').run(email, purpose);
+      return res.status(500).json({ error: 'Failed to send OTP email' });
+    }
+    console.log(`[auth][dev] OTP for ${email} (${purpose}): ${otp}`);
+    res.json({ success: true, devOtp: otp, message: 'OTP sent (dev mode: check server console)' });
   }
 });
 
@@ -263,7 +285,7 @@ app.post('/register', (req, res) => {
   stmt.run(
     userId, 
     email, 
-    password, 
+    hashPassword(password), 
     first_name, 
     last_name || null, 
     phone || null, 
@@ -299,7 +321,7 @@ app.post('/login', (req, res) => {
   const { email, password } = req.body;
   const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
   
-  if (!user || user.password !== password) {
+  if (!user || !verifyPassword(password, user.password)) {
     return res.status(401).json({ error: 'Invalid credentials' });
   }
 
