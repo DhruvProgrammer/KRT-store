@@ -431,6 +431,7 @@ function RatingStars({ value, onChange }: { value: number; onChange: (v: number)
 export default function AuthForm({ mode: initialMode }: AuthFormProps) {
   const [mode, setMode] = useState<"login" | "signup" | "otp">(initialMode);
   const [otpMode, setOtpMode] = useState(false);
+  const [loginOtp, setLoginOtp] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -584,6 +585,51 @@ export default function AuthForm({ mode: initialMode }: AuthFormProps) {
       setSubmitted("signup");
     } catch (err: unknown) {
       setErrorMessage(err instanceof Error ? err.message : "Registration failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSendLoginOtp = async () => {
+    setShowErrors(true);
+    if (!isValidEmail) return;
+    setLoading(true);
+    setErrorMessage("");
+    try {
+      const res = await fetch(`${API_URL}/api/auth/send-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: trimmedEmail, purpose: "login" }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to send code");
+      setOtpSent(true);
+      setOtpResendCooldown(60);
+    } catch (err: unknown) {
+      setErrorMessage(err instanceof Error ? err.message : "Failed to send code");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLoginOtp = async () => {
+    setShowErrors(true);
+    if (otp.length !== 6) return;
+    setLoading(true);
+    setErrorMessage("");
+    try {
+      const res = await fetch(`${API_URL}/api/auth/login-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: trimmedEmail, otp }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Invalid code");
+      localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem("refreshToken", data.refreshToken);
+      setSubmitted("login");
+    } catch (err: unknown) {
+      setErrorMessage(err instanceof Error ? err.message : "Invalid or expired code");
     } finally {
       setLoading(false);
     }
