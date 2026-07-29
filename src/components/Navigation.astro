@@ -227,7 +227,11 @@ const searchExtras: SearchExtra[] = extras.map((e) => ({
 {/* On-demand React singleton — only the search modal needs React (for combobox state). */}
 <SearchModal client:load products={searchProducts} extras={searchExtras} />
 
-<script is:inline>
+<script>
+  // ponytail: NOT is:inline — Astro bundles this as an external <script src="...">
+  // so the CSP only needs 'self', not 'unsafe-inline'. The old inline version
+  // worked but forced the meta-CSP to whitelist inline scripts, which let any
+  // future stored XSS run arbitrary code.
   (function () {
     const init = () => {
       // ============ Cart badge sync ============
