@@ -119,7 +119,14 @@ const searchExtras: SearchExtra[] = extras.map((e) => ({
     </div>
 
     {/* MOBILE header buttons */}
-    <div class="flex items-center gap-2 md:hidden">
+    <div class="flex items-center gap-1 md:hidden">
+      <a
+        href="/login"
+        class="hidden h-11 items-center gap-1.5 rounded-full px-3 text-xs font-bold text-ink-muted transition hover:text-ink sm:inline-flex"
+      >
+        Sign in
+      </a>
+
       <button
         type="button"
         data-open-search
@@ -163,37 +170,60 @@ const searchExtras: SearchExtra[] = extras.map((e) => ({
     </div>
   </div>
 
-  <div class="hidden border-t border-line bg-bg-soft md:hidden" data-mobile-panel>
-    <nav class="container mx-auto flex flex-col gap-1 px-4 py-4 sm:px-6" aria-label="Mobile primary">
-      <p class="px-2 text-[11px] font-black uppercase tracking-[0.2em] text-ink-muted">Browse</p>
-      {links.map((link) => (
-        <a
-          href={link.href}
-          class="rounded-2xl px-4 py-3.5 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink"
+  {/* Mobile slide-in drawer backdrop */}
+  <div class="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300 md:hidden" data-mobile-backdrop></div>
+
+  {/* Mobile slide-in drawer */}
+  <div
+    class="fixed top-0 right-0 z-50 h-full w-[280px] translate-x-full border-l border-line bg-bg-soft/95 backdrop-blur-xl shadow-[0_0_40px_rgba(0,0,0,0.5)] transition-transform duration-300 ease-out md:hidden"
+    data-mobile-panel
+  >
+    <div class="flex h-full flex-col overflow-y-auto">
+      <div class="flex items-center justify-between px-5 py-4">
+        <span class="text-sm font-bold uppercase tracking-widest text-ink-muted">Menu</span>
+        <button
+          type="button"
+          data-mobile-close
+          aria-label="Close menu"
+          class="grid h-10 w-10 place-items-center rounded-full border border-line bg-surface-ink text-ink transition hover:bg-surface-bright"
         >
-          {link.label}
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="h-5 w-5">
+            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+        </button>
+      </div>
+
+      <nav class="container mx-auto flex flex-col gap-1 px-5" aria-label="Mobile primary">
+        <p class="px-3 pt-2 text-[11px] font-black uppercase tracking-[0.2em] text-ink-muted">Browse</p>
+        {links.map((link) => (
+          <a
+            href={link.href}
+            class="rounded-2xl px-4 py-3.5 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink"
+          >
+            {link.label}
+          </a>
+        ))}
+
+        <p class="mt-4 px-3 text-[11px] font-black uppercase tracking-[0.2em] text-ink-muted">Account</p>
+        <a href="/login" class="rounded-2xl px-4 py-3.5 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Sign in</a>
+        <a href="/signup" class="rounded-2xl px-4 py-3.5 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Create account</a>
+        <a href="/profile" class="rounded-2xl px-4 py-3.5 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Profile</a>
+        <a href="/settings" class="rounded-2xl px-4 py-3.5 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Settings</a>
+        <a href="/cart" class="rounded-2xl px-4 py-3 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Cart</a>
+
+        <a href="/store" class="mt-4 rounded-2xl bg-accent px-4 py-3 text-center text-sm font-black text-white shadow-[0_0_22px_rgba(0,162,255,0.35)] transition hover:bg-accent-bright">
+          Browse store
         </a>
-      ))}
+      </nav>
 
-      <p class="mt-4 px-2 text-[11px] font-black uppercase tracking-[0.2em] text-ink-muted">Account</p>
-      <a href="/login" class="rounded-2xl px-4 py-3.5 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Sign in</a>
-      <a href="/signup" class="rounded-2xl px-4 py-3.5 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Create account</a>
-      <a href="/profile" class="rounded-2xl px-4 py-3.5 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Profile</a>
-      <a href="/settings" class="rounded-2xl px-4 py-3.5 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Settings</a>
-      <a href="/cart" class="rounded-2xl px-4 py-3 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Cart</a>
-
-      <a href="/store" class="mt-4 rounded-2xl bg-accent px-4 py-3 text-center text-sm font-black text-white shadow-[0_0_22px_rgba(0,162,255,0.35)] transition hover:bg-accent-bright">
-        Browse store
-      </a>
-    </nav>
-
-    <div class="border-t border-line/60">
-      <div class="container mx-auto flex flex-wrap items-center justify-center gap-x-5 gap-y-2 px-4 py-4 text-[11px] font-bold uppercase tracking-[0.18em] text-ink-muted sm:px-6">
-        <a href="/privacy" class="transition hover:text-ink">Privacy</a>
-        <span aria-hidden="true" class="opacity-30">·</span>
-        <a href="/terms" class="transition hover:text-ink">Terms</a>
-        <span aria-hidden="true" class="opacity-30">·</span>
-        <a href="/#contact" class="transition hover:text-ink">Contact</a>
+      <div class="mt-auto border-t border-line/60 px-5 py-4">
+        <div class="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] font-bold uppercase tracking-[0.18em] text-ink-muted">
+          <a href="/privacy" class="transition hover:text-ink">Privacy</a>
+          <span aria-hidden="true" class="opacity-30">·</span>
+          <a href="/terms" class="transition hover:text-ink">Terms</a>
+          <span aria-hidden="true" class="opacity-30">·</span>
+          <a href="/#contact" class="transition hover:text-ink">Contact</a>
+        </div>
       </div>
     </div>
   </div>
@@ -276,50 +306,59 @@ const searchExtras: SearchExtra[] = extras.map((e) => ({
         }
       });
 
-      // ============ Mobile menu toggle ============
-      const panel = document.querySelector("[data-mobile-panel]");
-      const trigger = document.querySelector("[data-mobile-trigger]");
-      if (panel) {
-        const setOpen = (open) => {
-          panel.classList.toggle("hidden", !open);
-          if (trigger) {
-            trigger.setAttribute("aria-expanded", String(open));
-            trigger.setAttribute("aria-label", open ? "Close menu" : "Open menu");
-          }
-        };
-        const toggleOpen = () => setOpen(panel.classList.contains("hidden"));
-        if (trigger) {
-          trigger.addEventListener("click", (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            toggleOpen();
-          });
-        }
-        window.addEventListener("krt:toggle-menu", toggleOpen);
-        panel.querySelectorAll("a").forEach((anchor) =>
-          anchor.addEventListener("click", () => setOpen(false))
-        );
-        document.addEventListener("keydown", (event) => {
-          if (event.key === "Escape" && !panel.classList.contains("hidden")) {
-            setOpen(false);
-          }
-        });
-        // Close menu when tapping outside (mobile UX).
-        document.addEventListener("click", (event) => {
-          if (panel.classList.contains("hidden")) return;
-          const target = event.target;
-          if (!(target instanceof Node)) return;
-          if (panel.contains(target)) return;
-          if (trigger && trigger.contains(target)) return;
-          setOpen(false);
-        });
-        // Auto-close the mobile panel if the viewport grows past the md breakpoint.
-        const mq = window.matchMedia("(min-width: 768px)");
-        const onMq = (e) => {
-          if (e.matches) setOpen(false);
-        };
-        mq.addEventListener("change", onMq);
-      }
+       // ============ Mobile menu toggle (slide from right) ============
+       const panel = document.querySelector("[data-mobile-panel]");
+       const backdrop = document.querySelector("[data-mobile-backdrop]");
+       const trigger = document.querySelector("[data-mobile-trigger]");
+       const closeBtn = document.querySelector("[data-mobile-close]");
+       if (panel) {
+         const setOpen = (open) => {
+           panel.classList.toggle("translate-x-full", !open);
+           panel.classList.toggle("translate-x-0", open);
+           if (backdrop) {
+             backdrop.classList.toggle("pointer-events-none", !open);
+             backdrop.classList.toggle("opacity-0", !open);
+             backdrop.classList.toggle("opacity-100", open);
+             backdrop.classList.toggle("pointer-events-auto", open);
+           }
+           if (trigger) {
+             trigger.setAttribute("aria-expanded", String(open));
+             trigger.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+           }
+         };
+         const toggleOpen = () => setOpen(panel.classList.contains("translate-x-full"));
+         if (trigger) {
+           trigger.addEventListener("click", (event) => {
+             event.preventDefault();
+             event.stopPropagation();
+             toggleOpen();
+           });
+         }
+         if (closeBtn) {
+           closeBtn.addEventListener("click", () => setOpen(false));
+         }
+         if (backdrop) {
+           backdrop.addEventListener("click", () => setOpen(false));
+         }
+         window.addEventListener("krt:toggle-menu", toggleOpen);
+         panel.querySelectorAll("a").forEach((anchor) =>
+           anchor.addEventListener("click", () => setOpen(false))
+         );
+         document.addEventListener("keydown", (event) => {
+           if (event.key === "Escape" && !panel.classList.contains("translate-x-full")) {
+             setOpen(false);
+           }
+         });
+         // Close menu when tapping outside (on backdrop already handled).
+         // Auto-close the mobile panel if the viewport grows past the md breakpoint.
+         const mq = window.matchMedia("(min-width: 768px)");
+         const onMq = (e) => {
+           if (e.matches) setOpen(false);
+         };
+         mq.addEventListener("change", onMq);
+         // Initial state: closed
+         setOpen(false);
+       }
     };
 
     if (document.readyState === "loading") {
