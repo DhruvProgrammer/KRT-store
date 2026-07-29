@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import Button from "../Button";
-import { getProducts, updateProduct, deleteProduct, addProduct, getCategories, updateCategory, addCategory, deleteCategory, getExtras, isAuthenticated, authenticate, logout } from "../../lib/admin-store";
+import { getProducts, updateProduct, deleteProduct, addProduct, getCategories, updateCategory, addCategory, deleteCategory, getExtras, isAuthenticated, authenticate, verifySession, logout } from "../../lib/admin-store";
 import type { Product } from "../../data/products";
 import type { Category } from "../../data/categories";
 
@@ -23,6 +23,7 @@ function StarIcon() {
 }
 
 function LoginGate({ onAuth }: { onAuth: () => void }) {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -30,7 +31,7 @@ function LoginGate({ onAuth }: { onAuth: () => void }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const ok = await authenticate(password);
+    const ok = await authenticate(email, password);
     setLoading(false);
     if (ok) onAuth();
     else { setError(true); setPassword(""); }
@@ -43,13 +44,16 @@ function LoginGate({ onAuth }: { onAuth: () => void }) {
       <form onSubmit={handleSubmit} className="relative w-full max-w-sm rounded-3xl border border-line bg-surface/80 p-8 shadow-soft backdrop-blur-sm">
         <span className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-accent to-accent-bright font-black text-xl text-white shadow-[0_0_24px_rgba(0,162,255,0.35)]">K</span>
         <h1 className="text-center text-3xl font-black tracking-[-0.06em] text-ink">Admin sign in</h1>
-        <p className="mt-2 text-center text-sm text-ink-muted">Enter the admin password to continue.</p>
+        <p className="mt-2 text-center text-sm text-ink-muted">Enter your admin email and password to continue.</p>
         <div className="mt-6 space-y-4">
-          <input type="password" value={password} onChange={(e) => { setPassword(e.target.value); setError(false); }}
-            placeholder="Password" autoFocus autoComplete="off"
+          <input type="email" value={email} onChange={(e) => { setEmail(e.target.value); setError(false); }}
+            placeholder="Email" autoFocus autoComplete="username"
             className="h-12 w-full rounded-full border border-line bg-surface/60 px-5 text-sm text-ink placeholder-ink-muted outline-none transition focus:border-accent focus:ring-1 focus:ring-accent" />
-          {error && <p className="text-center text-xs text-red-400">Incorrect password.</p>}
-          <Button type="submit" className="w-full justify-center shadow-[0_0_22px_rgba(0,162,255,0.35)]" disabled={loading || !password}>
+          <input type="password" value={password} onChange={(e) => { setPassword(e.target.value); setError(false); }}
+            placeholder="Password" autoComplete="current-password"
+            className="h-12 w-full rounded-full border border-line bg-surface/60 px-5 text-sm text-ink placeholder-ink-muted outline-none transition focus:border-accent focus:ring-1 focus:ring-accent" />
+          {error && <p className="text-center text-xs text-red-400">Incorrect email or password.</p>}
+          <Button type="submit" className="w-full justify-center shadow-[0_0_22px_rgba(0,162,255,0.35)]" disabled={loading || !email || !password}>
             {loading ? "Checking…" : "Sign in"}
           </Button>
         </div>
@@ -411,7 +415,15 @@ export default function AdminPanel() {
   const [authed, setAuthed] = useState(false);
   const [tab, setTab] = useState<Tab>("dashboard");
 
-  useEffect(() => { if (isAuthenticated()) setAuthed(true); }, []);
+  useEffect(() => {
+    let cancelled = false;
+    if (!isAuthenticated()) return;
+    // ponytail: trust nothing — verify the stored token with the server on
+    // every mount. A spoofed sessionStorage flag or a tampered token falls
+    // through verifySession()'s 401, which clears the token.
+    verifySession().then((ok) => { if (!cancelled) setAuthed(ok); });
+    return () => { cancelled = true; };
+  }, []);
 
   if (!authed) return <LoginGate onAuth={() => setAuthed(true)} />;
 

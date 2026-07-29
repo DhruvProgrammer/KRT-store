@@ -12,6 +12,13 @@ app.use(express.json());
 const JWT_SECRET = process.env.JWT_SECRET || 'krt-store-secret-key-dev';
 const NOTIFICATION_SERVICE_URL = process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:8000';
 const NOTIFY_TOKEN = process.env.NOTIFY_TOKEN || 'brunogoyal';
+// ponytail: admin creds are env-only, never bundled. ADMIN_PASSWORD_HASH is a
+// pre-hashed value (see scripts/hash-admin-password.js) — the server never
+// sees the plaintext. ADMIN_BOOTSTRAP=true creates the admin row on first
+// boot if no admin exists; flip it to false (or unset it) after the row exists.
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || '';
+const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || '';
+const ADMIN_BOOTSTRAP = process.env.ADMIN_BOOTSTRAP === 'true';
 
 // Initialize SQLite database
 const db = new Database('auth.db');
@@ -30,7 +37,21 @@ db.exec(`
     created_at TEXT DEFAULT (datetime('now')),
     updated_at TEXT DEFAULT (datetime('now'))
   );
+`);
 
+// ponytail: additive migrations. Each ALTER is wrapped because ALTER TABLE ADD
+// COLUMN fails the second time the schema runs — without the IF EXISTS guard
+// the boot would crash on every restart after the first migration.
+function safeAddColumn(table, column, definition) {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all().map((c) => c.name);
+  if (!cols.includes(column)) {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+  }
+}
+safeAddColumn('users', 'role', "TEXT NOT NULL DEFAULT 'CUSTOMER'");
+safeAddColumn('users', 'last_login_at', 'TEXT');
+
+db.exec(`
   CREATE TABLE IF NOT EXISTS otps (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     email TEXT NOT NULL,
@@ -62,6 +83,20 @@ db.exec(`
     created_at TEXT DEFAULT (datetime('now'))
   );
   CREATE INDEX IF NOT EXISTS idx_magic_links_email ON magic_links(email);
+
+  CREATE TABLE IF NOT EXISTS admin_audit_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    admin_id TEXT NOT NULL,
+    admin_email TEXT NOT NULL,
+    action TEXT NOT NULL,
+    target TEXT,
+    detail TEXT,
+    ip TEXT,
+    user_agent TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+  CREATE INDEX IF NOT EXISTS idx_audit_admin ON admin_audit_log(admin_id);
+  CREATE INDEX IF NOT EXISTS idx_audit_created ON admin_audit_log(created_at);
 `);
 
 function hashOTP(otp) {
@@ -112,6 +147,70 @@ function generateMagicToken() {
 
 function hashMagicToken(token) {
   return crypto.createHash('sha256').update(token + 'krt-magic-salt').digest('hex');
+}
+
+// ponytail: admins live in the same users table with role='ADMIN'. The
+// password hash is supplied via env (never the plaintext). On first boot,
+// ADMIN_BOOTSTRAP=true creates a single admin row if none exists — the
+// operator sets ADMIN_BOOTSTRAP=false (or unsets it) after the row lands,
+// so a leaked DATABASE_URL can't recreate the admin.
+function bootstrapAdmin() {
+  if (!ADMIN_BOOTSTRAP) return;
+  if (!ADMIN_EMAIL || !ADMIN_PASSWORD_HASH) {
+    console.warn('[auth] ADMIN_BOOTSTRAP=true but ADMIN_EMAIL or ADMIN_PASSWORD_HASH is missing — skipping');
+    return;
+  }
+  const existing = db.prepare("SELECT id FROM users WHERE email = ? AND role = 'ADMIN'").get(ADMIN_EMAIL);
+  if (existing) return;
+  const id = crypto.randomUUID();
+  db.prepare(`
+    INSERT INTO users (id, email, password, first_name, role, email_verified, created_at, updated_at)
+    VALUES (?, ?, ?, 'Admin', 'ADMIN', 1, datetime('now'), datetime('now'))
+  `).run(id, ADMIN_EMAIL, ADMIN_PASSWORD_HASH);
+  console.log(`[auth] Bootstrapped admin user ${ADMIN_EMAIL}`);
+}
+
+function auditAdmin(admin, action, req, target, detail) {
+  try {
+    db.prepare(`
+      INSERT INTO admin_audit_log (admin_id, admin_email, action, target, detail, ip, user_agent)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      admin?.id || null,
+      admin?.email || null,
+      action,
+      target || null,
+      detail ? JSON.stringify(detail) : null,
+      req?.ip || req?.headers?.['x-forwarded-for'] || null,
+      req?.headers?.['user-agent'] || null
+    );
+  } catch (err) {
+    console.error('[auth] audit log failed:', err.message);
+  }
+}
+
+function requireAdmin(req, res) {
+  const authHeader = req.headers.authorization || '';
+  if (!authHeader.startsWith('Bearer ')) {
+    res.status(401).json({ error: 'No token provided' });
+    return null;
+  }
+  try {
+    const decoded = jwt.verify(authHeader.substring(7), JWT_SECRET);
+    if (decoded.role !== 'ADMIN') {
+      res.status(403).json({ error: 'Admin access required' });
+      return null;
+    }
+    const admin = db.prepare('SELECT id, email, role FROM users WHERE id = ? AND role = ?').get(decoded.userId, 'ADMIN');
+    if (!admin) {
+      res.status(403).json({ error: 'Admin not found' });
+      return null;
+    }
+    return admin;
+  } catch {
+    res.status(401).json({ error: 'Invalid or expired token' });
+    return null;
+  }
 }
 
 // Helper function to send magic link email via notification service
@@ -627,6 +726,56 @@ app.use((err, req, res, next) => {
   if (res.headersSent) return next(err);
   res.status(500).json({ error: err?.message || 'Internal server error' });
 });
+
+// POST /admin/login - Admin sign-in. Constant-time password compare via
+// verifyPassword(). Logs every attempt (success + failure) to admin_audit_log.
+app.post('/admin/login', (req, res) => {
+  const { email, password } = req.body || {};
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
+  const admin = db.prepare("SELECT * FROM users WHERE email = ? AND role = 'ADMIN'").get(email);
+  if (!admin) {
+    auditAdmin({ email }, 'login.fail.no_user', req, email, { reason: 'no_admin_with_email' });
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
+  if (!verifyPassword(password, admin.password)) {
+    auditAdmin(admin, 'login.fail.bad_password', req, email, null);
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
+  db.prepare("UPDATE users SET last_login_at = datetime('now') WHERE id = ?").run(admin.id);
+  const accessToken = generateAccessToken(admin);
+  const refreshToken = generateRefreshToken(admin);
+  auditAdmin(admin, 'login.ok', req, email, null);
+  res.json({
+    user: { id: admin.id, email: admin.email, first_name: admin.first_name, role: admin.role },
+    accessToken,
+    refreshToken
+  });
+});
+
+// GET /admin/verify - Validate admin token. Used by the storefront admin
+// panel on every page load instead of trusting a client-side sessionStorage flag.
+app.get('/admin/verify', (req, res) => {
+  const admin = requireAdmin(req, res);
+  if (!admin) return;
+  res.json({ authenticated: true, admin: { id: admin.id, email: admin.email } });
+});
+
+// GET /admin/audit - Owner-only. Returns recent audit log rows.
+app.get('/admin/audit', (req, res) => {
+  const admin = requireAdmin(req, res);
+  if (!admin) return;
+  const rows = db.prepare(`
+    SELECT id, admin_email, action, target, detail, ip, created_at
+    FROM admin_audit_log
+    ORDER BY created_at DESC
+    LIMIT 200
+  `).all();
+  res.json({ rows });
+});
+
+bootstrapAdmin();
 
 const PORT = process.env.PORT || 3002;
 app.listen(PORT, () => console.log(`Auth Service running on port ${PORT}`));

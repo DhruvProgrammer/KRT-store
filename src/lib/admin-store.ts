@@ -92,31 +92,63 @@ export function getExtras(): ExtraItem[] {
   return sourceExtras;
 }
 
-// ponytail: prototype auth — uses sessionStorage + hardcoded default password.
-// Upgrade: wire to auth-service (port 3002) with bcrypt + JWT.
-const AUTH_HASH = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918";
+// ponytail: admin auth is server-side now. The client calls POST /api/auth/admin/login
+// with email+password; the auth-service verifies a scrypt hash, returns a JWT
+// with role=ADMIN, and writes an admin_audit_log row. SessionStorage still
+// holds the token, but the token is verified server-side on every page load
+// via GET /api/auth/admin/verify — there's no client-only flag to spoof.
+const AUTH_KEY = "dg-admin-token";
 
-async function sha256(input: string): Promise<string> {
-  const enc = new TextEncoder();
-  const data = enc.encode(input);
-  const hash = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(hash)).map((b) => b.toString(16).padStart(2, "0")).join("");
+const API_URL = import.meta.env.PUBLIC_API_URL;
+if (!API_URL) {
+  throw new Error("PUBLIC_API_URL is not set");
+}
+
+function readToken(): string | null {
+  if (typeof sessionStorage === "undefined") return null;
+  return sessionStorage.getItem(AUTH_KEY);
+}
+
+function writeToken(token: string | null) {
+  if (typeof sessionStorage === "undefined") return;
+  if (token) sessionStorage.setItem(AUTH_KEY, token);
+  else sessionStorage.removeItem(AUTH_KEY);
 }
 
 export function isAuthenticated(): boolean {
-  if (typeof sessionStorage === "undefined") return false;
-  return sessionStorage.getItem(AUTH_KEY) === "1";
+  return readToken() !== null;
 }
 
-export async function authenticate(password: string): Promise<boolean> {
-  const hash = await sha256(password);
-  if (hash === AUTH_HASH) {
-    try { sessionStorage.setItem(AUTH_KEY, "1"); } catch { /* ignore */ }
+export async function authenticate(email: string, password: string): Promise<boolean> {
+  const res = await fetch(`${API_URL}/api/auth/admin/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password })
+  });
+  if (!res.ok) return false;
+  const data = await res.json();
+  if (!data.accessToken) return false;
+  writeToken(data.accessToken);
+  return true;
+}
+
+export async function verifySession(): Promise<boolean> {
+  const token = readToken();
+  if (!token) return false;
+  try {
+    const res = await fetch(`${API_URL}/api/auth/admin/verify`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) {
+      writeToken(null);
+      return false;
+    }
     return true;
+  } catch {
+    return false;
   }
-  return false;
 }
 
 export function logout() {
-  try { sessionStorage.removeItem(AUTH_KEY); } catch { /* ignore */ }
+  writeToken(null);
 }
