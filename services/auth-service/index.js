@@ -869,6 +869,22 @@ app.get('/admin/audit', (req, res) => {
   res.json({ rows });
 });
 
+// POST /admin/logout - Same as /logout but admin-aware (logs to audit log).
+app.post('/admin/logout', (req, res) => {
+  const admin = requireAdmin(req, res);
+  if (!admin) return;
+  auditAdmin(admin, 'logout', req, admin.email, null);
+  const token = req.cookies?.[COOKIE_REFRESH];
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET + '_refresh');
+      db.prepare("UPDATE refresh_tokens SET revoked_at = datetime('now') WHERE jti = ?").run(decoded.jti);
+    } catch { /* ignore */ }
+  }
+  clearAuthCookies(res);
+  res.json({ success: true });
+});
+
 bootstrapAdmin();
 
 const PORT = process.env.PORT || 3002;

@@ -308,8 +308,7 @@ export default function AuthForm({ mode: initialMode, method }: AuthFormProps) {
       });
       const data = await parseJson(res);
       if (!res.ok) throw new Error(data?.error || `Request failed (status ${res.status})`);
-      localStorage.setItem("accessToken", data.accessToken);
-      localStorage.setItem("refreshToken", data.refreshToken);
+      // ponytail: tokens are now httpOnly cookies set by the server — no longer write to localStorage.
       setSubmitted("signup");
     } catch (err: unknown) {
       setErrorMessage(err instanceof Error ? err.message : "Registration failed");
@@ -332,8 +331,7 @@ export default function AuthForm({ mode: initialMode, method }: AuthFormProps) {
       });
       const data = await parseJson(res);
       if (!res.ok) throw new Error(data?.error || `Request failed (status ${res.status})`);
-      localStorage.setItem("accessToken", data.accessToken);
-      localStorage.setItem("refreshToken", data.refreshToken);
+      // ponytail: tokens are now httpOnly cookies set by the server — no longer write to localStorage.
       setSubmitted("login");
     } catch (err: unknown) {
       setErrorMessage(err instanceof Error ? err.message : "Invalid or expired magic link");
@@ -377,8 +375,7 @@ export default function AuthForm({ mode: initialMode, method }: AuthFormProps) {
       });
       const data = await parseJson(res);
       if (!res.ok) throw new Error(data?.error || `Request failed (status ${res.status})`);
-      localStorage.setItem("accessToken", data.accessToken);
-      localStorage.setItem("refreshToken", data.refreshToken);
+      // ponytail: tokens are now httpOnly cookies set by the server — no longer write to localStorage.
       setSubmitted("login");
     } catch (err: unknown) {
       setErrorMessage(err instanceof Error ? err.message : "Invalid or expired code");
@@ -399,8 +396,7 @@ export default function AuthForm({ mode: initialMode, method }: AuthFormProps) {
       });
       const data = await parseJson(res);
       if (!res.ok) throw new Error(data?.error || `Request failed (status ${res.status})`);
-      localStorage.setItem("accessToken", data.accessToken);
-      localStorage.setItem("refreshToken", data.refreshToken);
+      // ponytail: tokens are now httpOnly cookies set by the server — no longer write to localStorage.
       setSubmitted("login");
     } catch (err: unknown) {
       setErrorMessage(err instanceof Error ? err.message : "Login failed");

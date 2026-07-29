@@ -91,63 +91,77 @@ export function getExtras(): ExtraItem[] {
   return sourceExtras;
 }
 
-// ponytail: admin auth is server-side now. The client calls POST /api/auth/admin/login
-// with email+password; the auth-service verifies a scrypt hash, returns a JWT
-// with role=ADMIN, and writes an admin_audit_log row. SessionStorage still
-// holds the token, but the token is verified server-side on every page load
-// via GET /api/auth/admin/verify — there's no client-only flag to spoof.
-const AUTH_KEY = "dg-admin-token";
+// ponytail: admin auth uses httpOnly cookies set by the server. There's no
+// client-readable token to store. /verify is the source of truth — the
+// server reads the cookie and returns the admin's id/email. sessionStorage
+// only holds a non-secret "last verified" timestamp so the UI can avoid a
+// pointless verify round-trip on first paint.
+const AUTH_VERIFIED_AT = "dg-admin-verified-at";
 
 const API_URL = import.meta.env.PUBLIC_API_URL;
 if (!API_URL) {
   throw new Error("PUBLIC_API_URL is not set");
 }
 
-function readToken(): string | null {
-  if (typeof sessionStorage === "undefined") return null;
-  return sessionStorage.getItem(AUTH_KEY);
+function readVerifiedAt(): number {
+  if (typeof sessionStorage === "undefined") return 0;
+  return Number(sessionStorage.getItem(AUTH_VERIFIED_AT) || 0);
 }
 
-function writeToken(token: string | null) {
+function markVerified() {
   if (typeof sessionStorage === "undefined") return;
-  if (token) sessionStorage.setItem(AUTH_KEY, token);
-  else sessionStorage.removeItem(AUTH_KEY);
+  sessionStorage.setItem(AUTH_VERIFIED_AT, String(Date.now()));
+}
+
+function clearVerified() {
+  if (typeof sessionStorage === "undefined") return;
+  sessionStorage.removeItem(AUTH_VERIFIED_AT);
 }
 
 export function isAuthenticated(): boolean {
-  return readToken() !== null;
+  // ponytail: the cookie is the only truth. sessionStorage here is just a
+  // "we know the session was live at time T" hint — it's used to skip the
+  // network verify on first paint of a session that *just* authenticated.
+  // We cap the hint at 5 minutes: after that we re-verify to catch expired
+  // tokens or stolen cookies that the user has since revoked.
+  return Date.now() - readVerifiedAt() < 5 * 60 * 1000;
 }
 
 export async function authenticate(email: string, password: string): Promise<boolean> {
   const res = await fetch(`${API_URL}/api/auth/admin/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password })
+    body: JSON.stringify({ email, password }),
+    credentials: "include"
   });
   if (!res.ok) return false;
-  const data = await res.json();
-  if (!data.accessToken) return false;
-  writeToken(data.accessToken);
+  await res.json();
+  markVerified();
   return true;
 }
 
 export async function verifySession(): Promise<boolean> {
-  const token = readToken();
-  if (!token) return false;
   try {
     const res = await fetch(`${API_URL}/api/auth/admin/verify`, {
-      headers: { Authorization: `Bearer ${token}` }
+      credentials: "include"
     });
     if (!res.ok) {
-      writeToken(null);
+      clearVerified();
       return false;
     }
+    markVerified();
     return true;
   } catch {
     return false;
   }
 }
 
-export function logout() {
-  writeToken(null);
+export async function logout() {
+  try {
+    await fetch(`${API_URL}/api/auth/admin/logout`, {
+      method: "POST",
+      credentials: "include"
+    });
+  } catch { /* network error — server-side cookie will expire on its own */ }
+  clearVerified();
 }
