@@ -170,15 +170,15 @@ const searchExtras: SearchExtra[] = extras.map((e) => ({
   </div>
 
   {/* Mobile slide-in drawer backdrop */}
-  <div class="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300 md:hidden" data-mobile-backdrop></div>
+  <div class="fixed inset-0 z-40 bg-black/60 opacity-0 pointer-events-none transition-opacity duration-300 md:hidden" data-mobile-backdrop></div>
 
   {/* Mobile slide-in drawer */}
   <div
-    class="fixed top-0 right-0 z-50 h-full w-[280px] translate-x-full border-l border-line bg-bg-soft/95 backdrop-blur-xl shadow-[0_0_40px_rgba(0,0,0,0.5)] transition-transform duration-300 ease-out md:hidden"
+    class="fixed top-0 right-0 z-50 h-full w-[300px] translate-x-full bg-bg-soft/95 backdrop-blur-xl shadow-[0_0_40px_rgba(0,0,0,0.5)] transition-transform duration-300 ease-out md:hidden"
     data-mobile-panel
   >
     <div class="flex h-full flex-col overflow-y-auto">
-      <div class="flex items-center justify-between px-5 py-4">
+      <div class="flex items-center justify-between px-4 py-3">
         <span class="text-sm font-bold uppercase tracking-widest text-ink-muted">Menu</span>
         <button
           type="button"
@@ -192,8 +192,8 @@ const searchExtras: SearchExtra[] = extras.map((e) => ({
         </button>
       </div>
 
-      <nav class="container mx-auto flex flex-col gap-1 px-5" aria-label="Mobile primary">
-        <p class="px-3 pt-2 text-[11px] font-black uppercase tracking-[0.2em] text-ink-muted">Browse</p>
+      <nav class="flex flex-col gap-1 px-4" aria-label="Mobile primary">
+        <p class="px-1 pt-2 text-[11px] font-black uppercase tracking-[0.2em] text-ink-muted">Browse</p>
         {links.map((link) => (
           <a
             href={link.href}
@@ -203,7 +203,7 @@ const searchExtras: SearchExtra[] = extras.map((e) => ({
           </a>
         ))}
 
-        <p class="mt-4 px-3 text-[11px] font-black uppercase tracking-[0.2em] text-ink-muted">Account</p>
+        <p class="mt-4 px-1 text-[11px] font-black uppercase tracking-[0.2em] text-ink-muted">Account</p>
         <a href="/login" class="rounded-2xl px-4 py-3.5 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Sign in</a>
         <a href="/signup" class="rounded-2xl px-4 py-3.5 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Create account</a>
         <a href="/profile" class="rounded-2xl px-4 py-3.5 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Profile</a>
@@ -215,7 +215,7 @@ const searchExtras: SearchExtra[] = extras.map((e) => ({
         </a>
       </nav>
 
-      <div class="mt-auto border-t border-line/60 px-5 py-4">
+      <div class="mt-auto border-t border-line/60 px-4 py-3">
         <div class="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] font-bold uppercase tracking-[0.18em] text-ink-muted">
           <a href="/privacy" class="transition hover:text-ink">Privacy</a>
           <span aria-hidden="true" class="opacity-30">·</span>
@@ -305,59 +305,58 @@ const searchExtras: SearchExtra[] = extras.map((e) => ({
         }
       });
 
-       // ============ Mobile menu toggle (slide from right) ============
-       const panel = document.querySelector("[data-mobile-panel]");
-       const backdrop = document.querySelector("[data-mobile-backdrop]");
-       const trigger = document.querySelector("[data-mobile-trigger]");
-       const closeBtn = document.querySelector("[data-mobile-close]");
-       if (panel) {
-         const setOpen = (open) => {
-           panel.classList.toggle("translate-x-full", !open);
-           panel.classList.toggle("translate-x-0", open);
-           if (backdrop) {
-             backdrop.classList.toggle("pointer-events-none", !open);
-             backdrop.classList.toggle("opacity-0", !open);
-             backdrop.classList.toggle("opacity-100", open);
-             backdrop.classList.toggle("pointer-events-auto", open);
-           }
-           if (trigger) {
-             trigger.setAttribute("aria-expanded", String(open));
-             trigger.setAttribute("aria-label", open ? "Close menu" : "Open menu");
-           }
-         };
-         const toggleOpen = () => setOpen(panel.classList.contains("translate-x-full"));
-         if (trigger) {
-           trigger.addEventListener("click", (event) => {
-             event.preventDefault();
-             event.stopPropagation();
-             toggleOpen();
-           });
-         }
-         if (closeBtn) {
-           closeBtn.addEventListener("click", () => setOpen(false));
-         }
-         if (backdrop) {
-           backdrop.addEventListener("click", () => setOpen(false));
-         }
-         window.addEventListener("krt:toggle-menu", toggleOpen);
-         panel.querySelectorAll("a").forEach((anchor) =>
-           anchor.addEventListener("click", () => setOpen(false))
-         );
-         document.addEventListener("keydown", (event) => {
-           if (event.key === "Escape" && !panel.classList.contains("translate-x-full")) {
-             setOpen(false);
-           }
-         });
-         // Close menu when tapping outside (on backdrop already handled).
-         // Auto-close the mobile panel if the viewport grows past the md breakpoint.
-         const mq = window.matchMedia("(min-width: 768px)");
-         const onMq = (e) => {
-           if (e.matches) setOpen(false);
-         };
-         mq.addEventListener("change", onMq);
-         // Initial state: closed
-         setOpen(false);
-       }
+        // ============ Mobile menu toggle (slide from right) ============
+        const panel = document.querySelector("[data-mobile-panel]");
+        const backdrop = document.querySelector("[data-mobile-backdrop]");
+        const trigger = document.querySelector("[data-mobile-trigger]");
+        const closeBtn = document.querySelector("[data-mobile-close]");
+        if (panel) {
+          const setOpen = (open) => {
+            panel.classList.toggle("translate-x-full", !open);
+            panel.classList.toggle("translate-x-0", open);
+            if (backdrop) {
+              backdrop.classList.toggle("pointer-events-none", !open);
+              backdrop.classList.toggle("opacity-0", !open);
+              backdrop.classList.toggle("opacity-100", open);
+              backdrop.classList.toggle("pointer-events-auto", open);
+            }
+            if (trigger) {
+              trigger.setAttribute("aria-expanded", String(open));
+              trigger.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+            }
+          };
+          const toggleOpen = () => setOpen(panel.classList.contains("translate-x-full"));
+          if (trigger) {
+            trigger.addEventListener("click", (event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              toggleOpen();
+            });
+          }
+          if (closeBtn) {
+            closeBtn.addEventListener("click", () => setOpen(false));
+          }
+          if (backdrop) {
+            backdrop.addEventListener("click", () => setOpen(false));
+          }
+          window.addEventListener("krt:toggle-menu", toggleOpen);
+          panel.querySelectorAll("a").forEach((anchor) =>
+            anchor.addEventListener("click", () => setOpen(false))
+          );
+          document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape" && panel.classList.contains("translate-x-full")) {
+              setOpen(false);
+            }
+          });
+          // Auto-close the mobile panel if the viewport grows past the md breakpoint.
+          const mq = window.matchMedia("(min-width: 768px)");
+          const onMq = (e) => {
+            if (e.matches) setOpen(false);
+          };
+          mq.addEventListener("change", onMq);
+          // Initial state: closed
+          setOpen(false);
+        }
     };
 
     if (document.readyState === "loading") {
