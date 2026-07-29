@@ -42,6 +42,19 @@ const websiteSchema = {
     "query-input": "required name=search_term_string"
   }
 };
+
+// ponytail: CSP script-src needs SHA-256 hashes for the JSON-LD inline blocks
+// so we can drop 'unsafe-inline' entirely. The blocks vary per page (siteUrl
+// is the page origin), so hashes are computed at render time.
+// WebCrypto isn't available in the SSR Node runtime; use Node's crypto.
+import { createHash } from "node:crypto";
+const sha256 = (s: string) =>
+  `'sha256-${createHash("sha256").update(s, "utf8").digest("base64")}'`;
+const orgJson = JSON.stringify(organizationSchema);
+const webJson = JSON.stringify(websiteSchema);
+const orgHash = sha256(orgJson);
+const webHash = sha256(webJson);
+const jsonLdHashes = `${orgHash} ${webHash}`;
 ---
 
 <!doctype html>
@@ -83,8 +96,11 @@ const websiteSchema = {
          The origin is derived from PUBLIC_API_URL at build time (see astro.config.mjs
          for the deploy-time HTTPS check). frame-ancestors is intentionally omitted:
          it is ignored in a <meta> CSP and only works as an HTTP header, so frame-src
-         'none' (valid in meta) provides the clickjacking protection. -->
-    <meta http-equiv="Content-Security-Policy" content={`default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src ${connectSrc}; frame-src 'none'; base-uri 'self'; form-action 'self';`} />
+         'none' (valid in meta) provides the clickjacking protection. 'unsafe-eval'
+         is dropped because nothing in the source uses eval()/new Function(). Inline
+         is replaced by sha256-* hashes for the JSON-LD blocks; everything else is
+         an external script bundled by Astro. -->
+    <meta http-equiv="Content-Security-Policy" content={`default-src 'self'; script-src 'self' ${jsonLdHashes}; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src ${connectSrc}; frame-src 'none'; base-uri 'self'; form-action 'self';`} />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
     <meta http-equiv="Permissions-Policy" content="accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()" />
