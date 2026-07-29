@@ -1,6 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const Database = require('better-sqlite3');
 const crypto = require('crypto');
 const path = require('path');
@@ -8,6 +9,7 @@ const path = require('path');
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
 
 const JWT_SECRET = process.env.JWT_SECRET || 'krt-store-secret-key-dev';
 const NOTIFICATION_SERVICE_URL = process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:8000';
@@ -97,6 +99,15 @@ db.exec(`
   );
   CREATE INDEX IF NOT EXISTS idx_audit_admin ON admin_audit_log(admin_id);
   CREATE INDEX IF NOT EXISTS idx_audit_created ON admin_audit_log(created_at);
+
+  CREATE TABLE IF NOT EXISTS refresh_tokens (
+    jti TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    revoked_at TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+  CREATE INDEX IF NOT EXISTS idx_refresh_user ON refresh_tokens(user_id);
 `);
 
 function hashOTP(otp) {
@@ -112,7 +123,14 @@ function generateAccessToken(user) {
 }
 
 function generateRefreshToken(user) {
-  return jwt.sign({ userId: user.id }, JWT_SECRET + '_refresh', { expiresIn: '7d' });
+  // ponytail: jti is recorded server-side so we can revoke individual
+  // refresh tokens (logout-everywhere, stolen-device revoke, etc).
+  const jti = crypto.randomUUID();
+  const token = jwt.sign({ userId: user.id, jti }, JWT_SECRET + '_refresh', { expiresIn: '7d' });
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+  db.prepare(`INSERT INTO refresh_tokens (jti, user_id, expires_at) VALUES (?, ?, ?)`)
+    .run(jti, user.id, expiresAt);
+  return token;
 }
 
 // ponytail: passwords hashed with native scrypt — no extra dependency.
@@ -130,6 +148,39 @@ function verifyPassword(password, stored) {
   const a = Buffer.from(hash, 'hex');
   const b = Buffer.from(derived, 'hex');
   return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+// ponytail: tokens are httpOnly cookies — never readable from JS, so any
+// XSS payload can't exfiltrate them via document.cookie. SameSite=Strict
+// blocks CSRF. Secure is forced in production (NODE_ENV=production). The
+// access cookie is short (15m, matches the JWT expiry) and the refresh
+// cookie is longer (7d) so silent rotation just works.
+const COOKIE_ACCESS = 'krt_access';
+const COOKIE_REFRESH = 'krt_refresh';
+const COOKIE_BASE = {
+  httpOnly: true,
+  sameSite: 'strict',
+  secure: process.env.NODE_ENV === 'production',
+  path: '/'
+};
+
+function setAuthCookies(res, accessToken, refreshToken) {
+  res.cookie(COOKIE_ACCESS, accessToken, { ...COOKIE_BASE, maxAge: 15 * 60 * 1000 });
+  res.cookie(COOKIE_REFRESH, refreshToken, { ...COOKIE_BASE, maxAge: 7 * 24 * 60 * 60 * 1000 });
+}
+
+function clearAuthCookies(res) {
+  res.clearCookie(COOKIE_ACCESS, COOKIE_BASE);
+  res.clearCookie(COOKIE_REFRESH, COOKIE_BASE);
+}
+
+// ponytail: read token from Bearer header (CLI/script use) OR cookie (browser).
+// Without this, switching to cookie-based auth would break every existing caller.
+function readAccessToken(req) {
+  const header = req.headers.authorization;
+  if (header && header.startsWith('Bearer ')) return header.substring(7);
+  const fromCookie = req.cookies?.[COOKIE_ACCESS];
+  return fromCookie || null;
 }
 
 function verifyPassword(password, stored) {
@@ -190,13 +241,13 @@ function auditAdmin(admin, action, req, target, detail) {
 }
 
 function requireAdmin(req, res) {
-  const authHeader = req.headers.authorization || '';
-  if (!authHeader.startsWith('Bearer ')) {
+  const token = readAccessToken(req);
+  if (!token) {
     res.status(401).json({ error: 'No token provided' });
     return null;
   }
   try {
-    const decoded = jwt.verify(authHeader.substring(7), JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET);
     if (decoded.role !== 'ADMIN') {
       res.status(403).json({ error: 'Admin access required' });
       return null;
@@ -520,15 +571,16 @@ app.post('/register', (req, res) => {
   const accessToken = generateAccessToken({ id: user.id, email: user.email, role: user.role });
   const refreshToken = generateRefreshToken({ id: user.id, email: user.email, role: user.role });
 
+  setAuthCookies(res, accessToken, refreshToken);
   res.status(201).json({
-    user: { 
-      id: user.id, 
-      email: user.email, 
-      first_name: user.first_name, 
+    user: {
+      id: user.id,
+      email: user.email,
+      first_name: user.first_name,
       last_name: user.last_name,
       phone: user.phone,
       rating: user.rating,
-      role: user.role 
+      role: user.role
     },
     accessToken,
     refreshToken
@@ -547,15 +599,16 @@ app.post('/login', (req, res) => {
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
 
+  setAuthCookies(res, accessToken, refreshToken);
   res.json({
-    user: { 
-      id: user.id, 
-      email: user.email, 
-      first_name: user.first_name, 
+    user: {
+      id: user.id,
+      email: user.email,
+      first_name: user.first_name,
       last_name: user.last_name,
       phone: user.phone,
       rating: user.rating,
-      role: user.role 
+      role: user.role
     },
     accessToken,
     refreshToken
@@ -591,6 +644,7 @@ app.post('/login-otp', (req, res) => {
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
 
+  setAuthCookies(res, accessToken, refreshToken);
   res.json({
     user: {
       id: user.id,
@@ -677,6 +731,7 @@ app.post('/verify-magic-link', (req, res) => {
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
 
+  setAuthCookies(res, accessToken, refreshToken);
   res.json({
     user: {
       id: user.id,
@@ -692,14 +747,13 @@ app.post('/verify-magic-link', (req, res) => {
   });
 });
 
-// GET /me - Validate token and return user info
+// GET /me - Validate token (Bearer header OR httpOnly cookie) and return user info
 app.get('/me', (req, res) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith('Bearer ')) {
+  const token = readAccessToken(req);
+  if (!token) {
     return res.status(401).json({ error: 'No token provided' });
   }
   try {
-    const token = authHeader.substring(7);
     const decoded = jwt.verify(token, JWT_SECRET);
     const user = db.prepare('SELECT * FROM users WHERE email = ?').get(decoded.email);
     if (!user) {
@@ -718,6 +772,45 @@ app.get('/me', (req, res) => {
   } catch (err) {
     res.status(401).json({ error: 'Invalid or expired token' });
   }
+});
+
+// POST /refresh - Rotate access token using the refresh cookie. The old
+// refresh token is revoked (single-use) so a stolen cookie can't keep
+// refreshing forever. Returns a new access cookie.
+app.post('/refresh', (req, res) => {
+  const token = req.cookies?.[COOKIE_REFRESH];
+  if (!token) return res.status(401).json({ error: 'No refresh token' });
+  let decoded;
+  try {
+    decoded = jwt.verify(token, JWT_SECRET + '_refresh');
+  } catch {
+    return res.status(401).json({ error: 'Invalid or expired refresh token' });
+  }
+  const row = db.prepare('SELECT user_id, revoked_at FROM refresh_tokens WHERE jti = ?').get(decoded.jti);
+  if (!row || row.revoked_at) {
+    return res.status(401).json({ error: 'Refresh token revoked' });
+  }
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(row.user_id);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  // Revoke the used refresh token, then mint a new pair.
+  db.prepare("UPDATE refresh_tokens SET revoked_at = datetime('now') WHERE jti = ?").run(decoded.jti);
+  const accessToken = generateAccessToken(user);
+  const refreshToken = generateRefreshToken(user);
+  setAuthCookies(res, accessToken, refreshToken);
+  res.json({ success: true });
+});
+
+// POST /logout - Revoke the current refresh token + clear cookies.
+app.post('/logout', (req, res) => {
+  const token = req.cookies?.[COOKIE_REFRESH];
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET + '_refresh');
+      db.prepare("UPDATE refresh_tokens SET revoked_at = datetime('now') WHERE jti = ?").run(decoded.jti);
+    } catch { /* expired token — nothing to revoke */ }
+  }
+  clearAuthCookies(res);
+  res.json({ success: true });
 });
 
 // ponytail: never leak HTML stack traces to API clients — always respond JSON.
@@ -747,6 +840,7 @@ app.post('/admin/login', (req, res) => {
   const accessToken = generateAccessToken(admin);
   const refreshToken = generateRefreshToken(admin);
   auditAdmin(admin, 'login.ok', req, email, null);
+  setAuthCookies(res, accessToken, refreshToken);
   res.json({
     user: { id: admin.id, email: admin.email, first_name: admin.first_name, role: admin.role },
     accessToken,

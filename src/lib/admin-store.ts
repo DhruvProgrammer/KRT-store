@@ -6,7 +6,6 @@ import { categories as sourceCategories } from "../data/categories";
 import { extras as sourceExtras } from "../data/extras";
 
 const EDIT_KEY = "dg-admin-edits";
-const AUTH_KEY = "dg-admin-auth";
 
 function readEdits(): Record<string, unknown> {
   try {
