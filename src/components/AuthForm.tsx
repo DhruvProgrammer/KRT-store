@@ -61,7 +61,10 @@ interface AuthFormProps {
   method?: "password" | "otp" | "magic-link";
 }
 
-const API_URL = import.meta.env.PUBLIC_API_URL || "http://localhost:3001";
+const API_URL = import.meta.env.PUBLIC_API_URL;
+if (!API_URL) {
+  throw new Error("PUBLIC_API_URL is not set");
+}
 
 function PasswordInput({ id, label, value, onChange, placeholder, autoComplete }: {
   id: string;

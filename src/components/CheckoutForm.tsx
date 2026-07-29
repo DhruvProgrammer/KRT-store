@@ -171,7 +171,10 @@ export default function CheckoutForm() {
   }, [otpResendCooldown]);
 
   const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-  const API_URL = import.meta.env.PUBLIC_API_URL || "http://localhost:3001";
+  const API_URL = import.meta.env.PUBLIC_API_URL;
+  if (!API_URL) {
+    throw new Error("PUBLIC_API_URL is not set");
+  }
 
   const sendCode = async () => {
     if (!isValidEmail) return;
@@ -267,7 +270,10 @@ export default function CheckoutForm() {
       return;
     }
 
-    const API_URL = import.meta.env.PUBLIC_API_URL || "http://localhost:3001";
+    const API_URL = import.meta.env.PUBLIC_API_URL;
+    if (!API_URL) {
+      throw new Error("PUBLIC_API_URL is not set");
+    }
     setLoading(true);
     try {
       const res = await fetch(`${API_URL}/api/orders`, {

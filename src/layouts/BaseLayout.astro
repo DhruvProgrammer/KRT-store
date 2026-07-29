@@ -16,6 +16,8 @@ const siteDescription = description;
 const siteUrl = Astro.url.origin;
 const pageImage = image ? new URL(image, siteUrl).href : `${siteUrl}/og.svg`;
 const canonicalUrl = canonical ?? Astro.url.href;
+const apiUrl = import.meta.env.PUBLIC_API_URL ?? "";
+const connectSrc = apiUrl ? `'self' ${apiUrl}` : "'self'";
 
 const organizationSchema = {
   "@context": "https://schema.org",
@@ -77,11 +79,12 @@ const websiteSchema = {
       these are enforced.
     -->
     <!-- ponytail: connect-src must allow the API gateway origin, otherwise the
-         browser blocks the checkout fetch to :3001 (cross-origin from :4321) and
-         no order/receipt email is ever sent. frame-ancestors is intentionally
-         omitted: it is ignored in a <meta> CSP and only works as an HTTP header,
-         so frame-src 'none' (valid in meta) provides the clickjacking protection. -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' http://localhost:3001; frame-src 'none'; base-uri 'self'; form-action 'self';" />
+         browser blocks the checkout fetch and no order/receipt email is ever sent.
+         The origin is derived from PUBLIC_API_URL at build time (see astro.config.mjs
+         for the deploy-time HTTPS check). frame-ancestors is intentionally omitted:
+         it is ignored in a <meta> CSP and only works as an HTTP header, so frame-src
+         'none' (valid in meta) provides the clickjacking protection. -->
+    <meta http-equiv="Content-Security-Policy" content={`default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src ${connectSrc}; frame-src 'none'; base-uri 'self'; form-action 'self';`} />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
     <meta http-equiv="Permissions-Policy" content="accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()" />
