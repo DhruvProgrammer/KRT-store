@@ -168,65 +168,61 @@ const searchExtras: SearchExtra[] = extras.map((e) => ({
       </button>
     </div>
   </div>
+</header>
 
-  {/* Mobile slide-in drawer backdrop */}
-  <div class="fixed inset-0 z-40 bg-black/60 opacity-0 pointer-events-none transition-opacity duration-300 md:hidden" data-mobile-backdrop></div>
+{/* Mobile slide-in drawer backdrop */}
+<div class="fixed inset-0 z-40 bg-black/60 opacity-0 pointer-events-none transition-opacity duration-300 md:hidden" data-mobile-backdrop></div>
 
-  {/* Mobile slide-in drawer */}
-  <div
-    class="fixed top-0 right-0 z-50 h-full w-[300px] translate-x-full bg-bg-soft/95 backdrop-blur-xl shadow-[0_0_40px_rgba(0,0,0,0.5)] transition-transform duration-300 ease-out md:hidden"
-    data-mobile-panel
-  >
-    <div class="flex h-full flex-col overflow-y-auto">
-      <div class="flex items-center justify-between px-4 py-3">
-        <span class="text-sm font-bold uppercase tracking-widest text-ink-muted">Menu</span>
-        <button
-          type="button"
-          data-mobile-close
-          aria-label="Close menu"
-          class="grid h-10 w-10 place-items-center rounded-full border border-line bg-surface-ink text-ink transition hover:bg-surface-bright"
-        >
-          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="h-5 w-5">
-            <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-          </svg>
-        </button>
-      </div>
+{/* Mobile slide-in drawer */}
+<div
+  class="fixed top-0 right-0 z-50 h-full w-[300px] translate-x-full bg-bg-soft shadow-[0_0_40px_rgba(0,0,0,0.5)] transition-transform duration-300 ease-out md:hidden"
+  data-mobile-panel
+>
+  <div class="flex h-full flex-col overflow-y-auto">
+    <div class="flex items-center justify-between border-b border-line/60 px-4 py-3">
+      <span class="text-sm font-bold uppercase tracking-widest text-ink">Menu</span>
+      <button
+        type="button"
+        data-mobile-close
+        aria-label="Close menu"
+        class="grid h-10 w-10 place-items-center rounded-full border border-line bg-surface-ink text-ink transition hover:bg-surface-bright"
+      >
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="h-5 w-5">
+          <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+      </button>
+    </div>
 
-      <nav class="flex flex-col gap-1 px-4" aria-label="Mobile primary">
-        <p class="px-1 pt-2 text-[11px] font-black uppercase tracking-[0.2em] text-ink-muted">Browse</p>
-        {links.map((link) => (
-          <a
-            href={link.href}
-            class="rounded-2xl px-4 py-3.5 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink"
-          >
-            {link.label}
-          </a>
-        ))}
+    <nav class="flex flex-col gap-1 px-3 py-2" aria-label="Mobile primary">
+      <p class="px-3 pt-3 pb-2 text-[11px] font-black uppercase tracking-[0.2em] text-ink-muted">Browse</p>
+      <a href="/" class="block rounded-xl px-4 py-3 text-base font-semibold text-ink transition hover:bg-surface">Home</a>
+      <a href="/store" class="block rounded-xl px-4 py-3 text-base font-semibold text-ink transition hover:bg-surface">Store</a>
+      <a href="/extras" class="block rounded-xl px-4 py-3 text-base font-semibold text-ink transition hover:bg-surface">Extras</a>
+      <a href="/#contact" class="block rounded-xl px-4 py-3 text-base font-semibold text-ink transition hover:bg-surface">Contact</a>
 
-        <p class="mt-4 px-1 text-[11px] font-black uppercase tracking-[0.2em] text-ink-muted">Account</p>
-        <a href="/login" class="rounded-2xl px-4 py-3.5 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Sign in</a>
-        <a href="/signup" class="rounded-2xl px-4 py-3.5 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Create account</a>
-        <a href="/profile" class="rounded-2xl px-4 py-3.5 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Profile</a>
-        <a href="/settings" class="rounded-2xl px-4 py-3.5 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Settings</a>
-        <a href="/cart" class="rounded-2xl px-4 py-3 text-sm font-bold text-ink-muted transition hover:bg-slate-800/40 hover:text-ink">Cart</a>
+      <p class="px-3 pt-5 pb-2 text-[11px] font-black uppercase tracking-[0.2em] text-ink-muted">Account</p>
+      <a href="/login" class="block rounded-xl px-4 py-3 text-base font-semibold text-ink transition hover:bg-surface">Sign in</a>
+      <a href="/signup" class="block rounded-xl px-4 py-3 text-base font-semibold text-ink transition hover:bg-surface">Create account</a>
+      <a href="/profile" class="block rounded-xl px-4 py-3 text-base font-semibold text-ink transition hover:bg-surface">Profile</a>
+      <a href="/settings" class="block rounded-xl px-4 py-3 text-base font-semibold text-ink transition hover:bg-surface">Settings</a>
+      <a href="/cart" class="block rounded-xl px-4 py-3 text-base font-semibold text-ink transition hover:bg-surface">Cart</a>
 
-        <a href="/store" class="mt-4 rounded-2xl bg-accent px-4 py-3 text-center text-sm font-black text-white shadow-[0_0_22px_rgba(0,162,255,0.35)] transition hover:bg-accent-bright">
-          Browse store
-        </a>
-      </nav>
+      <a href="/store" class="mt-4 block rounded-xl bg-accent px-4 py-3 text-center text-base font-bold text-white shadow-[0_0_22px_rgba(0,162,255,0.35)] transition hover:bg-accent-bright">
+        Browse store
+      </a>
+    </nav>
 
-      <div class="mt-auto border-t border-line/60 px-4 py-3">
-        <div class="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] font-bold uppercase tracking-[0.18em] text-ink-muted">
-          <a href="/privacy" class="transition hover:text-ink">Privacy</a>
-          <span aria-hidden="true" class="opacity-30">·</span>
-          <a href="/terms" class="transition hover:text-ink">Terms</a>
-          <span aria-hidden="true" class="opacity-30">·</span>
-          <a href="/#contact" class="transition hover:text-ink">Contact</a>
-        </div>
+    <div class="mt-auto border-t border-line/60 px-4 py-3">
+      <div class="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] font-bold uppercase tracking-[0.18em] text-ink-muted">
+        <a href="/privacy" class="transition hover:text-ink">Privacy</a>
+        <span aria-hidden="true" class="opacity-30">·</span>
+        <a href="/terms" class="transition hover:text-ink">Terms</a>
+        <span aria-hidden="true" class="opacity-30">·</span>
+        <a href="/#contact" class="transition hover:text-ink">Contact</a>
       </div>
     </div>
   </div>
-</header>
+</div>
 
 {/* On-demand React singleton — only the search modal needs React (for combobox state). */}
 <SearchModal client:load products={searchProducts} extras={searchExtras} />
