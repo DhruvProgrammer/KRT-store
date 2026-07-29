@@ -30,7 +30,7 @@ const searchExtras: SearchExtra[] = extras.map((e) => ({
 ---
 
 <header class="sticky top-0 z-40 border-b border-line bg-bg-soft/90 backdrop-blur-xl" data-navigation>
-  <div class="border-b border-line/60">
+  <div class="hidden border-b border-line/60 md:block">
     <div class="container mx-auto flex h-9 items-center justify-between gap-2 px-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-muted sm:px-6 lg:px-8">
       <p class="flex items-center gap-2 truncate">
         <span class="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-accent shadow-[0_0_10px_rgba(0,162,255,0.7)]"></span>
@@ -41,7 +41,6 @@ const searchExtras: SearchExtra[] = extras.map((e) => ({
         <span aria-hidden="true" class="opacity-30">·</span>
         <a href="/#contact" class="transition hover:text-ink">Contact</a>
       </div>
-      <a href="/login" class="sm:hidden transition hover:text-ink">Sign in</a>
     </div>
   </div>
 

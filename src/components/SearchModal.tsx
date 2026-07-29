@@ -132,9 +132,9 @@ export default function SearchModal({
       />
        <div
          ref={dialogRef}
-         className={`fixed inset-0 z-50 max-h-[100dvh] origin-top overflow-y-auto overscroll-contain border-b border-line bg-bg-soft/95 shadow-[0_24px_60px_rgba(0,0,0,0.55)] backdrop-blur-xl transition-transform md:top-0 md:inset-x-auto md:right-0 md:w-[420px] md:max-w-[90vw] md:border-b md:border-l md:border-line md:rounded-2xl md:shadow-[0_24px_60px_rgba(0,0,0,0.55)] ${
-           open ? "translate-y-0" : "-translate-y-full"
-         }`}
+        className={`fixed inset-x-0 top-0 z-50 max-h-[100dvh] origin-top overflow-y-auto overscroll-contain border-b border-line bg-bg-soft/95 shadow-[0_24px_60px_rgba(0,0,0,0.55)] backdrop-blur-xl transition-transform max-md:inset-0 max-md:max-h-none max-md:rounded-none md:rounded-2xl ${
+          open ? "translate-y-0" : "-translate-y-full"
+        }`}
         role="dialog"
         aria-modal="true"
         aria-label="Search products"
