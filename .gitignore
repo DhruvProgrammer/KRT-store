@@ -9,6 +9,9 @@ package-lock.json
 .DS_Store
 .cache
 ISSUES.md
+.agents
+hooks
+skills
 
 # Python
 .venv/
@@ -18,3 +21,5 @@ __pycache__/
 .env
 # Runtime logs
 *.log
+
+#folders i dont want 
