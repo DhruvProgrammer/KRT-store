@@ -21,6 +21,17 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
+// ponytail: password policy. NIST 800-63B says length > complexity, but we
+// keep a floor of 8 + a ceiling (prevent abuse) + a tiny blocklist. No
+// "must contain uppercase+symbol" theater — that just annoys users without
+// meaningfully raising entropy.
+const WEAK_PASSWORDS = new Set(['password', '12345678', 'password1', 'qwerty12', 'letmein1', '11111111', '00000000', 'abc12345', 'iloveyou']);
+function validatePassword(pw) {
+  if (typeof pw !== 'string' || pw.length < 8 || pw.length > 128) return 'Password must be 8–128 characters';
+  if (WEAK_PASSWORDS.has(pw.toLowerCase())) return 'Password is too common';
+  return null;
+}
+
 // ponytail: in-memory rate limiter — no dep. Ceiling: resets on restart, not
 // shared across instances. Upgrade path: swap for a Redis-backed limiter when
 // the service scales past one process. key=identifier, max=N, windowMs=W.
@@ -562,6 +573,9 @@ app.post('/register', (req, res) => {
       error: 'Email, password, first name, and OTP are required' 
     });
   }
+
+  const pwErr = validatePassword(password);
+  if (pwErr) return res.status(400).json({ error: pwErr });
 
   // Verify OTP
   const crypto = require('crypto');
