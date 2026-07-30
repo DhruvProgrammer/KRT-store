@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import { createHash } from "node:crypto";
 import { ClientRouter } from "astro:transitions";
 
 interface Props {
@@ -46,14 +47,10 @@ const websiteSchema = {
 // ponytail: CSP script-src needs SHA-256 hashes for the JSON-LD inline blocks
 // so we can drop 'unsafe-inline' entirely. The blocks vary per page (siteUrl
 // is the page origin), so hashes are computed at render time.
-// WebCrypto isn't available in the SSR Node runtime; use Node's crypto.
-import { createHash } from "node:crypto";
 const sha256 = (s: string) =>
   `'sha256-${createHash("sha256").update(s, "utf8").digest("base64")}'`;
-const orgJson = JSON.stringify(organizationSchema);
-const webJson = JSON.stringify(websiteSchema);
-const orgHash = sha256(orgJson);
-const webHash = sha256(webJson);
+const orgHash = sha256(JSON.stringify(organizationSchema));
+const webHash = sha256(JSON.stringify(websiteSchema));
 const jsonLdHashes = `${orgHash} ${webHash}`;
 ---
 

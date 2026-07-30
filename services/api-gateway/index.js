@@ -7,7 +7,27 @@ const app = express();
 // CORS must be applied to ALL responses including proxy errors.
 // Without this, if the backend is down the browser gets a 502 with no
 // CORS headers and throws "Failed to fetch" instead of showing the real error.
-const corsOptions = { origin: '*', methods: ['GET','POST','PUT','DELETE','PATCH','OPTIONS'] };
+// ponytail: ALLOWED_ORIGINS is a comma-separated allowlist. '*' is rejected
+// at boot — wildcard CORS + Authorization header is the classic CSRF vector.
+// Dev default permits the Astro dev server (:4321) and the gateway's own host.
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'http://localhost:4321,http://127.0.0.1:4321')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+if (ALLOWED_ORIGINS.includes('*')) {
+  console.error('[Gateway] ALLOWED_ORIGINS="*" is not permitted. Pin it to the real app origin(s).');
+  process.exit(1);
+}
+const corsOptions = {
+  origin: (origin, cb) => {
+    // ponytail: no-origin (same-origin/server-to-server/curl) → allow.
+    // false (not Error) so cors omits the header instead of 500-ing.
+    if (!origin || ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
+    return cb(null, false);
+  },
+  methods: ['GET','POST','PUT','DELETE','PATCH','OPTIONS'],
+  credentials: true
+};
 app.use(cors(corsOptions));
 
 // ponytail: no express.json() here — the gateway is a pure proxy. Parsing the
@@ -41,7 +61,11 @@ Object.entries(services).forEach(([name, config]) => {
       onError: (err, req, res) => {
         console.error(`[Gateway] ❌ Proxy error for ${name}:`, err.message);
         // Always set CORS headers on error so the browser can read the response
-        res.setHeader('Access-Control-Allow-Origin', '*');
+        const origin = req.headers.origin;
+        if (origin && ALLOWED_ORIGINS.includes(origin)) {
+          res.setHeader('Access-Control-Allow-Origin', origin);
+          res.setHeader('Access-Control-Allow-Credentials', 'true');
+        }
         res.status(502).json({ error: `Service ${name} unavailable`, detail: err.message });
       },
       onProxyReq: (proxyReq, req) => {

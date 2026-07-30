@@ -7,9 +7,44 @@ const crypto = require('crypto');
 const path = require('path');
 
 const app = express();
-app.use(cors());
+// ponytail: same allowlist pattern as the gateway. The auth-service is behind
+// the gateway but browser scripts could fetch it directly in dev, so pin it.
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'http://localhost:4321,http://127.0.0.1:4321')
+  .split(',').map((s) => s.trim()).filter(Boolean);
+app.use(cors({
+  origin: (origin, cb) => {
+    if (!origin || ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
+    return cb(null, false);
+  },
+  credentials: true
+}));
 app.use(express.json());
 app.use(cookieParser());
+
+// ponytail: in-memory rate limiter — no dep. Ceiling: resets on restart, not
+// shared across instances. Upgrade path: swap for a Redis-backed limiter when
+// the service scales past one process. key=identifier, max=N, windowMs=W.
+function rateLimit({ max, windowMs }) {
+  const hits = new Map();
+  // ponytail: sweep every 5×window to avoid unbounded growth. Naive but fine
+  // for a single-process dev/stage service.
+  setInterval(() => hits.clear(), windowMs * 5).unref();
+  return (req, res, next) => {
+    const ip = req.ip || req.socket.remoteAddress || 'unknown';
+    const now = Date.now();
+    const entry = hits.get(ip) || { count: 0, resetAt: now + windowMs };
+    if (now > entry.resetAt) { entry.count = 0; entry.resetAt = now + windowMs; }
+    entry.count++;
+    hits.set(ip, entry);
+    res.setHeader('X-RateLimit-Limit', max);
+    res.setHeader('X-RateLimit-Remaining', Math.max(0, max - entry.count));
+    res.setHeader('X-RateLimit-Reset', Math.floor(entry.resetAt / 1000));
+    if (entry.count > max) {
+      return res.status(429).json({ error: 'Too many requests. Try again later.' });
+    }
+    next();
+  };
+}
 
 const JWT_SECRET = process.env.JWT_SECRET || 'krt-store-secret-key-dev';
 const NOTIFICATION_SERVICE_URL = process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:8000';
@@ -427,7 +462,9 @@ function renderOTPEmail(otp, purpose = 'registration') {
 }
 
 // POST /send-otp - Send OTP to email
-app.post('/send-otp', async (req, res) => {
+// ponytail: 5/min per IP — email-sending is the expensive+abusable resource.
+const sendOtpLimiter = rateLimit({ max: 5, windowMs: 60_000 });
+app.post('/send-otp', sendOtpLimiter, async (req, res) => {
   const { email, purpose = 'registration' } = req.body;
   
   if (!email) {
@@ -588,7 +625,10 @@ app.post('/register', (req, res) => {
 });
 
 // POST /login - Login (returns JWT)
-app.post('/login', (req, res) => {
+// ponytail: 10/min per IP — blocks credential stuffing while letting legit
+// fat-finger retries through.
+const loginLimiter = rateLimit({ max: 10, windowMs: 60_000 });
+app.post('/login', loginLimiter, (req, res) => {
   const { email, password } = req.body;
   const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
   
@@ -616,7 +656,9 @@ app.post('/login', (req, res) => {
 });
 
 // POST /login-otp - Passwordless sign-in via OTP (returns JWT)
-app.post('/login-otp', (req, res) => {
+// ponytail: 10/min per IP — 6-digit OTP × 10 attempts is 1e-6 brute-force odds.
+const loginOtpLimiter = rateLimit({ max: 10, windowMs: 60_000 });
+app.post('/login-otp', loginOtpLimiter, (req, res) => {
   const { email, otp } = req.body;
 
   if (!email || !otp) {
@@ -661,7 +703,9 @@ app.post('/login-otp', (req, res) => {
 });
 
 // POST /send-magic-link - Send magic link for passwordless sign-in
-app.post('/send-magic-link', async (req, res) => {
+// ponytail: 5/min per IP — same email-sending abuse vector as send-otp.
+const magicLinkLimiter = rateLimit({ max: 5, windowMs: 60_000 });
+app.post('/send-magic-link', magicLinkLimiter, async (req, res) => {
   const { email } = req.body;
 
   if (!email) {
@@ -822,7 +866,9 @@ app.use((err, req, res, next) => {
 
 // POST /admin/login - Admin sign-in. Constant-time password compare via
 // verifyPassword(). Logs every attempt (success + failure) to admin_audit_log.
-app.post('/admin/login', (req, res) => {
+// ponytail: 5/min per IP — tighter than user login; admin is the crown jewels.
+const adminLoginLimiter = rateLimit({ max: 5, windowMs: 60_000 });
+app.post('/admin/login', adminLoginLimiter, (req, res) => {
   const { email, password } = req.body || {};
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password are required' });

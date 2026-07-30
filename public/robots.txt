@@ -1,4 +1,11 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /profile
+Disallow: /settings
+Disallow: /cart
+Disallow: /checkout
+Disallow: /account
+Disallow: /api/
 
 Sitemap: https://design-goods.example.com/sitemap-index.xml
