@@ -1,0 +1,10 @@
+# ponytail: this folder holds the ArgonVault pepper secret for the krt store
+# auth-service. NEVER commit anything in here. The pepper converts a DB-only
+# breach into a two-point failure (DB + secrets) — but only if it stays secret.
+#
+# pepper.key    64 hex chars (32 bytes), generated via crypto.randomBytes(32)
+#
+# Rotate: drop a pepper2.key alongside, the loader HMACs with both during
+# transition, then retire pepper.key once all hashes have rehashed on login.
+*
+!.gitignore

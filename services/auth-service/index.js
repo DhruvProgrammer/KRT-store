@@ -5,6 +5,9 @@ const cookieParser = require('cookie-parser');
 const Database = require('better-sqlite3');
 const crypto = require('crypto');
 const path = require('path');
+// ponytail: ArgonVault = audited Argon2id + HMAC pepper + salt + versioning
+// (see argonvault.js). NOT a custom algorithm — composed per OWASP / RFC 9106.
+const { argonvaultHash, argonvaultVerify, needsRehash } = require('./argonvault');
 
 const app = express();
 // ponytail: same allowlist pattern as the gateway. The auth-service is behind
@@ -179,21 +182,33 @@ function generateRefreshToken(user) {
   return token;
 }
 
-// ponytail: passwords hashed with native scrypt — no extra dependency.
-// Stored as "salt:hex64". Legacy plaintext rows (no ':') still verify during migration.
-function hashPassword(password) {
-  const salt = crypto.randomBytes(16).toString('hex');
-  const derived = crypto.scryptSync(password, salt, 64).toString('hex');
-  return `${salt}:${derived}`;
+// ponytail: ArgonVault is the new password store (Argon2id + pepper). Legacy
+// scrypt rows ("salt:hex64", no AV2: prefix) still verify via scrypt so we can
+// migrate without a forced password reset; a successful scrypt login rehashes
+// the password into ArgonVault transparently (see needsRehash() at call sites).
+// Legacy plaintext rows (no ':') verify against the raw string during the
+// earliest migration — kept only to avoid lockout on ancient dev DBs.
+async function hashPassword(password) {
+  return argonvaultHash(password);
 }
 
-function verifyPassword(password, stored) {
-  if (!stored || !stored.includes(':')) return stored === password;
-  const [salt, hash] = stored.split(':');
-  const derived = crypto.scryptSync(password, salt, 64).toString('hex');
-  const a = Buffer.from(hash, 'hex');
-  const b = Buffer.from(derived, 'hex');
-  return a.length === b.length && crypto.timingSafeEqual(a, b);
+// async wrapper: verify against ArgonVault (AV2:) OR legacy scrypt/plaintext.
+// On success + needsRehash, the caller rehashes and persists — returns true so
+// the call site can treat upgrade as a verify-side concern.
+async function verifyPassword(password, stored) {
+  if (!stored) return false;
+  if (typeof stored === 'string' && stored.startsWith('AV2:')) {
+    return argonvaultVerify(password, stored);
+  }
+  // Legacy scrypt "salt:hex64" (or ancient plaintext "no colon").
+  if (typeof stored === 'string' && stored.includes(':')) {
+    const [salt, hash] = stored.split(':');
+    const derived = crypto.scryptSync(password, salt, 64).toString('hex');
+    const a = Buffer.from(hash, 'hex');
+    const b = Buffer.from(derived, 'hex');
+    return a.length === b.length && crypto.timingSafeEqual(a, b);
+  }
+  return stored === password; // ponytail: ancient plaintext — dev DB only
 }
 
 // ponytail: tokens are httpOnly cookies — never readable from JS, so any
@@ -227,15 +242,6 @@ function readAccessToken(req) {
   if (header && header.startsWith('Bearer ')) return header.substring(7);
   const fromCookie = req.cookies?.[COOKIE_ACCESS];
   return fromCookie || null;
-}
-
-function verifyPassword(password, stored) {
-  if (!stored || !stored.includes(':')) return stored === password;
-  const [salt, hash] = stored.split(':');
-  const derived = crypto.scryptSync(password, salt, 64).toString('hex');
-  const a = Buffer.from(hash, 'hex');
-  const b = Buffer.from(derived, 'hex');
-  return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
 function generateMagicToken() {
@@ -557,7 +563,7 @@ app.post('/verify-otp', (req, res) => {
 });
 
 // POST /register - Register new user (requires verified email)
-app.post('/register', (req, res) => {
+app.post('/register', async (req, res) => {
   const { 
     email, 
     password, 
@@ -606,7 +612,7 @@ app.post('/register', (req, res) => {
   stmt.run(
     userId, 
     email, 
-    hashPassword(password), 
+    await hashPassword(password), 
     first_name, 
     last_name || null, 
     phone || null, 
@@ -642,12 +648,20 @@ app.post('/register', (req, res) => {
 // ponytail: 10/min per IP — blocks credential stuffing while letting legit
 // fat-finger retries through.
 const loginLimiter = rateLimit({ max: 10, windowMs: 60_000 });
-app.post('/login', loginLimiter, (req, res) => {
+app.post('/login', loginLimiter, async (req, res) => {
   const { email, password } = req.body;
   const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
   
-  if (!user || !verifyPassword(password, user.password)) {
+  if (!user || !await verifyPassword(password, user.password)) {
     return res.status(401).json({ error: 'Invalid credentials' });
+  }
+
+  // ponytail: transparent upgrade. Legacy scrypt rows or out-of-date Argon2id
+  // params get rehashed here so users migrate on next login, no forced reset.
+  if (needsRehash(user.password)) {
+    const rehashed = await hashPassword(password);
+    db.prepare('UPDATE users SET password = ?, updated_at = datetime("now") WHERE id = ?').run(rehashed, user.id);
+    user.password = rehashed;
   }
 
   const accessToken = generateAccessToken(user);
@@ -882,7 +896,7 @@ app.use((err, req, res, next) => {
 // verifyPassword(). Logs every attempt (success + failure) to admin_audit_log.
 // ponytail: 5/min per IP — tighter than user login; admin is the crown jewels.
 const adminLoginLimiter = rateLimit({ max: 5, windowMs: 60_000 });
-app.post('/admin/login', adminLoginLimiter, (req, res) => {
+app.post('/admin/login', adminLoginLimiter, async (req, res) => {
   const { email, password } = req.body || {};
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password are required' });
@@ -892,9 +906,17 @@ app.post('/admin/login', adminLoginLimiter, (req, res) => {
     auditAdmin({ email }, 'login.fail.no_user', req, email, { reason: 'no_admin_with_email' });
     return res.status(401).json({ error: 'Invalid credentials' });
   }
-  if (!verifyPassword(password, admin.password)) {
+  if (!await verifyPassword(password, admin.password)) {
     auditAdmin(admin, 'login.fail.bad_password', req, email, null);
     return res.status(401).json({ error: 'Invalid credentials' });
+  }
+  // ponytail: upgrade legacy scrypt admin hash to ArgonVault on first login.
+  // The bootstrapped admin (env-supplied scrypt hash) lands here and rehashes
+  // so subsequent logins go straight through Argon2id.
+  if (needsRehash(admin.password)) {
+    const rehashed = await hashPassword(password);
+    db.prepare('UPDATE users SET password = ?, updated_at = datetime("now") WHERE id = ?').run(rehashed, admin.id);
+    admin.password = rehashed;
   }
   db.prepare("UPDATE users SET last_login_at = datetime('now') WHERE id = ?").run(admin.id);
   const accessToken = generateAccessToken(admin);
