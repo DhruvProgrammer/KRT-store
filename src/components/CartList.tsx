@@ -197,7 +197,7 @@ export default function CartList() {
               <div className="flex justify-between"><dt className="text-ink-muted">Delivery</dt><dd className="text-ink-muted">Instant download</dd></div>
               <div className="flex justify-between"><dt className="text-ink-muted">Tax</dt><dd className="text-ink-muted">$0.00</dd></div>
               <div className="border-t border-line pt-3">
-                <div className="flex justify-between text-base"><dt className="font-boldash text-ink">Order total</dt><dd className="font-black text-accent drop-shadow-[0_0_8px_rgba(0,162,255,0.25)]">{formatPrice(total)}</dd></div>
+                <div className="flex justify-between text-base"><dt className="font-bold text-ink">Order total</dt><dd className="font-black text-accent drop-shadow-[0_0_8px_rgba(0,162,255,0.25)]">{formatPrice(total)}</dd></div>
               </div>
             </dl>
 

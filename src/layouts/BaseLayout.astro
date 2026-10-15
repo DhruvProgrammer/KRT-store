@@ -1,6 +1,5 @@
 ---
 import "../styles/global.css";
-import { createHash } from "node:crypto";
 import { ClientRouter } from "astro:transitions";
 
 interface Props {
@@ -17,8 +16,18 @@ const siteDescription = description;
 const siteUrl = Astro.url.origin;
 const pageImage = image ? new URL(image, siteUrl).href : `${siteUrl}/og.svg`;
 const canonicalUrl = canonical ?? Astro.url.href;
-const apiUrl = import.meta.env.PUBLIC_API_URL ?? "";
-const connectSrc = apiUrl ? `'self' ${apiUrl}` : "'self'";
+// ponytail: CSP host-source needs an ORIGIN. A path-carrying PUBLIC_API_URL
+// ("https://api.x.com/v1") is a silent mismatch that would block every fetch,
+// so normalise through URL instead of trusting the raw env string.
+const apiUrl = import.meta.env.PUBLIC_API_URL;
+let connectSrc = "'self'";
+if (apiUrl) {
+  try {
+    connectSrc = `'self' ${new URL(apiUrl).origin}`;
+  } catch {
+    connectSrc = "'self'";
+  }
+}
 
 const organizationSchema = {
   "@context": "https://schema.org",
@@ -44,14 +53,13 @@ const websiteSchema = {
   }
 };
 
-// ponytail: CSP script-src needs SHA-256 hashes for the JSON-LD inline blocks
-// so we can drop 'unsafe-inline' entirely. The blocks vary per page (siteUrl
-// is the page origin), so hashes are computed at render time.
-const sha256 = (s: string) =>
-  `'sha256-${createHash("sha256").update(s, "utf8").digest("base64")}'`;
-const orgHash = sha256(JSON.stringify(organizationSchema));
-const webHash = sha256(JSON.stringify(websiteSchema));
-const jsonLdHashes = `${orgHash} ${webHash}`;
+// ponytail: there is deliberately NO hand-rolled hash list here. Only the build
+// knows the SHA-256 of each script Astro inlines (the island hydrator, the view
+// transition router, component scripts), so a hand-written list can only ever
+// cover the JSON-LD blocks — which script-src does not govern anyway. A partial
+// list is worse than none: the browser blocks the hashless scripts, no island
+// hydrates, and every interactive page renders blank. The JSON-LD schemas below
+// need no hash entries for the same reason.
 ---
 
 <!doctype html>
@@ -83,21 +91,25 @@ const jsonLdHashes = `${orgHash} ${webHash}`;
     <script type="application/ld+json" set:html={JSON.stringify(websiteSchema)} is:inline></script>
 
     <!--
-      Security headers via <meta> tags. Static-only sites are served from
-      a CDN/edge that should also set these as real HTTP response headers.
-      Astro meta tags are a useful fallback but should NOT be the only place
-      these are enforced.
+      Security headers.
+
+      ponytail: script-src uses 'unsafe-inline' because Astro inlines the island
+      hydrator and component scripts and no stable hand-written hash list can
+      cover them (a partial list blocks them and blanks every page — see above).
+      A stricter policy needs a nonce per response, which is only possible if
+      this moves to a server/SSR render; the current build is fully static.
+      Serve this policy as a real HTTP header in public/_headers as well — <meta>
+      is the weaker enforcement point and is ignored for frame-ancestors/HSTS.
+
+      style-src keeps 'unsafe-inline' as well: the React `style={{background}}`
+      product gradients rely on it. A style injection cannot execute script, so
+      this is the cheaper of the two exceptions.
+
+      connect-src MUST keep the API gateway origin or every auth/checkout fetch
+      is blocked. object-src 'none' is added because default-src 'self' still
+      permits same-origin <object>/<embed>.
     -->
-    <!-- ponytail: connect-src must allow the API gateway origin, otherwise the
-         browser blocks the checkout fetch and no order/receipt email is ever sent.
-         The origin is derived from PUBLIC_API_URL at build time (see astro.config.mjs
-         for the deploy-time HTTPS check). frame-ancestors is intentionally omitted:
-         it is ignored in a <meta> CSP and only works as an HTTP header, so frame-src
-         'none' (valid in meta) provides the clickjacking protection. 'unsafe-eval'
-         is dropped because nothing in the source uses eval()/new Function(). Inline
-         is replaced by sha256-* hashes for the JSON-LD blocks; everything else is
-         an external script bundled by Astro. -->
-    <meta http-equiv="Content-Security-Policy" content={`default-src 'self'; script-src 'self' ${jsonLdHashes}; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src ${connectSrc}; frame-src 'none'; base-uri 'self'; form-action 'self';`} />
+    <meta http-equiv="Content-Security-Policy" content={`default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src ${connectSrc}; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'self';`} />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
     <meta http-equiv="Permissions-Policy" content="accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()" />

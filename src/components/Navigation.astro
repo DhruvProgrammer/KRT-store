@@ -344,7 +344,9 @@ const searchExtras: SearchExtra[] = extras.map((e) => ({
             anchor.addEventListener("click", () => setOpen(false))
           );
           document.addEventListener("keydown", (event) => {
-            if (event.key === "Escape" && panel.classList.contains("translate-x-full")) {
+            // translate-x-full is the CLOSED state, so this used to fire only
+            // when the drawer was already shut and setOpen(false) was a no-op.
+            if (event.key === "Escape" && !panel.classList.contains("translate-x-full")) {
               setOpen(false);
             }
           });

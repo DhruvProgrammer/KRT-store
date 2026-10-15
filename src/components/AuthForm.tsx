@@ -189,19 +189,24 @@ export default function AuthForm({ mode: initialMode, method }: AuthFormProps) {
   const isSignupVerify = mode === "signup" && otpSent;
   const isLoginMagic = mode === "login" && loginMagicLink && magicLinkSent;
   const isLoginMagicStart = mode === "login" && loginMagicLink && !magicLinkSent;
+  // ponytail: isLoginMagic/isLoginMagicStart both require mode === "login", so
+  // in signup mode they are false and control falls to the last branch. That
+  // branch said "Sign in", which made /signup render an <h1>Sign in</h1>.
   const heading = isLoginOtp
     ? (otpSent ? "Enter your sign-in code" : "Sign in with a code")
     : mode === "login" ? "Sign in"
-      : isLoginMagic ? "Verify your email" : isLoginMagicStart ? "Check your email" : "Sign in";
+      : isLoginMagic ? "Verify your email" : isLoginMagicStart ? "Check your email" : "Create account";
   const subtitle = isLoginOtp
     ? (otpSent ? "We've sent a 6-digit code to your email." : "We'll email you a 6-digit code — no password needed.")
     : mode === "login" ? "Enter the email and password you signed up with."
       : isLoginMagic ? "We've sent a sign-in link to your email. Click the link to sign in."
       : isLoginMagicStart ? "We've sent a magic link to your email. Click the link to sign in." : "Enter your details. We'll email you a verification code to confirm your account.";
+  // Signup is a two-step flow: step 1 asks for the code, step 2 creates the
+  // account. Say which one the button performs instead of always "Sign in".
   const cta = isLoginOtp
     ? (otpSent ? "Verify code" : "Send code")
     : mode === "login" ? "Sign in"
-      : loginMagicLink && magicLinkSent ? "Verify link" : loginMagicLink && !magicLinkSent ? "Send magic link" : "Sign in";
+      : otpSent ? "Create account" : "Send code";
 
   if (submitted) {
     const isLogin = submitted === "login";
@@ -456,12 +461,12 @@ export default function AuthForm({ mode: initialMode, method }: AuthFormProps) {
 
         {mode === "signup" && !otpSent && (
           <>
+            {/* PasswordInput renders its own <label htmlFor> and sets required
+                itself, so an outer label here duplicated the visible name. */}
             <div>
-              <label htmlFor="password" className="mb-2 block text-sm font-bold text-ink">Password <span className="text-red-400">*</span></label>
               <PasswordInput id="password" label="Password" value={password} onChange={setPassword} autoComplete="new-password" />
             </div>
             <div>
-              <label htmlFor="confirm" className="mb-2 block text-sm font-bold text-ink">Confirm password <span className="text-red-400">*</span></label>
               <PasswordInput id="confirm" label="Confirm password" value={confirm} onChange={setConfirm} placeholder="Re-enter password" autoComplete="new-password" />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -512,7 +517,7 @@ export default function AuthForm({ mode: initialMode, method }: AuthFormProps) {
         </Button>
 
         <p className="text-sm text-ink-muted">
-          {mode === "login" ? "Don&apos;t have an account?" : "Already have an account? "}<button type="button" onClick={() => { setMode(mode === "login" ? "signup" : "login"); setLoginOtp(false); setLoginMagicLink(false); setOtpSent(false); setMagicLinkSent(false); setOtp(""); setMagicToken(""); setShowErrors(false); setErrorMessage(""); }} className="font-black text-accent transition hover:text-accent-bright">{mode === "login" ? "Create account →" : "← Back to sign in"}</button>
+          {mode === "login" ? "Don't have an account?" : "Already have an account? "}<button type="button" onClick={() => { setMode(mode === "login" ? "signup" : "login"); setLoginOtp(false); setLoginMagicLink(false); setOtpSent(false); setMagicLinkSent(false); setOtp(""); setMagicToken(""); setShowErrors(false); setErrorMessage(""); }} className="font-black text-accent transition hover:text-accent-bright">{mode === "login" ? "Create account →" : "← Back to sign in"}</button>
         </p>
 
         {mode === "login" && (
