@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Button from "./Button";
 import Reveal from "./Reveal";
 import OtpInput from "./OtpInput";
@@ -113,10 +113,33 @@ async function parseJson(res: Response): Promise<any> {
   }
 }
 
-export default function AuthForm({ mode: initialMode, method }: AuthFormProps) {
+// ponytail: fetch rejects with a TypeError ("Failed to fetch" / "Load failed")
+// when the network is down — surface one readable message instead of the
+// browser-specific string.
+function errorText(err: unknown, fallback: string): string {
+  if (err instanceof TypeError) return "Could not reach the server. Check your connection and try again.";
+  if (err instanceof Error && err.message) return err.message;
+  return fallback;
+}
+
+// The magic link token is 32 random bytes hex-encoded (see generateMagicToken
+// in the auth service) — the backend links to /magic-link?token=<64 hex>&email=…
+const MAGIC_TOKEN_RE = /^[0-9a-f]{64}$/i;
+
+export default function AuthForm({ mode: initialMode, method: initialMethod }: AuthFormProps) {
   const [mode, setMode] = useState<"login" | "signup">(initialMode === "signup" ? "signup" : "login");
-  const [loginOtp, setLoginOtp] = useState(initialMode === "login" && method === "otp");
-  const [loginMagicLink, setLoginMagicLink] = useState(initialMode === "login" && method === "magic-link");
+  // ponytail: the sign-in method is ONE piece of state. Two booleans (loginOtp
+  // / loginMagicLink) could both be true at once, which rendered a
+  // contradictory UI and dead-ended the user.
+  const [method, setMethod] = useState<"password" | "otp" | "magic-link">(
+    initialMode === "signup"
+      ? "password"
+      : initialMethod === "otp"
+        ? "otp"
+        : initialMethod === "magic-link"
+          ? "magic-link"
+          : "password"
+  );
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [magicLinkResendCooldown, setMagicLinkResendCooldown] = useState(0);
   const [otpSent, setOtpSent] = useState(false);
@@ -149,64 +172,110 @@ export default function AuthForm({ mode: initialMode, method }: AuthFormProps) {
     }
   }, [magicLinkResendCooldown]);
 
+  // ponytail: the backend links to ${FRONTEND_URL}/magic-link?token=<64 hex>&email=…
+  // Read the query string on mount and seed the form from it.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token") ?? "";
+    const mail = params.get("email") ?? "";
+    if (token) {
+      setMagicToken(token);
+      setMethod("magic-link");
+    }
+    if (mail) setEmail(mail);
+  }, []);
+
+  // ponytail: a token in the URL means the user already clicked the link in
+  // their email — verify it right away instead of making them click again.
+  // The ref guard keeps a double effect run from firing two requests.
+  const autoVerified = useRef(false);
+  useEffect(() => {
+    if (!magicToken || autoVerified.current) return;
+    autoVerified.current = true;
+    handleLoginVerifyMagicLink();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [magicToken]);
+
   const trimmedEmail = email.trim();
   const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail);
   const signupLengthOK = password.length >= 8;
   const signupMatchOK = password === confirm;
   const firstNameOK = firstName.trim().length > 0;
+  const hasMagicToken = magicToken.length > 0;
+  const magicTokenValid = MAGIC_TOKEN_RE.test(magicToken);
 
   const errors: string[] = [];
   if (showErrors) {
     if (!isValidEmail) errors.push("Enter a valid email address.");
-    if (mode === "login" && !loginOtp && password.length < 1) errors.push("Enter your password.");
-    if (mode === "login" && loginOtp && otp.length !== 6) errors.push("Enter the 6-digit code.");
-    if (mode === "signup" && !otpSent) {
+    if (mode === "login" && method === "password" && password.length < 1) errors.push("Enter your password.");
+    if (mode === "login" && method === "otp" && otpSent && otp.length !== 6) errors.push("Enter the 6-digit code.");
+    if (mode === "login" && method === "magic-link" && hasMagicToken && !magicTokenValid) errors.push("Invalid magic link.");
+    if (mode === "signup") {
+      // The password policy holds in BOTH signup steps — the code step must
+      // not become a way around it.
       if (!signupLengthOK) errors.push("Password must be at least 8 characters.");
       if (!signupMatchOK) errors.push("Passwords do not match.");
       if (!firstNameOK) errors.push("First name is required.");
+      if (otpSent && otp.length !== 6) errors.push("Enter the 6-digit code.");
     }
-    if (mode === "signup" && otpSent && otp.length !== 6) errors.push("Enter the 6-digit code.");
-    if (mode === "login" && loginMagicLink && magicLinkSent && magicToken.length !== 64) errors.push("Invalid magic link.");
   }
 
   const canSubmit = isValidEmail && (
     mode === "login"
-      ? loginOtp
+      ? method === "otp"
         ? otpSent
           ? otp.length === 6
           : true
-        : loginMagicLink
-        ? magicLinkSent
-          ? magicToken.length === 64
+        : method === "magic-link"
+        ? hasMagicToken
+          ? magicTokenValid
           : true
         : password.length > 0
       : otpSent
-      ? otp.length === 6
+      ? otp.length === 6 && signupLengthOK && signupMatchOK && firstNameOK
       : signupLengthOK && signupMatchOK && firstNameOK
   );
 
-  const isLoginOtp = mode === "login" && loginOtp;
+  const isLoginOtp = mode === "login" && method === "otp";
   const isSignupVerify = mode === "signup" && otpSent;
-  const isLoginMagic = mode === "login" && loginMagicLink && magicLinkSent;
-  const isLoginMagicStart = mode === "login" && loginMagicLink && !magicLinkSent;
-  // ponytail: isLoginMagic/isLoginMagicStart both require mode === "login", so
-  // in signup mode they are false and control falls to the last branch. That
-  // branch said "Sign in", which made /signup render an <h1>Sign in</h1>.
-  const heading = isLoginOtp
-    ? (otpSent ? "Enter your sign-in code" : "Sign in with a code")
-    : mode === "login" ? "Sign in"
-      : isLoginMagic ? "Verify your email" : isLoginMagicStart ? "Check your email" : "Create account";
-  const subtitle = isLoginOtp
-    ? (otpSent ? "We've sent a 6-digit code to your email." : "We'll email you a 6-digit code — no password needed.")
-    : mode === "login" ? "Enter the email and password you signed up with."
-      : isLoginMagic ? "We've sent a sign-in link to your email. Click the link to sign in."
-      : isLoginMagicStart ? "We've sent a magic link to your email. Click the link to sign in." : "Enter your details. We'll email you a verification code to confirm your account.";
+  const isLoginMagic = mode === "login" && method === "magic-link";
+  // A token in hand = the link was already clicked, so we verify instead of asking
+  // for another link.
+  const isMagicVerify = isLoginMagic && hasMagicToken;
+  const isMagicSent = isLoginMagic && !hasMagicToken && magicLinkSent;
+  // ponytail: mode is the outermost branch so a signup can never fall through
+  // to a login heading (that used to render <h1>Sign in</h1> on /signup).
+  const heading = mode === "login"
+    ? isLoginOtp
+      ? (otpSent ? "Enter your sign-in code" : "Sign in with a code")
+      : isLoginMagic
+        ? (isMagicVerify ? "Verify your email" : isMagicSent ? "Check your email" : "Sign in with a magic link")
+        : "Sign in"
+    : "Create account";
+  const subtitle = mode === "login"
+    ? isLoginOtp
+      ? (otpSent ? "We've sent a 6-digit code to your email." : "We'll email you a 6-digit code — no password needed.")
+      : isLoginMagic
+        ? (isMagicVerify
+          ? "Signing you in with the link from your email."
+          : isMagicSent
+            ? "We've sent a sign-in link to your email. Click the link to sign in."
+            : "We'll email you a secure sign-in link — no password needed.")
+        : "Enter the email and password you signed up with."
+    : "Enter your details. We'll email you a verification code to confirm your account.";
   // Signup is a two-step flow: step 1 asks for the code, step 2 creates the
   // account. Say which one the button performs instead of always "Sign in".
-  const cta = isLoginOtp
-    ? (otpSent ? "Verify code" : "Send code")
-    : mode === "login" ? "Sign in"
-      : otpSent ? "Create account" : "Send code";
+  const cta = mode === "login"
+    ? isLoginOtp
+      ? (otpSent ? "Verify code" : "Send code")
+      : isLoginMagic
+        ? (isMagicVerify
+          ? "Verify link"
+          : isMagicSent
+            ? (magicLinkResendCooldown > 0 ? `Resend in ${magicLinkResendCooldown}s` : "Resend link")
+            : "Send magic link")
+        : "Sign in"
+    : otpSent ? "Create account" : "Send code";
 
   if (submitted) {
     const isLogin = submitted === "login";
@@ -225,6 +294,17 @@ export default function AuthForm({ mode: initialMode, method }: AuthFormProps) {
     );
   }
 
+  // ponytail: switching the sign-in method clears the transient state of the
+  // method being left, so the two can never contradict each other.
+  const switchMethod = (next: "password" | "otp" | "magic-link") => {
+    setMethod(next);
+    setOtpSent(false);
+    setOtp("");
+    setMagicLinkSent(false);
+    setShowErrors(false);
+    setErrorMessage("");
+  };
+
   // Signup step 1 → request the verification code (step 2 reveals the input).
   const handleSignupSendOtp = async () => {
     setShowErrors(true);
@@ -234,6 +314,11 @@ export default function AuthForm({ mode: initialMode, method }: AuthFormProps) {
     try {
       const res = await fetch(`${API_URL}/api/auth/send-otp`, {
         method: "POST",
+        // ponytail: the API is a DIFFERENT ORIGIN (the storefront on :4321
+        // calls the gateway on :3001). Without credentials:"include" the
+        // browser drops the Set-Cookie, so the session the auth service just
+        // created never exists — the UI says "signed in" and /me says 401.
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: trimmedEmail, purpose: "registration" }),
       });
@@ -242,7 +327,7 @@ export default function AuthForm({ mode: initialMode, method }: AuthFormProps) {
       setOtpSent(true);
       setOtpResendCooldown(60);
     } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : "Failed to send code");
+      setErrorMessage(errorText(err, "Failed to send code"));
     } finally {
       setLoading(false);
     }
@@ -257,6 +342,11 @@ export default function AuthForm({ mode: initialMode, method }: AuthFormProps) {
     try {
       const res = await fetch(`${API_URL}/api/auth/send-magic-link`, {
         method: "POST",
+        // ponytail: the API is a DIFFERENT ORIGIN (the storefront on :4321
+        // calls the gateway on :3001). Without credentials:"include" the
+        // browser drops the Set-Cookie, so the session the auth service just
+        // created never exists — the UI says "signed in" and /me says 401.
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: trimmedEmail }),
       });
@@ -266,7 +356,7 @@ export default function AuthForm({ mode: initialMode, method }: AuthFormProps) {
       setMagicLinkResendCooldown(60);
       setErrorMessage("");
     } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : "Failed to send magic link");
+      setErrorMessage(errorText(err, "Failed to send magic link"));
     } finally {
       setLoading(false);
     }
@@ -275,18 +365,24 @@ export default function AuthForm({ mode: initialMode, method }: AuthFormProps) {
   const resendOtp = async () => {
     if (otpResendCooldown > 0) return;
     setLoading(true);
+    setErrorMessage("");
     try {
       const res = await fetch(`${API_URL}/api/auth/send-otp`, {
         method: "POST",
+        // ponytail: the API is a DIFFERENT ORIGIN (the storefront on :4321
+        // calls the gateway on :3001). Without credentials:"include" the
+        // browser drops the Set-Cookie, so the session the auth service just
+        // created never exists — the UI says "signed in" and /me says 401.
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: trimmedEmail, purpose: loginOtp ? "login" : "registration" }),
+        body: JSON.stringify({ email: trimmedEmail, purpose: mode === "login" ? "login" : "registration" }),
       });
       const data = await parseJson(res);
       if (!res.ok) throw new Error(data?.error || `Request failed (status ${res.status})`);
       setOtpResendCooldown(60);
       setErrorMessage("");
     } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : "Failed to resend OTP");
+      setErrorMessage(errorText(err, "Failed to resend OTP"));
     } finally {
       setLoading(false);
     }
@@ -297,9 +393,15 @@ export default function AuthForm({ mode: initialMode, method }: AuthFormProps) {
     setShowErrors(true);
     if (!canSubmit || loading) return;
     setLoading(true);
+    setErrorMessage("");
     try {
       const res = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
+        // ponytail: the API is a DIFFERENT ORIGIN (the storefront on :4321
+        // calls the gateway on :3001). Without credentials:"include" the
+        // browser drops the Set-Cookie, so the session the auth service just
+        // created never exists — the UI says "signed in" and /me says 401.
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: trimmedEmail,
@@ -307,7 +409,8 @@ export default function AuthForm({ mode: initialMode, method }: AuthFormProps) {
           first_name: firstName,
           last_name: lastName || undefined,
           phone: phone || undefined,
-          rating: rating || undefined,
+          // ponytail: C12 — the rating is collected in the UI but NOT sent to
+          // the server; a client-supplied rating must never be stored.
           otp,
         }),
       });
@@ -316,7 +419,7 @@ export default function AuthForm({ mode: initialMode, method }: AuthFormProps) {
       // ponytail: tokens are now httpOnly cookies set by the server — no longer write to localStorage.
       setSubmitted("signup");
     } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : "Registration failed");
+      setErrorMessage(errorText(err, "Registration failed"));
     } finally {
       setLoading(false);
     }
@@ -325,12 +428,17 @@ export default function AuthForm({ mode: initialMode, method }: AuthFormProps) {
   // Login: verify magic link token
   const handleLoginVerifyMagicLink = async () => {
     setShowErrors(true);
-    if (magicToken.length !== 64 || loading) return;
+    if (!magicTokenValid || loading) return;
     setLoading(true);
     setErrorMessage("");
     try {
       const res = await fetch(`${API_URL}/api/auth/verify-magic-link`, {
         method: "POST",
+        // ponytail: the API is a DIFFERENT ORIGIN (the storefront on :4321
+        // calls the gateway on :3001). Without credentials:"include" the
+        // browser drops the Set-Cookie, so the session the auth service just
+        // created never exists — the UI says "signed in" and /me says 401.
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: trimmedEmail, token: magicToken }),
       });
@@ -339,7 +447,7 @@ export default function AuthForm({ mode: initialMode, method }: AuthFormProps) {
       // ponytail: tokens are now httpOnly cookies set by the server — no longer write to localStorage.
       setSubmitted("login");
     } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : "Invalid or expired magic link");
+      setErrorMessage(errorText(err, "Invalid or expired magic link"));
     } finally {
       setLoading(false);
     }
@@ -353,6 +461,11 @@ export default function AuthForm({ mode: initialMode, method }: AuthFormProps) {
     try {
       const res = await fetch(`${API_URL}/api/auth/send-otp`, {
         method: "POST",
+        // ponytail: the API is a DIFFERENT ORIGIN (the storefront on :4321
+        // calls the gateway on :3001). Without credentials:"include" the
+        // browser drops the Set-Cookie, so the session the auth service just
+        // created never exists — the UI says "signed in" and /me says 401.
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: trimmedEmail, purpose: "login" }),
       });
@@ -361,7 +474,7 @@ export default function AuthForm({ mode: initialMode, method }: AuthFormProps) {
       setOtpSent(true);
       setOtpResendCooldown(60);
     } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : "Failed to send code");
+      setErrorMessage(errorText(err, "Failed to send code"));
     } finally {
       setLoading(false);
     }
@@ -375,6 +488,11 @@ export default function AuthForm({ mode: initialMode, method }: AuthFormProps) {
     try {
       const res = await fetch(`${API_URL}/api/auth/login-otp`, {
         method: "POST",
+        // ponytail: the API is a DIFFERENT ORIGIN (the storefront on :4321
+        // calls the gateway on :3001). Without credentials:"include" the
+        // browser drops the Set-Cookie, so the session the auth service just
+        // created never exists — the UI says "signed in" and /me says 401.
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: trimmedEmail, otp }),
       });
@@ -383,7 +501,7 @@ export default function AuthForm({ mode: initialMode, method }: AuthFormProps) {
       // ponytail: tokens are now httpOnly cookies set by the server — no longer write to localStorage.
       setSubmitted("login");
     } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : "Invalid or expired code");
+      setErrorMessage(errorText(err, "Invalid or expired code"));
     } finally {
       setLoading(false);
     }
@@ -393,9 +511,15 @@ export default function AuthForm({ mode: initialMode, method }: AuthFormProps) {
     setShowErrors(true);
     if (!canSubmit || loading) return;
     setLoading(true);
+    setErrorMessage("");
     try {
       const res = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
+        // ponytail: the API is a DIFFERENT ORIGIN (the storefront on :4321
+        // calls the gateway on :3001). Without credentials:"include" the
+        // browser drops the Set-Cookie, so the session the auth service just
+        // created never exists — the UI says "signed in" and /me says 401.
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: trimmedEmail, password }),
       });
@@ -404,7 +528,7 @@ export default function AuthForm({ mode: initialMode, method }: AuthFormProps) {
       // ponytail: tokens are now httpOnly cookies set by the server — no longer write to localStorage.
       setSubmitted("login");
     } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : "Login failed");
+      setErrorMessage(errorText(err, "Login failed"));
     } finally {
       setLoading(false);
     }
@@ -437,32 +561,48 @@ export default function AuthForm({ mode: initialMode, method }: AuthFormProps) {
 
       <form onSubmit={e => {
         e.preventDefault();
-        if (mode === "login" && loginOtp && !otpSent) handleSendLoginOtp();
-        else if (mode === "login" && loginOtp && otpSent) handleLoginOtp();
-        else if (mode === "login" && loginMagicLink && !magicLinkSent) handleSendLoginMagicLink();
-        else if (mode === "login" && loginMagicLink && magicLinkSent) handleLoginVerifyMagicLink();
-        else if (mode === "login") handleLogin();
-        else if (mode === "signup" && !otpSent) handleSignupSendOtp();
-        else if (mode === "signup" && otpSent) handleSignup();
+        if (mode === "login") {
+          if (method === "otp") {
+            if (otpSent) handleLoginOtp(); else handleSendLoginOtp();
+          } else if (method === "magic-link") {
+            // A token in hand means the link was already clicked — verify it
+            // instead of asking the user to request another link.
+            if (hasMagicToken) handleLoginVerifyMagicLink(); else handleSendLoginMagicLink();
+          } else {
+            handleLogin();
+          }
+        } else if (!otpSent) {
+          handleSignupSendOtp();
+        } else {
+          handleSignup();
+        }
       }} noValidate className="space-y-6">
         <div>
           <label htmlFor="email" className="mb-2 block text-sm font-bold text-ink">Email address</label>
           <div className="relative">
             <span className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-ink-muted"><MailIcon /></span>
-            <input id="email" type="email" required placeholder="you@example.com" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} onBlur={() => setShowErrors(true)} aria-invalid={showErrors && !isValidEmail ? "true" : "false"} className={inputClass} />
+            {/* ponytail: only flag the email on blur when it is actually invalid.
+                Flagging on every blur inserted the error box under the cursor and
+                shifted the buttons down, which swallowed the click on the
+                "sign in with a code / magic link" toggles. */}
+            <input id="email" type="email" required placeholder="you@example.com" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} onBlur={() => { if (!isValidEmail) setShowErrors(true); }} aria-invalid={showErrors && !isValidEmail ? "true" : "false"} className={inputClass} />
           </div>
         </div>
 
-        {mode === "login" && !loginOtp && (
+        {mode === "login" && method === "password" && (
           <PasswordInput id="password" label="Password" value={password} onChange={setPassword} autoComplete="current-password" />
         )}
 
-        {mode === "login" && loginOtp && otpBlock}
+        {mode === "login" && method === "otp" && otpBlock}
 
-        {mode === "signup" && !otpSent && (
+        {mode === "signup" && otpSent && otpBlock}
+
+        {mode === "signup" && (
           <>
             {/* PasswordInput renders its own <label htmlFor> and sets required
-                itself, so an outer label here duplicated the visible name. */}
+                itself, so an outer label here duplicated the visible name.
+                The details stay editable in the code step so the password
+                policy stays enforceable (and fixable) there too. */}
             <div>
               <PasswordInput id="password" label="Password" value={password} onChange={setPassword} autoComplete="new-password" />
             </div>
@@ -493,8 +633,6 @@ export default function AuthForm({ mode: initialMode, method }: AuthFormProps) {
           </>
         )}
 
-        {mode === "signup" && otpSent && otpBlock}
-
         {errors.length > 0 && (
           <ul className="space-y-1 rounded-2xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-200" role="alert">
             {errors.map(message => <li key={message}>· {message}</li>)}
@@ -505,7 +643,7 @@ export default function AuthForm({ mode: initialMode, method }: AuthFormProps) {
           <p className="rounded-2xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-200" role="alert">{errorMessage}</p>
         )}
 
-        <Button type="submit" className="w-full justify-center shadow-[0_0_28px_rgba(0,162,255,0.4)]" disabled={loading || showErrors && !canSubmit}>
+        <Button type="submit" className="w-full justify-center shadow-[0_0_28px_rgba(0,162,255,0.4)]" disabled={loading || showErrors && !canSubmit || isMagicSent && magicLinkResendCooldown > 0}>
           {loading ? (
             <>
               <svg className="mr-2 h-4 w-4 animate-spin" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
@@ -517,36 +655,36 @@ export default function AuthForm({ mode: initialMode, method }: AuthFormProps) {
         </Button>
 
         <p className="text-sm text-ink-muted">
-          {mode === "login" ? "Don't have an account?" : "Already have an account? "}<button type="button" onClick={() => { setMode(mode === "login" ? "signup" : "login"); setLoginOtp(false); setLoginMagicLink(false); setOtpSent(false); setMagicLinkSent(false); setOtp(""); setMagicToken(""); setShowErrors(false); setErrorMessage(""); }} className="font-black text-accent transition hover:text-accent-bright">{mode === "login" ? "Create account →" : "← Back to sign in"}</button>
+          {mode === "login" ? "Don't have an account?" : "Already have an account? "}<button type="button" onClick={() => { setMode(mode === "login" ? "signup" : "login"); setMethod("password"); setOtpSent(false); setMagicLinkSent(false); setOtp(""); setMagicToken(""); setShowErrors(false); setErrorMessage(""); }} className="font-black text-accent transition hover:text-accent-bright">{mode === "login" ? "Create account →" : "← Back to sign in"}</button>
         </p>
 
-        {mode === "login" && (
+        {mode === "login" && method !== "otp" && (
           <p className="text-sm text-ink-muted">
-            <button type="button" onClick={() => { setLoginOtp(v => !v); setOtpSent(false); setOtp(""); setErrorMessage(""); }} className="font-black text-accent transition hover:text-accent-bright">
-              {loginOtp ? "← Use password instead" : "Sign in with a code instead →"}
+            <button type="button" onClick={() => switchMethod("otp")} className="font-black text-accent transition hover:text-accent-bright">
+              Sign in with a code instead →
             </button>
           </p>
         )}
 
-        {mode === "login" && !loginMagicLink && (
+        {mode === "login" && method === "otp" && (
           <p className="text-sm text-ink-muted">
-            <button type="button" onClick={() => { setLoginMagicLink(true); setOtpSent(false); setOtp(""); setErrorMessage(""); }} className="font-black text-accent transition hover:text-accent-bright">
-              Sign in with a magic link instead →
-            </button>
-          </p>
-        )}
-
-        {mode === "login" && loginMagicLink && !magicLinkSent && (
-          <p className="text-sm text-ink-muted">
-            <button type="button" onClick={() => { setLoginMagicLink(false); setErrorMessage(""); }} className="font-black text-accent transition hover:text-accent-bright">
+            <button type="button" onClick={() => switchMethod("password")} className="font-black text-accent transition hover:text-accent-bright">
               ← Use password instead
             </button>
           </p>
         )}
 
-        {mode === "login" && loginMagicLink && magicLinkSent && (
+        {mode === "login" && method !== "magic-link" && (
           <p className="text-sm text-ink-muted">
-            <button type="button" onClick={() => { setLoginMagicLink(false); setMagicLinkSent(false); setMagicToken(""); setErrorMessage(""); }} className="font-black text-accent transition hover:text-accent-bright">
+            <button type="button" onClick={() => switchMethod("magic-link")} className="font-black text-accent transition hover:text-accent-bright">
+              Sign in with a magic link instead →
+            </button>
+          </p>
+        )}
+
+        {mode === "login" && method === "magic-link" && (
+          <p className="text-sm text-ink-muted">
+            <button type="button" onClick={() => switchMethod("password")} className="font-black text-accent transition hover:text-accent-bright">
               ← Use password instead
             </button>
           </p>

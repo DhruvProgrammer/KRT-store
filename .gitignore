@@ -24,4 +24,17 @@ __pycache__/
 # Runtime logs
 *.log
 
+# Runtime databases (and their WAL sidecars). The auth DB holds password
+# hashes and live refresh tokens — it is a runtime artifact, never a source
+# file. It was previously tracked and ended up in Docker images.
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Secrets
+client_secret.json
+pepper.key
+services/test/mock-notify-log.json
+
 #folders i dont want 

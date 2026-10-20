@@ -1,0 +1,38 @@
+# ponytail: the Dockerfiles do `COPY . .`, so without this the real Gmail
+# OAuth secret, the refresh token, the notify token and the SQLite database
+# were baked into the image layer. Anything here is excluded from the build
+# context and never reaches the image.
+.env
+.env.*
+*.env
+
+# credentials
+client_secret.json
+pepper.key
+*.pem
+*.key
+
+# databases (and their journals)
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# logs
+*.log
+*.err
+
+# python
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# node
+node_modules/
+npm-debug.log*
+
+# dev tooling that has no business in a production image
+scripts/
+*.ps1

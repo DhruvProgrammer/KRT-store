@@ -183,6 +183,9 @@ export default function CheckoutForm() {
     try {
       const res = await fetch(`${API_URL}/api/auth/send-otp`, {
         method: "POST",
+        // ponytail: cross-origin API — without credentials:"include" the
+        // browser discards the Set-Cookie and no session is established.
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim(), purpose: "checkout" })
       });
@@ -203,6 +206,9 @@ export default function CheckoutForm() {
     try {
       const res = await fetch(`${API_URL}/api/auth/send-otp`, {
         method: "POST",
+        // ponytail: cross-origin API — without credentials:"include" the
+        // browser discards the Set-Cookie and no session is established.
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim(), purpose: "checkout" })
       });
@@ -278,6 +284,9 @@ export default function CheckoutForm() {
     try {
       const res = await fetch(`${API_URL}/api/orders`, {
         method: "POST",
+        // ponytail: cross-origin API — without credentials:"include" the
+        // browser discards the Set-Cookie and no session is established.
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
           "x-user-id": getGuestId()

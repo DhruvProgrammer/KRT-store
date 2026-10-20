@@ -1,5 +1,11 @@
 version: '3.9'
 
+# ponytail: the only service that may be reachable from outside the Docker
+# network is the API gateway. Everything else uses `expose` (internal only), so
+# the gateway is the single hop that may set X-Forwarded-For — the auth
+# service trusts one proxy hop, and a directly-published auth service would
+# let a client forge that header and mint a fresh rate-limit bucket per
+# request.
 services:
   api-gateway:
     build:
@@ -9,6 +15,8 @@ services:
       - "3001:3001"
     environment:
       - PORT=3001
+      - NODE_ENV=production
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:4321}
       - AUTH_SERVICE_URL=http://auth-service:3002
       - CATALOG_SERVICE_URL=http://catalog-service:3003
       - CART_SERVICE_URL=http://cart-service:3004
@@ -29,11 +37,34 @@ services:
     build:
       context: ./services/auth-service
     container_name: krt-auth-service
-    ports:
-      - "3002:3002"
+    expose:
+      - "3002"
+    # ponytail: the ArgonVault pepper is REQUIRED — without it every
+    # registration 500s, every password check silently fails, and account
+    # existence leaks through response time. It lives outside the build
+    # context on purpose (it is a secret), so it is mounted, not copied.
+    volumes:
+      - ${ARGONVAULT_PEPPER_FILE:-./brunoash alogritm/pepper.key}:/run/secrets/pepper.key:ro
+      - auth-db:/app/data
     environment:
       - PORT=3002
-      - JWT_SECRET=${JWT_SECRET:-krt-store-secret-key-dev}
+      - ARGONVAULT_PEPPER_PATH=/run/secrets/pepper.key
+      - AUTH_DB_PATH=/app/data/auth.db
+      # ponytail: NODE_ENV=production is what turns on the Secure cookie flag
+      # and turns OFF the dev-only "print the OTP to stdout" path. Leaving it
+      # unset silently took the dev path in production.
+      - NODE_ENV=production
+      # ponytail: required, and no default. The old default was a 24-character
+      # literal committed to the repo, which the new >=32-character boot check
+      # rejects — the container would exit 1 on every start.
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set to at least 32 characters}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:4321}
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8000
+      - NOTIFY_TOKEN=${NOTIFY_TOKEN:?NOTIFY_TOKEN must be set}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:4321}
+      - STORE_NAME=${STORE_NAME:-KRT Store}
+    depends_on:
+      - notification-service
     networks:
       - krt-network
 
@@ -41,10 +72,11 @@ services:
     build:
       context: ./services/catalog-service
     container_name: krt-catalog-service
-    ports:
-      - "3003:3003"
+    expose:
+      - "3003"
     environment:
       - PORT=3003
+      - NODE_ENV=production
     networks:
       - krt-network
 
@@ -52,10 +84,11 @@ services:
     build:
       context: ./services/cart-service
     container_name: krt-cart-service
-    ports:
-      - "3004:3004"
+    expose:
+      - "3004"
     environment:
       - PORT=3004
+      - NODE_ENV=production
     networks:
       - krt-network
 
@@ -63,14 +96,18 @@ services:
     build:
       context: ./services/order-service
     container_name: krt-order-service
-    ports:
-      - "3005:3005"
+    expose:
+      - "3005"
     environment:
       - PORT=3005
+      - NODE_ENV=production
       - AUTH_SERVICE_URL=http://auth-service:3002
       - NOTIFICATION_SERVICE_URL=http://notification-service:8000
-      - NOTIFY_TOKEN=${NOTIFY_TOKEN:-}
+      - NOTIFY_TOKEN=${NOTIFY_TOKEN:?NOTIFY_TOKEN must be set}
       - STORE_NAME=${STORE_NAME:-KRT Store}
+    depends_on:
+      - auth-service
+      - notification-service
     networks:
       - krt-network
 
@@ -78,16 +115,20 @@ services:
     build:
       context: ./services/notification-service
     container_name: krt-notification-service
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     environment:
+      - NODE_ENV=production
       - GMAIL_USER=${GMAIL_USER:-}
       - GMAIL_CLIENT_ID=${GMAIL_CLIENT_ID:-}
       - GMAIL_CLIENT_SECRET=${GMAIL_CLIENT_SECRET:-}
       - GMAIL_REFRESH_TOKEN=${GMAIL_REFRESH_TOKEN:-}
       - STORE_OWNER_EMAIL=${STORE_OWNER_EMAIL:-}
       - STORE_NAME=${STORE_NAME:-KRT Store}
-      - NOTIFY_TOKEN=${NOTIFY_TOKEN:-}
+      # ponytail: required. The service now refuses to start without it — an
+      # empty token used to disable the check entirely, leaving /notify/otp
+      # open to anyone.
+      - NOTIFY_TOKEN=${NOTIFY_TOKEN:?NOTIFY_TOKEN must be set}
     networks:
       - krt-network
 
@@ -95,13 +136,19 @@ services:
     build:
       context: ./services/payment-service
     container_name: krt-payment-service
-    ports:
-      - "3006:3006"
+    expose:
+      - "3006"
     environment:
       - PORT=3006
+      - NODE_ENV=production
     networks:
       - krt-network
 
 networks:
   krt-network:
     driver: bridge
+
+volumes:
+  # The auth database is a runtime artifact (password hashes, refresh tokens).
+  # It was previously committed to git and shipped inside the image.
+  auth-db:

@@ -1,0 +1,36 @@
+# Docker reads <build-context>/.dockerignore — NOT the repo root. Each service
+# is built with `context: ./services/<svc>` and the Dockerfile does `COPY . .`,
+# so without THIS file the real credentials, the SQLite database and the
+# ArgonVault pepper would be baked into the image layer.
+
+# secrets
+.env
+.env.*
+*.env
+client_secret.json
+pepper.key
+*.pem
+*.key
+
+# databases (and their WAL sidecars)
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# logs
+*.log
+*.err
+
+# dependencies (installed inside the image)
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# dev tooling
+*.ps1
+*.cjs
+!hash-admin-password.cjs

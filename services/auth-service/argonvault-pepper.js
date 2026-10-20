@@ -1,6 +1,11 @@
-// ponytail: ArgonVault pepper loader. Reads a 32-byte secret from
-// `brunoash alogritm/pepper.key` (gitignored). The pepper is the second
-// point of failure: a DB leak alone can't verify password guesses without it.
+// ponytail: the pepper is the second point of failure: a DB leak alone
+// can't verify password guesses without it.
+//
+// The pepper MUST be present. In production a missing pepper used to fail
+// silently in two ways: every registration threw (a 500), and every AV2
+// password check returned false (a 401 that looked like a wrong password) —
+// and the timing-equalisation hash could not be built, so account existence
+// leaked through response time. The service now refuses to start instead.
 //
 // Ceiling: single-process, single-host. Upgrade path: move the pepper to a
 // KMS/HSM (AWS Secrets Manager, GCP Secret Manager, Vault) and read via API
@@ -35,4 +40,19 @@ function loadPepper() {
   return (pepper = Buffer.from(hex, 'hex'));
 }
 
-module.exports = { loadPepper };
+// ponytail: fail the boot if the pepper is unusable in production. The
+// service is useless without it, and a half-working auth service (register
+// 500s, logins 401, timing oracle open) is worse than one that refuses to
+// start.
+function assertPepperAvailable() {
+  try {
+    loadPepper();
+    return true;
+  } catch (err) {
+    console.error(`[auth] FATAL: ${err.message}`);
+    if (process.env.NODE_ENV === 'production') process.exit(1);
+    return false;
+  }
+}
+
+module.exports = { loadPepper, assertPepperAvailable };

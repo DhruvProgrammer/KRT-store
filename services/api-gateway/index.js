@@ -58,21 +58,40 @@ Object.entries(services).forEach(([name, config]) => {
       pathRewrite: {
         [`^${config.path}`]: ''
       },
-      onError: (err, req, res) => {
-        console.error(`[Gateway] ❌ Proxy error for ${name}:`, err.message);
-        // Always set CORS headers on error so the browser can read the response
-        const origin = req.headers.origin;
-        if (origin && ALLOWED_ORIGINS.includes(origin)) {
-          res.setHeader('Access-Control-Allow-Origin', origin);
-          res.setHeader('Access-Control-Allow-Credentials', 'true');
+      // ponytail: http-proxy-middleware v3 nests the event handlers under
+      // `on`. The LEGACY top-level names (onProxyReq / onProxyRes / onError)
+      // are silently IGNORED by createProxyMiddleware — only
+      // legacyCreateProxyMiddleware maps them. The previous code used the
+      // legacy names, so none of these handlers ever ran.
+      on: {
+        error: (err, req, res) => {
+          console.error(`[Gateway] ❌ Proxy error for ${name}:`, err.message);
+          // Always set CORS headers on error so the browser can read the response
+          const origin = req.headers.origin;
+          if (origin && ALLOWED_ORIGINS.includes(origin)) {
+            res.setHeader('Access-Control-Allow-Origin', origin);
+            res.setHeader('Access-Control-Allow-Credentials', 'true');
+          }
+          res.status(502).json({ error: `Service ${name} unavailable` });
+        },
+        proxyReq: (proxyReq, req) => {
+          console.log(`[Gateway] → ${req.method} ${req.path} → ${name} (${config.target})`);
+          // ponytail: the gateway is the ONLY hop that may set the forwarded
+          // client IP. A client-supplied X-Forwarded-For would otherwise reach
+          // the auth service verbatim, and since the auth service trusts one
+          // proxy hop, an attacker could mint a fresh rate-limit bucket per
+          // request and defeat every limiter (and forge audit-log IPs).
+          // Strip whatever the client sent and set it from the socket peer.
+          proxyReq.removeHeader('x-forwarded-for');
+          proxyReq.removeHeader('x-real-ip');
+          proxyReq.removeHeader('forwarded');
+          const peer = req.socket && req.socket.remoteAddress;
+          if (peer) proxyReq.setHeader('x-forwarded-for', peer);
+          proxyReq.setHeader('x-real-ip', peer || '');
+        },
+        proxyRes: (proxyRes, req) => {
+          console.log(`[Gateway] ← ${req.method} ${req.path} ← ${name} status:${proxyRes.statusCode}`);
         }
-        res.status(502).json({ error: `Service ${name} unavailable`, detail: err.message });
-      },
-      onProxyReq: (proxyReq, req) => {
-        console.log(`[Gateway] → ${req.method} ${req.path} → ${name} (${config.target})`);
-      },
-      onProxyRes: (proxyRes, req) => {
-        console.log(`[Gateway] ← ${req.method} ${req.path} ← ${name} status:${proxyRes.statusCode}`);
       }
     })
   );
