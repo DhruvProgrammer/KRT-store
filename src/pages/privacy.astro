@@ -3,6 +3,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import Navigation from "../components/Navigation.astro";
 import Footer from "../components/Footer";
 import LegalPage from "../components/LegalPage";
+import Breadcrumbs from "../components/Breadcrumbs.astro";
 import { privacySections } from "../data/privacy-sections";
 
 const title = "Privacy Policy | KRT store";
@@ -12,6 +13,15 @@ const description = "How KRT store collects, uses, and protects your information
 <BaseLayout title={title} description={description}>
   <Navigation />
   <main id="main">
+    <!-- ponytail: /privacy is indexable and in the sitemap, so it gets
+         the same breadcrumb (and the same BreadcrumbList schema) as
+         every other indexable page. -->
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <Breadcrumbs
+        class="pt-8"
+        items={[{ label: "Home", href: "/" }, { label: "Privacy policy" }]}
+      />
+    </div>
     <LegalPage
       client:load
       eyebrow="Privacy"

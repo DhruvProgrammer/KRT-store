@@ -23,14 +23,10 @@ export default function ProfileSection() {
           <ol className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-ink-muted">
             <li className="flex items-center gap-2">
               <a href="/" className="transition hover:text-ink">Home</a>
-            </li>
-            <li className="flex items-center gap-2">
               <span aria-hidden="true" className="opacity-40">/</span>
             </li>
             <li className="flex items-center gap-2">
               <a href="/login/" className="transition hover:text-ink">Sign in</a>
-            </li>
-            <li className="flex items-center gap-2">
               <span aria-hidden="true" className="opacity-40">/</span>
             </li>
             <li>

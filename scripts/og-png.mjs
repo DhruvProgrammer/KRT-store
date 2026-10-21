@@ -55,31 +55,68 @@ class Canvas {
   constructor(width, height) {
     this.w = width;
     this.h = height;
+    // Premultiplied RGBA. The alpha channel is what makes the rounded
+    // corners of the brand mark and the favicon TRANSPARENT: without it
+    // every unpainted pixel stayed RGB 0 and toRgba() forced alpha 255,
+    // so the icon shipped with opaque BLACK corners.
     this.data = new Float64Array(width * height * 3);
+    this.alpha = new Float64Array(width * height);
   }
 
+  /** Opaque replacement of a pixel. */
   set(x, y, r, g, b) {
     const i = (y * this.w + x) * 3;
     this.data[i] = r;
     this.data[i + 1] = g;
     this.data[i + 2] = b;
+    this.alpha[y * this.w + x] = 1;
   }
 
-  /** Multiply a pixel towards `color` by `a` (0..1). */
+  /**
+   * Source-over of a solid `color` at coverage `a` (0..1).
+   *
+   * On an opaque pixel this is exactly the old "blend towards the colour"
+   * formula, so the social cards are byte-identical. On a transparent pixel
+   * it accumulates coverage instead of leaving a black hole.
+   */
   shade(x, y, color, a) {
-    const i = (y * this.w + x) * 3;
-    this.data[i] += (color[0] - this.data[i]) * a;
-    this.data[i + 1] += (color[1] - this.data[i + 1]) * a;
-    this.data[i + 2] += (color[2] - this.data[i + 2]) * a;
+    const p = y * this.w + x;
+    const i = p * 3;
+    const da = this.alpha[p];
+    if (da >= 1) {
+      // Opaque destination: the original blend, bit for bit, so the social
+      // cards (which paint their whole background first) are byte-identical.
+      this.data[i] += (color[0] - this.data[i]) * a;
+      this.data[i + 1] += (color[1] - this.data[i + 1]) * a;
+      this.data[i + 2] += (color[2] - this.data[i + 2]) * a;
+      return;
+    }
+    // Transparent or partly transparent destination: source-over, so the
+    // coverage accumulates instead of leaving a black hole.
+    const inv = 1 - a;
+    this.data[i] = color[0] * a + this.data[i] * da * inv;
+    this.data[i + 1] = color[1] * a + this.data[i + 1] * da * inv;
+    this.data[i + 2] = color[2] * a + this.data[i + 2] * da * inv;
+    this.alpha[p] = a + da * inv;
   }
 
   toRgba() {
     const out = Buffer.alloc(this.w * this.h * 4);
     for (let p = 0; p < this.w * this.h; p++) {
-      out[p * 4] = clamp255(this.data[p * 3]);
-      out[p * 4 + 1] = clamp255(this.data[p * 3 + 1]);
-      out[p * 4 + 2] = clamp255(this.data[p * 3 + 2]);
-      out[p * 4 + 3] = 255;
+      const a = this.alpha[p];
+      if (a <= 0) {
+        out[p * 4] = 0;
+        out[p * 4 + 1] = 0;
+        out[p * 4 + 2] = 0;
+        out[p * 4 + 3] = 0;
+        continue;
+      }
+      // Un-premultiply.
+      const inv = 1 / a;
+      out[p * 4] = clamp255(this.data[p * 3] * inv);
+      out[p * 4 + 1] = clamp255(this.data[p * 3 + 1] * inv);
+      out[p * 4 + 2] = clamp255(this.data[p * 3 + 2] * inv);
+      out[p * 4 + 3] = clamp255(a * 255);
     }
     return out;
   }
@@ -611,7 +648,19 @@ function buildIco(pixels, size) {
     }
   }
 
-  const image = Buffer.concat([dib, xor, Buffer.alloc(andSize)]);
+  // AND mask: one bit per pixel, set where the pixel is transparent. Without
+  // it every renderer that reads the mask (rather than the alpha channel)
+  // sees an opaque black square behind the rounded corners.
+  const and = Buffer.alloc(andSize);
+  for (let y = 0; y < size; y++) {
+    const src = (size - 1 - y) * size * 4; // bottom-up, same as the XOR image
+    for (let x = 0; x < size; x++) {
+      if (pixels[src + x * 4 + 3] >= 128) continue; // opaque -> mask bit 0
+      and[y * maskStride + (x >> 3)] |= 0x80 >> (x & 7);
+    }
+  }
+
+  const image = Buffer.concat([dib, xor, and]);
 
   const header = Buffer.alloc(6);
   header.writeUInt16LE(0, 0); // reserved

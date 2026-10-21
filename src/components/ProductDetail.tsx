@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Product } from "../data/products";
 import { products, productsRetailTotal } from "../data/products";
+import { productTitle } from "../data/seo";
 import { cart } from "../lib/cart";
 import Button from "./Button";
 import Reveal from "./Reveal";
@@ -143,7 +144,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
               {product.tag}
             </p>
             <h1 className="mt-3 text-4xl font-black tracking-[-0.07em] text-ink sm:text-5xl">
-              {product.name} — {product.seoTitle}
+              {productTitle(product)}
             </h1>
             <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-ink-muted">
               {/* ponytail: the star rating was removed with the fabricated

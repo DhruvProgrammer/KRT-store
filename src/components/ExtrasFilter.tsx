@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ExtraItem } from "../data/extras";
-import { EXTRA_CATEGORY_LABELS } from "../data/extras";
+import { EXTRA_CATEGORY_HEADINGS, EXTRA_CATEGORY_LABELS } from "../data/extras";
 import ExtraCard from "./ExtraCard";
 
 interface ExtrasFilterProps {
@@ -177,7 +177,7 @@ export default function ExtrasFilter({ items }: ExtrasFilterProps) {
                       id={`extra-${category}`}
                       className="text-2xl font-black tracking-[-0.04em] text-ink sm:text-3xl"
                     >
-                      Free {EXTRA_CATEGORY_LABELS[category as keyof typeof EXTRA_CATEGORY_LABELS] ?? category}
+                      {EXTRA_CATEGORY_HEADINGS[category as keyof typeof EXTRA_CATEGORY_HEADINGS] ?? category}
                     </h2>
                   </div>
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">

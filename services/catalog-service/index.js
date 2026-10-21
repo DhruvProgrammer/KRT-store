@@ -16,13 +16,11 @@ const products = [
     longDescription: 'Clarity is a browser and Figma plugin that scans your design or live site for contrast failures, missing focus indicators, and motion issues. It runs Lighthouse-based rules without leaving your workflow and exports a shareable audit report in seconds.',
     price: 24,
     features: ['One-click contrast and focus audits', 'Live URL scanning', 'Lighthouse rule coverage', 'Exportable audit report'],
-    compatibility: ['Figma 13+', 'Chrome 119+', '_(Over)'],
+    compatibility: ['Figma 13+', 'Chrome 119+', 'Web'],
     version: 'v1.4.2',
     fileSize: '2.3 MB',
     gradient: 'linear-gradient(135deg, #dfe4ea 0%, #9aa1ab 100%)',
     highlights: [{ label: 'Rules', value: '92' }, { label: 'Avg scan', value: '<4s' }, { label: 'Platforms', value: '3' }],
-    rating: 4.8,
-    reviewCount: 232
   },
   {
     slug: 'pivot-extension',
@@ -37,9 +35,7 @@ const products = [
     version: 'v2.0.1',
     fileSize: '1.1 MB',
     gradient: 'linear-gradient(135deg, #c8d0db 0%, #7c8694 100%)',
-    highlights: [{ label: 'Commands', value: '14' }, { label: 'Latency', value: '<12ms' }, { label: 'Rating', value: '4.9' }],
-    rating: 4.7,
-    reviewCount: 184
+    highlights: [{ label: 'Commands', value: '14' }, { label: 'Latency', value: '<12ms' }, { label: 'Platforms', value: '2' }],
   },
   {
     slug: 'composer-plugin',
@@ -55,8 +51,6 @@ const products = [
     fileSize: '3.8 MB',
     gradient: 'linear-gradient(135deg, #b0b8c4 0%, #636e7e 100%)',
     highlights: [{ label: 'Templates', value: '28' }, { label: 'Build time', value: '<0.5s' }, { label: 'Transfers', value: '2.1k' }],
-    rating: 4.6,
-    reviewCount: 96
   },
   {
     slug: 'atlas-template',
@@ -72,8 +66,6 @@ const products = [
     fileSize: '4.6 MB',
     gradient: 'linear-gradient(135deg, #a3adb8 0%, #545d6c 100%)',
     highlights: [{ label: 'Lighthouse', value: '98' }, { label: 'Pages', value: '6' }, { label: 'Fonts', value: '0' }],
-    rating: 4.9,
-    reviewCount: 312
   },
   {
     slug: 'arcwise-template',
@@ -89,8 +81,6 @@ const products = [
     fileSize: '8.2 MB',
     gradient: 'linear-gradient(135deg, #8e99a8 0%, #3d4654 100%)',
     highlights: [{ label: 'Components', value: '42' }, { label: 'Auth', value: 'Built-in' }, { label: 'Payments', value: 'Stripe' }],
-    rating: 4.8,
-    reviewCount: 248
   },
   {
     slug: 'calm-tokens',
@@ -106,8 +96,6 @@ const products = [
     fileSize: '0.8 MB',
     gradient: 'linear-gradient(135deg, #95a0ae 0%, #4a5568 100%)',
     highlights: [{ label: 'Tokens', value: '120' }, { label: 'Themes', value: '2' }, { label: 'Format', value: 'JSON' }],
-    rating: 4.6,
-    reviewCount: 74
   },
   {
     slug: 'frontline-ui',
@@ -123,8 +111,6 @@ const products = [
     fileSize: '5.4 MB',
     gradient: 'linear-gradient(135deg, #7e8a99 0%, #2d3748 100%)',
     highlights: [{ label: 'Components', value: '28' }, { label: 'Bundle', value: '14kb' }, { label: 'A11y', value: 'AA' }],
-    rating: 4.7,
-    reviewCount: 162
   },
   {
     slug: 'monochrome-icons',
@@ -140,8 +126,6 @@ const products = [
     fileSize: '1.6 MB',
     gradient: 'linear-gradient(135deg, #b8bfca 0%, #6b7280 100%)',
     highlights: [{ label: 'Icons', value: '320' }, { label: 'Weights', value: '3' }, { label: 'Formats', value: '4' }],
-    rating: 4.9,
-    reviewCount: 412
   },
   {
     slug: 'open-lesson-kit',
@@ -157,8 +141,6 @@ const products = [
     fileSize: '6.1 MB',
     gradient: 'linear-gradient(135deg, #a0aab5 0%, #4b5563 100%)',
     highlights: [{ label: 'Lessons', value: 'Unlimited' }, { label: 'Quizzes', value: 'Yes' }, { label: 'Lighthouse', value: '97' }],
-    rating: 4.5,
-    reviewCount: 56
   }
 ];
 

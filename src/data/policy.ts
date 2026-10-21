@@ -14,6 +14,18 @@
 export const REFUND_POLICY = {
   /** Days after purchase during which a refund can be requested. */
   windowDays: 30,
+  /**
+   * ISO 3166-1 alpha-2 country the return policy applies to.
+   *
+   * ponytail: Google REQUIRES applicableCountry on a MerchantReturnPolicy --
+   * without it the markup is invalid and the merchant listing is rejected,
+   * so the property is not optional here. The Terms of Service do not name
+   * a jurisdiction ("to the maximum extent allowed by law"), so this is the
+   * ONE value the operator must confirm: it has to be the country the store
+   * sells into, not the country the code happens to be written in. It is
+   * here, once, so confirming it is a one-line change.
+   */
+  applicableCountry: "US",
   /** One-line version, for the announcement bar and the trust micro-bar. */
   short: "30-day refund",
   /** Full sentence, for the FAQ and the product page. */
@@ -37,6 +49,18 @@ export const UPDATE_POLICY = {
   /** The contractual version, for the Terms of Service. */
   terms:
     "Updates that ship within the same major version of a product are free for every customer, for as long as we maintain that product. A new major version is a separate purchase.",
+} as const;
+
+export const PURCHASE_POLICY = {
+  // ponytail: "Pay once, own forever, updates included." was the site's
+  // biggest promise and it was in TWO places (the footer of every page and
+  // the store listing), hand-written, and UNQUALIFIED — while the terms said
+  // "updates within the same major version; a new major version is a
+  // separate purchase". The licence IS perpetual, so "own forever" was
+  // true, but "updates included" was not the promise the contract makes.
+  // Now it says what the contract says.
+  /** One line, for the footer and the meta description. */
+  short: "Perpetual licence, free updates within the version you bought",
 } as const;
 
 export const SUPPORT_POLICY = {

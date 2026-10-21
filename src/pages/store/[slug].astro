@@ -8,7 +8,7 @@ import { products, type Product } from "../../data/products";
 import { categoryBySlug } from "../../data/categories";
 import { LICENSE_TIERS, licensePrice } from "../../data/licenses";
 import { REFUND_POLICY, UPDATE_POLICY } from "../../data/policy";
-import { metaDescription, pageTitle } from "../../data/seo";
+import { metaDescription, pageTitle, productTitle } from "../../data/seo";
 
 export const getStaticPaths = () =>
   products.map((p) => ({ params: { slug: p.slug }, props: { product: p } }));
@@ -46,11 +46,18 @@ const offers = LICENSE_TIERS.map((tier) => ({
   url: pageUrl,
   itemCondition: "https://schema.org/NewCondition",
   seller: { "@type": "Organization", name: "KRT store" },
+  // ponytail: Google requires applicableCountry on a MerchantReturnPolicy,
+  // and returnPolicyCountry since March 2025. Without them the merchant
+  // listing reports "Missing field applicableCountry" on all 12 product
+  // pages. returnMethod is deliberately absent: Google's enum is
+  // ReturnAtKiosk / ReturnByMail / ReturnInStore, and a ZIP download cannot
+  // be returned by post -- any of those three would be a false claim.
   hasMerchantReturnPolicy: {
     "@type": "MerchantReturnPolicy",
+    applicableCountry: REFUND_POLICY.applicableCountry,
+    returnPolicyCountry: REFUND_POLICY.applicableCountry,
     merchantReturnDays: REFUND_POLICY.windowDays,
     returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
-    returnMethod: "https://schema.org/ReturnByMail",
     returnFees: "https://schema.org/FreeReturn"
   }
 }));
@@ -58,7 +65,10 @@ const offers = LICENSE_TIERS.map((tier) => ({
 const productSchema = {
   "@context": "https://schema.org",
   "@type": "Product",
-  name: product.name,
+  // ponytail: the schema name is the visible headline, not the bare product
+  // name. Google wants the structured name to match what is on the page, and
+  // the <h1> is "Clarity - Accessibility Audit Plugin for Figma & Chrome".
+  name: productTitle(product),
   description,
   image: `${siteUrl}/og/${product.slug}.png`,
   brand: { "@type": "Brand", name: "KRT store" },

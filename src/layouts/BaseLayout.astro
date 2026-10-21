@@ -38,7 +38,11 @@ const organizationSchema = {
   "@type": "Organization",
   name: siteTitle,
   url: siteUrl,
-  logo: `${siteUrl}/favicon.svg`,
+  // ponytail: the logo was favicon.svg, a 100x100 viewBox with no intrinsic
+  // size. Google requires an Organization logo of at least 112x112 px, and
+  // the 512x512 PNG the og generator already produces (public/brand/
+  // logo-512.png) was generated for exactly this and wired to nothing.
+  logo: `${siteUrl}/brand/logo-512.png`,
   sameAs: [
     "https://twitter.com/krtstore",
     "https://github.com/krtstore"
@@ -52,7 +56,9 @@ const websiteSchema = {
   url: siteUrl,
   potentialAction: {
     "@type": "SearchAction",
-    target: `${siteUrl}/store?q={search_term_string}`,
+    // ponytail: the trailing slash matches the canonical of the page it
+    // points at ("/store/"), so the search target is not a second URL shape.
+    target: `${siteUrl}/store/?q={search_term_string}`,
     "query-input": "required name=search_term_string"
   }
 };

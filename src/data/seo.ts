@@ -28,7 +28,20 @@ export function metaDescription(text: string, max = 157): string {
 /** The brand suffix used on every page title. */
 export const BRAND = "KRT store";
 
+/**
+ * The product's visible headline.
+ *
+ * ponytail: the Product schema said "Clarity" while the page said
+ * "Clarity - Accessibility Audit Plugin for Figma & Chrome". Google
+ * expects the structured-data name to match the visible headline, so
+ * both read this one function and cannot drift apart.
+ */
+export function productTitle(product: { name: string; seoTitle: string }): string {
+  return `${product.name} \u2014 ${product.seoTitle}`;
+}
+
 /** `{keyword} | KRT store` — the pattern for content pages. */
 export function pageTitle(keyword: string): string {
   return `${keyword} | ${BRAND}`;
 }
+

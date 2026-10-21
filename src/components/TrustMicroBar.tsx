@@ -42,12 +42,12 @@ export default function TrustMicroBar({ variant = "compact" }: TrustMicroBarProp
         <span aria-hidden="true" className="opacity-30">·</span>
         <span className="inline-flex items-center gap-1">
           <RefreshIcon />
-          Updates
+          {UPDATE_POLICY.short}
         </span>
         <span aria-hidden="true" className="opacity-30">·</span>
         <span className="inline-flex items-center gap-1">
           <ShieldIcon />
-          {REFUND_POLICY.windowDays}-day
+          {REFUND_POLICY.short}
         </span>
       </div>
     );

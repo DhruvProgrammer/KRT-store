@@ -109,10 +109,25 @@ export const extras: ExtraItem[] = [
   }
 ];
 
-/** Human-readable labels for the extra types, used in headings and schema. */
+/** Human-readable labels for the extra types, used in the filter chips. */
 export const EXTRA_CATEGORY_LABELS: Record<ExtraItem["category"], string> = {
   resource: "Resources",
   swatch: "Color swatches",
   starter: "Starters",
   guide: "Guides"
+};
+
+/**
+ * The <h2> for each type of extra.
+ *
+ * ponytail: the heading used to be "Free " + the chip label, which gave
+ * "Free Resources" (not a phrase anyone searches for) and "Free Color
+ * swatches" (a capital S in the middle). These are the actual contents of
+ * each group, so they are both accurate and keyword-bearing.
+ */
+export const EXTRA_CATEGORY_HEADINGS: Record<ExtraItem["category"], string> = {
+  resource: "Free Snippets & Icon Packs",
+  swatch: "Free Color Swatches",
+  starter: "Free Figma Starters",
+  guide: "Free Guides & Checklists"
 };

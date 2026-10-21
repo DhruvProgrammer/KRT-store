@@ -21,13 +21,21 @@ const DEFAULT_SITE_HOST = new URL(DEFAULT_SITE_URL).hostname;
 // "https://krt.design.evil.com" is otherwise accepted and silently de-indexes
 // the site. Set ALLOW_CUSTOM_SITE_URL=true to build for a different domain
 // (a staging host, for example).
-function resolveSiteUrl(raw) {
+function resolveSiteUrl(raw, { strict }) {
   const source = raw || DEFAULT_SITE_URL;
   let url;
   try {
     url = new URL(source);
   } catch {
     throw new Error(`PUBLIC_SITE_URL is not a valid URL ("${source}").`);
+  }
+  // The dev and preview servers must not die on a local value. The project's
+  // own .env uses "http://localhost:3001" for the API, so a developer who
+  // adds PUBLIC_SITE_URL=http://localhost:4321 would otherwise get a dead
+  // `npm run dev` from a variable they never knew was guarded. The strict
+  // rules are a BUILD gate — that is the only thing that ships.
+  if (!strict) {
+    return url.origin;
   }
   if (url.protocol !== "https:") {
     throw new Error(`PUBLIC_SITE_URL must use https:// ("${source}").`);
@@ -53,17 +61,28 @@ function resolveSiteUrl(raw) {
   if (/example\.(com|org|net)|your-store/i.test(host)) {
     throw new Error(`PUBLIC_SITE_URL is still a placeholder ("${source}"). Set the real production domain.`);
   }
-  if (host !== DEFAULT_SITE_HOST && process.env.ALLOW_CUSTOM_SITE_URL !== "true") {
+  const customHost = host !== DEFAULT_SITE_HOST;
+  if (customHost && process.env.ALLOW_CUSTOM_SITE_URL !== "true") {
     throw new Error(
       `PUBLIC_SITE_URL host "${host}" is not the production host "${DEFAULT_SITE_HOST}". ` +
         `A wrong domain here de-indexes every page. Set ALLOW_CUSTOM_SITE_URL=true if this is intentional.`
+    );
+  }
+  // url.port is "" for the default https port. Any other port rides along
+  // into url.origin and therefore into every canonical, every og:url and
+  // every sitemap entry, so "https://krt.design:8443" would move the whole
+  // site onto an origin that does not resolve.
+  if (url.port && !customHost) {
+    throw new Error(
+      `PUBLIC_SITE_URL must not include a port ("${source}"). ` +
+        `A port moves every canonical and sitemap entry onto another origin.`
     );
   }
   return url.origin;
 }
 
 const rawSiteUrl = process.env.PUBLIC_SITE_URL;
-const siteUrl = resolveSiteUrl(rawSiteUrl);
+const siteUrl = resolveSiteUrl(rawSiteUrl, { strict: process.argv.includes("build") });
 
 // ponytail: fail the build if PUBLIC_API_URL is missing or insecure. Catches
 // the "http://localhost:3001 leaked into production" footgun — that URL hits
@@ -106,6 +125,7 @@ const isIndexablePath = (pathname) =>
 // Build-time stamp for <lastmod>. Google actually uses it; changefreq and
 // priority are ignored by Google but honoured by other crawlers.
 const sitemapLastmod = new Date().toISOString();
+
 
 export default defineConfig({
   site: siteUrl,

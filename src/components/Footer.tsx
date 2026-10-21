@@ -1,6 +1,9 @@
-// ponytail: trailing slashes everywhere, because astro.config.mjs sets
-// trailingSlash: "always" — an internal link to "/store" would 301 to
-// "/store/" on every click and point the crawler at a non-canonical URL.
+// ponytail: trailing slashes everywhere, so every internal link points at
+// the same URL shape as the canonical and the sitemap. (astro.config.mjs
+// now sets trailingSlash: "ignore", so "/store" would also resolve — but
+// "/store/" is the canonical form, so that is what the links use.)
+import { PURCHASE_POLICY } from "../data/policy";
+
 const linkGroups = [
   {
     title: "Shop",
@@ -55,7 +58,7 @@ export default function Footer() {
           </a>
           <p className="mt-5 max-w-xs text-sm leading-7 text-ink-muted">
             Premium plugins, templates, and design assets crafted for designers and engineers who care about
-            craft. Pay once, own forever, updates included.
+            craft. {PURCHASE_POLICY.short}.
           </p>
         </div>
 

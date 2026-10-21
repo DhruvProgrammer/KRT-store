@@ -12,8 +12,10 @@ import { pageTitle } from "../data/seo";
 // had no definition of what they bought. This page and the Terms of Service
 // now read the same file.
 const title = pageTitle("License Tiers: Regular, Extended & Team");
+// ponytail: the refund and update promises come from the shared policy, so
+// this snippet cannot drift away from the body of the page or the Terms.
 const description =
-  "How KRT store licences work: Regular for one project, Extended for studios and client work, Team for 25 seats. One purchase, free updates, 30-day refund.";
+  `How KRT store licences work: Regular for one project, Extended for studios and client work, Team for 25 seats. One purchase, ${UPDATE_POLICY.short.toLowerCase()}, ${REFUND_POLICY.short}.`;
 ---
 
 <BaseLayout title={title} description={description} image="/og.png">

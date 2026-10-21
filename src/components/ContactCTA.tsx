@@ -1,11 +1,16 @@
 import Button from "./Button";
 import Reveal from "./Reveal";
+import { PURCHASE_POLICY, REFUND_POLICY, SUPPORT_POLICY } from "../data/policy";
 
+// ponytail: these were hand-typed, so the update promise here could drift
+// away from the one in policy.ts (and did: this said "within the major
+// version" while the shared label said "Free updates"). They are now built
+// from the shared policy, so there is one promise on the site.
 const principles = [
   "Instant download after purchase",
-  "Perpetual license, no subscriptions",
-  "Free updates within the major version",
-  "Email support and refund guarantee"
+  PURCHASE_POLICY.short,
+  `${REFUND_POLICY.short}, no questions asked`,
+  SUPPORT_POLICY.response
 ];
 
 export default function ContactCTA() {
