@@ -1,5 +1,56 @@
+# ponytail: the Content-Security-Policy below is the REAL one. A <meta http-equiv>
+# policy ignores frame-ancestors and cannot cover anything the browser fetched
+# before it parsed the tag, so the policy is served as a header. The Astro
+# dev/preview server never reads this file, so src/layouts/BaseLayout.astro
+# ALSO emits the same policy as a <meta> tag. Both strings come from
+# src/data/csp.ts, and `node scripts/check-csp.mjs` fails if they drift.
+#
+# Netlify's _headers cannot interpolate a build-time env var (only
+# netlify.toml supports placeholder substitution), so the header's connect-src
+# cannot name the deploy-time API origin. It allows any https origin instead,
+# and the <meta> tag -- which CAN read PUBLIC_API_URL -- carries the strict
+# one. A browser enforces both policies (the effective policy is the
+# intersection), so production stays exactly as strict as before and the
+# header can never silently break login/checkout.
+
+# ponytail: max-age is one year -- the shortest value the preload list accepts,
+# and long enough that a returning visitor stays protected for a year (a short
+# max-age is a rollout value, not a policy). includeSubDomains extends the
+# policy to the API host: HSTS is host-scoped, so without it a subdomain
+# served over plain HTTP is still strippable. The `preload` token only makes
+# the domain ELIGIBLE -- the actual preload happens when krt.design is
+# submitted at hstspreload.org, and THAT is the irreversible step: removal is
+# a slow, manual request and browsers keep the entry for months, so a
+# subdomain that is not HTTPS-only becomes unreachable over HTTP for the whole
+# max-age. Keep the token now (it changes nothing until the submission),
+# submit the domain only once every subdomain is HTTPS for good. This is also
+# exactly the header Netlify already serves, so production does not change.
+
+# ponytail: X-Frame-Options stays even though frame-ancestors 'none' now
+# covers framing -- it still protects clients that do not implement CSP
+# frame-ancestors, and it costs one line.
+
+# ponytail: NO Cross-Origin-Resource-Policy. Every asset this site serves is
+# same-origin (og cards, brand, self-hosted fonts) and nothing user-supplied
+# is served as a file, so CORP buys nothing here -- but the og/*.png cards are
+# consumed by OTHER sites (Telegram, Slack, WhatsApp unfurls), and a
+# browser-based preview renderer would be blocked by CORP: same-origin and
+# the share image would go blank. Rejected deliberately; revisit only if the
+# site ever starts serving user-generated files.
+#
+# ponytail: NO Cross-Origin-Embedder-Policy. COEP breaks every cross-origin
+# subresource. The site loads none today, but a wrong COEP is a silent,
+# hard-to-debug breakage (Google Fonts, Stripe, any future embed).
+#
+# ponytail: Cross-Origin-Opener-Policy: same-origin IS safe here: the site
+# opens no popup (no window.open, no target="_blank", no window.opener), and
+# it severs the cross-origin opener relationship that tabnabbing abuses.
+
 /*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https:; object-src 'none'; frame-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), browsing-topics=(), interest-cohort=()
+  Cross-Origin-Opener-Policy: same-origin

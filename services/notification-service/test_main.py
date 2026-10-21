@@ -99,14 +99,87 @@ def test_not_configured(monkeypatch):
     assert r.status_code == 503
 
 
-def test_invalid_email(monkeypatch):
+def test_invalid_payload(monkeypatch):
+    """The ceilings: a bad email, an oversized order, an over-long field, an
+    oversized body and a mail burst are all refused BEFORE any mail goes
+    out."""
     _configure(monkeypatch)
+    send = _patch_gmail(monkeypatch)
+    client = TestClient(main.app)
+
     order = _order()
     order["email"] = "not-an-email"
-    r = TestClient(main.app).post(
-        "/notify/order", json=order, headers={"x-notify-token": "secret"}
-    )
+    r = client.post("/notify/order", json=order, headers={"x-notify-token": "secret"})
     assert r.status_code == 422
+    send.assert_not_called()
+
+    # 5000 item lines: refused with 422, no mail.
+    huge = _order()
+    huge["items"] = [
+        {"name": f"Item {i}", "price": 1, "quantity": 1} for i in range(5000)
+    ]
+    r = client.post("/notify/order", json=huge, headers={"x-notify-token": "secret"})
+    assert r.status_code == 422
+    send.assert_not_called()
+
+    # 21 lines is one over the ceiling (the order service's MAX_ITEMS is 20).
+    over = _order()
+    over["items"] = [
+        {"name": f"Item {i}", "price": 1, "quantity": 1} for i in range(21)
+    ]
+    r = client.post("/notify/order", json=over, headers={"x-notify-token": "secret"})
+    assert r.status_code == 422
+    send.assert_not_called()
+
+    # 20 lines still works -- the ceiling is not off by one.
+    ok = _order()
+    ok["items"] = [
+        {"name": f"Item {i}", "price": 1, "quantity": 1} for i in range(20)
+    ]
+    r = client.post("/notify/order", json=ok, headers={"x-notify-token": "secret"})
+    assert r.status_code == 200
+    send.assert_called_once()
+
+    # Every free-text field is bounded too.
+    long_field = "x" * 201
+    for payload, route in (
+        ({**_order(), "order_id": long_field}, "/notify/order"),
+        ({**_order(), "store_name": long_field}, "/notify/order"),
+        ({**_otp(subject=long_field)}, "/notify/otp"),
+        ({**_otp(otp=long_field)}, "/notify/otp"),
+        ({**_otp(purpose=long_field)}, "/notify/otp"),
+        ({**_magic(link="https://x.test/" + "x" * 2100)}, "/notify/magic-link"),
+    ):
+        r = client.post(route, json=payload, headers={"x-notify-token": "secret"})
+        assert r.status_code == 422, route
+        assert send.call_count == 1, route  # still only the one good receipt
+
+    # An item name is bounded too.
+    order = _order()
+    order["items"] = [{"name": long_field, "price": 1, "quantity": 1}]
+    r = client.post("/notify/order", json=order, headers={"x-notify-token": "secret"})
+    assert r.status_code == 422
+    assert send.call_count == 1
+
+    # A body over the byte ceiling is refused before it is parsed.
+    fat = _order()
+    fat["created_at"] = "x" * (main.MAX_BODY_BYTES + 1024)
+    r = client.post("/notify/order", json=fat, headers={"x-notify-token": "secret"})
+    assert r.status_code == 413
+    assert send.call_count == 1
+
+    # The mail ceiling: a burst is refused with 429. It runs under its own
+    # token so the shared bucket of the other tests is untouched.
+    monkeypatch.setattr(main, "NOTIFY_TOKEN", "burst-token")
+    monkeypatch.setattr(main, "NOTIFY_RATE_PER_MINUTE", 2)
+    for _ in range(2):
+        r = client.post(
+            "/notify/otp", json=_otp(), headers={"x-notify-token": "burst-token"}
+        )
+        assert r.status_code == 200
+    r = client.post("/notify/otp", json=_otp(), headers={"x-notify-token": "burst-token"})
+    assert r.status_code == 429
+    assert send.call_count == 3
 
 
 def test_invoice_renders_total_and_items():

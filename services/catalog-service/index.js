@@ -118,7 +118,7 @@ const products = [
     category: 'icon-packs',
     tag: 'Icon family',
     description: '320 monotone SVG icons for UI, dashboards, and marketing pages.',
-    longDescription: 'Monochrome delivers 320 carefully drawn SVG icons in three weights — light, regular, bold — with a consistent 24px grid. Every icon is optimised for dark-mode surfaces and ships with React, Vue, and raw SVG exports.',
+    longDescription: 'Monochrome delivers 320 carefully drawn SVG icons in three weights â€” light, regular, bold â€” with a consistent 24px grid. Every icon is optimised for dark-mode surfaces and ships with React, Vue, and raw SVG exports.',
     price: 29,
     features: ['320 icons in 3 weights', '24px grid, 2px stroke', 'React, Vue, and SVG formats', 'Figma component library'],
     compatibility: ['React', 'Vue', 'Figma', 'SVG'],
@@ -141,6 +141,57 @@ const products = [
     fileSize: '6.1 MB',
     gradient: 'linear-gradient(135deg, #a0aab5 0%, #4b5563 100%)',
     highlights: [{ label: 'Lessons', value: 'Unlimited' }, { label: 'Quizzes', value: 'Yes' }, { label: 'Lighthouse', value: '97' }],
+  },
+  // ponytail: the order and payment services price the order from THIS
+  // catalogue, so a product the storefront sells but the catalogue does not
+  // know cannot be bought at all -- the checkout answers "Unknown product".
+  // These three were missing, which made Editor Shield, Dash UI Kit and
+  // Trailhead unbuyable. The catalogue must list EVERY sellable slug; the
+  // prices below are the storefront's (src/data/products.ts).
+  {
+    slug: 'editor-shield',
+    name: 'Editor Shield',
+    category: 'plugins',
+    tag: 'Content safety',
+    description: 'Auto-save, version snapshots, and offline recovery for browser editors.',
+    longDescription: 'Editor Shield is a lightweight browser plugin that adds auto-save, version snapshots, and offline recovery to any contenteditable field, CMS editor, or web-based writing tool. Never lose a draft again.',
+    price: 18,
+    features: ['Auto-save every 30 seconds', 'Version snapshots with diff', 'Offline recovery', 'Works on any contenteditable'],
+    compatibility: ['Chrome 119+', 'Firefox 125+', 'Safari 17+'],
+    version: 'v1.2.4',
+    fileSize: '0.9 MB',
+    gradient: 'linear-gradient(135deg, #c4cbd5 0%, #8a929e 100%)',
+    highlights: [{ label: 'Saves', value: 'Auto' }, { label: 'Recovery', value: 'Offline' }, { label: 'Editors', value: 'All' }],
+  },
+  {
+    slug: 'dash-ui-kit',
+    name: 'Dash UI Kit',
+    category: 'design-systems',
+    tag: 'Admin system',
+    description: 'A complete dashboard system: tables, filters, and 40+ components.',
+    longDescription: 'Dash UI Kit is a production-ready admin system for Astro and React: data tables, filter bars, drawers, and forty-plus accessible components that drop into an existing app without a rewrite.',
+    price: 54,
+    features: ['40+ accessible components', 'Data tables with sorting', 'Filter and search bars', 'Dark mode out of the box'],
+    compatibility: ['Astro 5+', 'React', 'Tailwind 3.4+'],
+    version: 'v2.3.0',
+    fileSize: '4.7 MB',
+    gradient: 'linear-gradient(135deg, #b9c2cd 0%, #6f7883 100%)',
+    highlights: [{ label: 'Components', value: '40+' }, { label: 'Themes', value: 'Light+Dark' }, { label: 'A11y', value: 'WCAG AA' }],
+  },
+  {
+    slug: 'trailhead-template',
+    name: 'Trailhead',
+    category: 'templates',
+    tag: 'Marketing site',
+    description: 'A launch-ready marketing site for a SaaS product, in one template.',
+    longDescription: 'Trailhead is a complete marketing site for a SaaS launch: hero, pricing, changelog, docs, and blog, all statically built and wired to a CMS of your choice.',
+    price: 29,
+    features: ['Hero, pricing, changelog, docs', 'CMS-ready content collections', 'Blog with RSS and sitemap', 'Built-in analytics slots'],
+    compatibility: ['Astro 5+', 'Any headless CMS'],
+    version: 'v1.0.6',
+    fileSize: '3.2 MB',
+    gradient: 'linear-gradient(135deg, #aab3be 0%, #5c6570 100%)',
+    highlights: [{ label: 'Pages', value: '12' }, { label: 'CMS', value: 'Any' }, { label: 'Lighthouse', value: '98' }],
   }
 ];
 
@@ -188,4 +239,8 @@ app.get('/categories', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3003;
-app.listen(PORT, () => console.log(`Catalog Service running on port ${PORT}`));
+// ponytail: loopback by default -- the catalogue is internal, and only the
+// gateway (the one public hop) has any business reaching it. Docker sets
+// HOST=0.0.0.0 so the container is reachable from the other containers.
+const HOST = process.env.HOST || '127.0.0.1';
+app.listen(PORT, HOST, () => console.log(`Catalog Service running on port ${PORT} (${HOST})`));

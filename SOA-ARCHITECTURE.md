@@ -100,10 +100,20 @@ services/
 - `DELETE /api/cart` — Clear cart
 
 ### Order Service (via Gateway)
-- `POST /api/orders` — Create order
-- `GET /api/orders` — List orders
-- `GET /api/orders/:id` — Single order
+- `POST /api/orders` — Create order. Body: `{ email, otp, items: [{ slug, quantity }], paymentMethod }`.
+  The price, the name and the total are the SERVER's — they are looked up in the
+  catalog service, and the price in the request body is ignored. The order
+  belongs to the address the server verified with the OTP; there is no
+  `x-user-id` header any more.
+- `GET /api/orders` — List the signed-in account's orders. Needs the `krt_access`
+  session cookie; without it the answer is 401. A guest has no list — the
+  receipt email is how a guest gets the download links.
+- `GET /api/orders/:id` — Single order. Same session rule; another account's
+  order is a 404, not a 403, so it is not even confirmed to exist.
 
 ### Payment Service (via Gateway)
-- `POST /api/payments` — Create payment intent
-- `POST /api/payments/:id/capture` — Capture payment
+- `POST /api/payments` — Create payment intent. Body: `{ items: [{ slug, quantity }], currency, orderId?, metadata: { email, paymentMethod? } }`.
+  The amount is derived from the catalog service — a client-supplied `amount` is
+  refused. `Idempotency-Key` is required: the same key returns the same intent,
+  the same key with a different body is a 409.
+- `POST /api/payments/capture` — Capture payment. Body: `{ paymentIntentId }`.

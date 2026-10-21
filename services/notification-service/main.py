@@ -2,15 +2,17 @@ import base64
 import hmac
 import html
 import os
+import time
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from typing import Annotated
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, Header, HTTPException
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 load_dotenv()
 
@@ -66,38 +68,108 @@ _SUBJECT_TEMPLATES = {
     "signin": "Your {store} sign-in link",
 }
 
-app = FastAPI(title="KRT Notification Service")
+# ponytail: the interactive API docs are OFF. This service is internal and
+# every endpoint is guarded by the x-notify-token, but /docs and
+# /openapi.json were unauthenticated FastAPI defaults -- a free, public
+# description of the service for anyone who could reach it. The schema is
+# not a secret; the endpoint map does not need to be one.
+app = FastAPI(title="KRT Notification Service", docs_url=None, redoc_url=None, openapi_url=None)
+
+# ponytail: the request ceilings. Every accepted request sends a real email
+# from the store's mailbox, so an unbounded service is an unbounded Gmail
+# quota (over-sending gets the mailbox suspended) and an unbounded body is
+# an unbounded parse in the worker. 20 item lines matches the order
+# service's MAX_ITEMS = 20, so every order the store can place can be
+# receipted -- and no receipt can be a 5000-line email.
+MAX_ITEMS = 20
+MAX_TEXT = 200  # every free-text field: order_id, store_name, subject, otp, purpose, item name
+MAX_LINK = 2048  # a magic link is a URL
+# 1 MB: a 5000-item body (~225 KB) still reaches pydantic, so the item
+# ceiling is what answers an oversized order (422). The byte ceiling is the
+# backstop against a huge PARSE, not against a huge order.
+MAX_BODY_BYTES = 1024 * 1024
+
+# ponytail: the mail ceiling. A fixed window, in-process, no dependency: one
+# window, one counter, keyed by the only identity there is (the token).
+# Ceiling: per-process and lost on restart, so N replicas allow N x the
+# limit. Upgrade path: a shared counter (Redis). The gateway already caps
+# the /api/notify route at 10/min per IP -- this is the inner belt.
+NOTIFY_RATE_PER_MINUTE = int(os.getenv("NOTIFY_RATE_PER_MINUTE", "60"))
+_RATE_WINDOW_MS = 60_000
+_rate_hits: dict[str, dict] = {}
 
 
+class BodySizeLimit:
+    """Refuse a body over MAX_BODY_BYTES before FastAPI parses it.
+
+    ponytail: pure ASGI, no dependency. Content-Length alone is not enough --
+    a chunked request has none -- so the body is counted as it arrives.
+    FastAPI re-raises an HTTPException that comes out of the body read (it
+    has an explicit `except HTTPException: raise`), so the 413 survives --
+    a plain exception would be swallowed into a 400 "error parsing the body".
+    """
+
+    def __init__(self, app, max_bytes: int):
+        self.app = app
+        self.max_bytes = max_bytes
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        received = 0
+
+        async def limited_receive():
+            nonlocal received
+            message = await receive()
+            if message["type"] == "http.request":
+                received += len(message.get("body", b""))
+                if received > self.max_bytes:
+                    raise HTTPException(
+                        status_code=413, detail="Request body is too large"
+                    )
+            return message
+
+        await self.app(scope, limited_receive, send)
+
+
+app.add_middleware(BodySizeLimit, max_bytes=MAX_BODY_BYTES)
+
+
+# ponytail: every string is bounded (email is bounded by EmailStr itself,
+# 254 chars). The fields are echoed into the mail body, so an unbounded
+# field is an unbounded email -- and the ceilings are checked by pydantic
+# BEFORE the handler runs, so an over-long request never reaches Gmail.
 class Item(BaseModel):
-    name: str
+    name: Annotated[str, Field(max_length=MAX_TEXT)]
     price: float
     quantity: int = 1
 
 
 class OrderNotification(BaseModel):
     email: EmailStr
-    order_id: str
-    items: list[Item]
+    order_id: Annotated[str, Field(max_length=MAX_TEXT)]
+    items: Annotated[list[Item], Field(max_length=MAX_ITEMS)]
     total: float
-    store_name: str = STORE_NAME
-    created_at: str = ""
+    store_name: Annotated[str, Field(max_length=MAX_TEXT)] = STORE_NAME
+    created_at: Annotated[str, Field(max_length=MAX_TEXT)] = ""
 
 
 class OTPNotification(BaseModel):
     email: EmailStr
-    subject: str
-    otp: str
-    purpose: str = "registration"
-    store_name: str = STORE_NAME
+    subject: Annotated[str, Field(max_length=MAX_TEXT)]
+    otp: Annotated[str, Field(max_length=MAX_TEXT)]
+    purpose: Annotated[str, Field(max_length=MAX_TEXT)] = "registration"
+    store_name: Annotated[str, Field(max_length=MAX_TEXT)] = STORE_NAME
 
 
 class MagicLinkNotification(BaseModel):
     email: EmailStr
-    subject: str
-    link: str
-    purpose: str = "signin"
-    store_name: str = STORE_NAME
+    subject: Annotated[str, Field(max_length=MAX_TEXT)]
+    link: Annotated[str, Field(max_length=MAX_LINK)]
+    purpose: Annotated[str, Field(max_length=MAX_TEXT)] = "signin"
+    store_name: Annotated[str, Field(max_length=MAX_TEXT)] = STORE_NAME
 
 
 def _escape(value: str) -> str:
@@ -341,6 +413,24 @@ def _require_gmail_config() -> None:
         raise HTTPException(status_code=503, detail="email not configured")
 
 
+def _rate_limit() -> None:
+    """Refuse a mail burst before a single mail goes out.
+
+    ponytail: one window, one counter -- every caller shares the token, so
+    the token is the only identity there is. Counted per MAIL ATTEMPT, not
+    per request: a request that never sends (a rejected payload) must not
+    eat the budget of the real receipts.
+    """
+    now = time.time()
+    entry = _rate_hits.get(NOTIFY_TOKEN)
+    if entry is None or now > entry["resetAt"]:
+        entry = {"count": 0, "resetAt": now + _RATE_WINDOW_MS}
+    entry["count"] += 1
+    _rate_hits[NOTIFY_TOKEN] = entry
+    if entry["count"] > NOTIFY_RATE_PER_MINUTE:
+        raise HTTPException(status_code=429, detail="too many notifications")
+
+
 # ponytail: plain `def` handlers — FastAPI runs them in its threadpool, so the
 # blocking Gmail calls below never sit on the asyncio event loop.
 @app.post("/notify/order")
@@ -351,6 +441,7 @@ def notify_order(o: OrderNotification, x_notify_token: str = Header("")):
     subject = _header_safe(
         f"Your {o.store_name} order #{o.order_id} — receipt", "subject"
     )
+    _rate_limit()
     html_body = render_invoice(o)
     text = (
         f"Thank you for your order #{o.order_id}. "
@@ -374,6 +465,7 @@ def notify_otp(o: OTPNotification, x_notify_token: str = Header("")):
     _check_purpose(o.purpose)
     _header_safe(o.store_name, "store_name")
     subject = _header_safe(o.subject.strip() or _default_subject(o.purpose, o.store_name), "subject")
+    _rate_limit()
     html_body = render_otp_email(o)
     text = (
         f"Your {_purpose_label(o.purpose)} code is {o.otp}. "
@@ -398,6 +490,7 @@ def notify_magic_link(o: MagicLinkNotification, x_notify_token: str = Header("")
     _header_safe(o.store_name, "store_name")
     _check_link(o.link)
     subject = _header_safe(o.subject.strip() or _default_subject(o.purpose, o.store_name), "subject")
+    _rate_limit()
     html_body = render_magic_link_email(o)
     text = f"Sign in to {o.store_name}: {o.link}"
     try:

@@ -1211,5 +1211,14 @@ app.use((err, req, res, next) => {
 // first login of an unknown address costs the same as a real one.
 initDummyHash().finally(() => {
   const PORT = process.env.PORT || 3002;
-  app.listen(PORT, () => console.log(`Auth Service running on port ${PORT}`));
+  // ponytail: bind to loopback by default. The auth service trusts ONE proxy
+  // hop (`trust proxy = 1`), which is only safe if the only thing that can
+  // reach this port is that proxy: a direct client can forge its own
+  // X-Forwarded-For and mint a fresh rate-limit bucket per request, which
+  // defeats every limiter here (proved: 14 unthrottled logins). In Docker
+  // the service is `expose`d -- only the gateway reaches it -- and Docker
+  // sets HOST=0.0.0.0 because the container must be reachable from the
+  // other containers on the network.
+  const HOST = process.env.HOST || '127.0.0.1';
+  app.listen(PORT, HOST, () => console.log(`Auth Service running on port ${PORT} (${HOST})`));
 });

@@ -25,7 +25,7 @@
 //   - an unset NOTIFY_TOKEN               -> 503 for every call (fail closed)
 //
 // Env:
-//   NOTIFY_TOKEN            the shared secret (default: brunogoyal)
+//   NOTIFY_TOKEN            the shared secret (REQUIRED -- no default)
 //   MOCK_NOTIFY_PURPOSES   csv of allowed purposes
 //                          (default: registration,login,checkout,signin)
 //   MOCK_NOTIFY_FAIL_PATHS csv of paths that answer 502 "email send failed"
@@ -40,7 +40,12 @@ const path = require("path");
 const PORT = Number(process.argv[2] || process.env.MOCK_NOTIFY_PORT || 8000);
 const LOG = path.join(__dirname, "mock-notify-log.json");
 // Fail closed, like the real service: an unset token must not mean "open".
-const EXPECT_TOKEN = process.env.NOTIFY_TOKEN === undefined ? "brunogoyal" : process.env.NOTIFY_TOKEN;
+// ponytail: there used to be a DEFAULT TOKEN here -- the same string as the
+// LIVE production NOTIFY_TOKEN, committed to a public repo. The comment above
+// already said an unset token must fail closed; the code did the opposite.
+// Now an unset NOTIFY_TOKEN means "no token matches", so every call is
+// rejected. The test suite passes its own throwaway token in the env.
+const EXPECT_TOKEN = process.env.NOTIFY_TOKEN || "";
 const ALLOWED_PURPOSES = (process.env.MOCK_NOTIFY_PURPOSES || "registration,login,checkout,signin")
   .split(",")
   .map((s) => s.trim())

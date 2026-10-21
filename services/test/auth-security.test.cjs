@@ -57,7 +57,12 @@ const { argonvaultHash } = require(path.join(ROOT, "services", "auth-service", "
 
 const JWT_SECRET = process.env.TEST_JWT_SECRET || "krt-suite-secret-0123456789-abcdefghijkl";
 const FRONTEND_URL = process.env.TEST_FRONTEND_URL || "http://localhost:4321";
-const NOTIFY_TOKEN = "brunogoyal";
+// ponytail: a THROWAWAY token for the mock mailer the suite starts. It used
+// to be the string that was also the LIVE production NOTIFY_TOKEN -- which
+// had been committed to this file (and to CONTRACT.md and mock-notify.cjs) in
+// a public repository. A test secret that is also a production secret is a
+// production secret.
+const NOTIFY_TOKEN = "test-only-notify-token-not-a-real-secret";
 const PW = "correct-horse-battery";
 const OLD_SECRET = "krt-store-secret-key-dev"; // the literal C2 says must die
 

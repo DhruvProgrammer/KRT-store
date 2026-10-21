@@ -171,7 +171,7 @@ report as required operator actions instead.
 
 - auth-service: `node services/auth-service/index.js`, port 3002
   - env: `JWT_SECRET` (>=32 chars), `NOTIFICATION_SERVICE_URL=http://localhost:8000`,
-    `NOTIFY_TOKEN=brunogoyal`, `ALLOWED_ORIGINS=http://localhost:4321`
+    `NOTIFY_TOKEN=<your own secret>`, `ALLOWED_ORIGINS=http://localhost:4321`
 - mock notification: `node services/test/mock-notify.cjs 8000`
 - test suite: `node services/test/auth-security.test.cjs`
 

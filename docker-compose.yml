@@ -23,6 +23,11 @@ services:
       - ORDER_SERVICE_URL=http://order-service:3005
       - PAYMENT_SERVICE_URL=http://payment-service:3006
       - NOTIFICATION_SERVICE_URL=http://notification-service:8000
+      # ponytail: set this ONLY when a reverse proxy sits in front of the
+      # gateway, and unpublish the gateway's port when you do. Without it the
+      # limiter sees the proxy's address and every customer shares one bucket
+      # (5 orders/min for the whole store). Example: TRUST_PROXY=loopback
+      - TRUST_PROXY=${TRUST_PROXY:-}
     depends_on:
       - auth-service
       - catalog-service
@@ -48,6 +53,7 @@ services:
       - auth-db:/app/data
     environment:
       - PORT=3002
+      - HOST=0.0.0.0
       - ARGONVAULT_PEPPER_PATH=/run/secrets/pepper.key
       - AUTH_DB_PATH=/app/data/auth.db
       # ponytail: NODE_ENV=production is what turns on the Secure cookie flag
@@ -76,6 +82,7 @@ services:
       - "3003"
     environment:
       - PORT=3003
+      - HOST=0.0.0.0
       - NODE_ENV=production
     networks:
       - krt-network
@@ -88,6 +95,7 @@ services:
       - "3004"
     environment:
       - PORT=3004
+      - HOST=0.0.0.0
       - NODE_ENV=production
     networks:
       - krt-network
@@ -100,13 +108,24 @@ services:
       - "3005"
     environment:
       - PORT=3005
+      - HOST=0.0.0.0
       - NODE_ENV=production
       - AUTH_SERVICE_URL=http://auth-service:3002
+      # ponytail: the order service prices the order itself now -- the price
+      # in the request body is ignored, so the catalog service is a hard
+      # dependency. Without this line the container resolves localhost:3003
+      # to ITSELF and every order fails with 503.
+      - CATALOG_SERVICE_URL=http://catalog-service:3003
+      # ponytail: the order service creates and CAPTURES the payment itself,
+      # server to server, so it needs the payment service's address.
+      - PAYMENT_SERVICE_URL=http://payment-service:3006
       - NOTIFICATION_SERVICE_URL=http://notification-service:8000
       - NOTIFY_TOKEN=${NOTIFY_TOKEN:?NOTIFY_TOKEN must be set}
       - STORE_NAME=${STORE_NAME:-KRT Store}
     depends_on:
       - auth-service
+      - catalog-service
+      - payment-service
       - notification-service
     networks:
       - krt-network
@@ -140,7 +159,13 @@ services:
       - "3006"
     environment:
       - PORT=3006
+      - HOST=0.0.0.0
       - NODE_ENV=production
+      # ponytail: same reason as the order service -- the amount is derived
+      # from the catalog, so the container needs the catalog's address.
+      - CATALOG_SERVICE_URL=http://catalog-service:3003
+    depends_on:
+      - catalog-service
     networks:
       - krt-network
 

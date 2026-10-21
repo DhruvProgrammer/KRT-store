@@ -1,6 +1,7 @@
 ---
 import "../styles/global.css";
 import { ClientRouter } from "astro:transitions";
+import { buildCsp } from "../data/csp.js";
 
 interface Props {
   title: string;
@@ -20,18 +21,12 @@ const siteUrl = (import.meta.env.SITE || Astro.url.origin).replace(/\/+$/, "");
 const pageImage = image ? new URL(image, siteUrl).href : `${siteUrl}/og.png`;
 const pageImageAlt = image ? title : `${siteTitle} — premium plugins, templates, and design assets`;
 const canonicalUrl = canonical ?? new URL(Astro.url.pathname, `${siteUrl}/`).href;
-// ponytail: CSP host-source needs an ORIGIN. A path-carrying PUBLIC_API_URL
-// ("https://api.x.com/v1") is a silent mismatch that would block every fetch,
-// so normalise through URL instead of trusting the raw env string.
-const apiUrl = import.meta.env.PUBLIC_API_URL;
-let connectSrc = "'self'";
-if (apiUrl) {
-  try {
-    connectSrc = `'self' ${new URL(apiUrl).origin}`;
-  } catch {
-    connectSrc = "'self'";
-  }
-}
+// ponytail: the policy lives in src/data/csp.js and is delivered TWICE: as a
+// real HTTP header (public/_headers) and as the <meta> tag below. The dev
+// server never reads _headers, so the tag is what keeps dev protected; the
+// header is what makes the policy real in production. The tag is built from
+// PUBLIC_API_URL, so connect-src names the API origin the browser may talk to.
+const csp = buildCsp(import.meta.env.PUBLIC_API_URL);
 
 const organizationSchema = {
   "@context": "https://schema.org",
@@ -125,13 +120,20 @@ const ldJson = (data: unknown) => JSON.stringify(data).replace(/</g, "\\u003c");
     <!--
       Security headers.
 
+      ponytail: the same policy is served as a real HTTP header in
+      public/_headers -- a <meta> policy ignores frame-ancestors and cannot
+      cover anything the browser fetched before it parsed the tag. The tag
+      stays because the Astro dev/preview server never reads _headers, and
+      because a browser enforces BOTH (the effective policy is the
+      intersection), so the tag can only make the page stricter. Both strings
+      come from src/data/csp.js; scripts/check-csp.mjs fails if they drift.
+
       ponytail: script-src uses 'unsafe-inline' because Astro inlines the island
       hydrator and component scripts and no stable hand-written hash list can
       cover them (a partial list blocks them and blanks every page — see above).
       A stricter policy needs a nonce per response, which is only possible if
       this moves to a server/SSR render; the current build is fully static.
-      Serve this policy as a real HTTP header in public/_headers as well — <meta>
-      is the weaker enforcement point and is ignored for frame-ancestors/HSTS.
+      Narrowing script-src to a hash list is a follow-up, not a blind change.
 
       style-src keeps 'unsafe-inline' as well: the React `style={{background}}`
       product gradients rely on it. A style injection cannot execute script, so
@@ -139,9 +141,11 @@ const ldJson = (data: unknown) => JSON.stringify(data).replace(/</g, "\\u003c");
 
       connect-src MUST keep the API gateway origin or every auth/checkout fetch
       is blocked. object-src 'none' is added because default-src 'self' still
-      permits same-origin <object>/<embed>.
+      permits same-origin <object>/<embed>. frame-src 'none' stays here
+      because frame-ancestors is IGNORED in a meta tag; frame-ancestors
+      'none' lives in the header, where it works.
     -->
-    <meta http-equiv="Content-Security-Policy" content={`default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src ${connectSrc}; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'self';`} />
+    <meta http-equiv="Content-Security-Policy" content={csp} />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
     <meta http-equiv="Permissions-Policy" content="accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()" />

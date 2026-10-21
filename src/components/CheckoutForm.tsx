@@ -14,15 +14,6 @@ function formatPrice(cents: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents);
 }
 
-function getGuestId(): string {
-  let id = localStorage.getItem("dg-guest-id");
-  if (!id) {
-    id = "guest-" + Math.random().toString(36).slice(2);
-    localStorage.setItem("dg-guest-id", id);
-  }
-  return id;
-}
-
 function recordLocalOrder(order: { id: string }, email: string, itemCount: number, total: number): void {
   try {
     const key = "dg-orders";
@@ -294,14 +285,16 @@ export default function CheckoutForm() {
         // browser discards the Set-Cookie and no session is established.
         credentials: "include",
         headers: {
-          "Content-Type": "application/json",
-          "x-user-id": getGuestId()
+          "Content-Type": "application/json"
         },
+        // ponytail: the client only says WHAT it wants. The price, the name
+        // and the total are the server's — it looks them up in the catalog.
+        // The `x-user-id` header is gone: the order belongs to the address
+        // the server verified with the OTP, not to a header we could forge.
         body: JSON.stringify({
           email: email.trim(),
           otp,
-          items: items.map((i) => ({ slug: i.slug, name: i.name, price: i.price, quantity: i.quantity })),
-          total,
+          items: items.map((i) => ({ slug: i.slug, quantity: i.quantity })),
           paymentMethod
         })
       });
@@ -310,7 +303,7 @@ export default function CheckoutForm() {
         setErrorMessage(data?.error || `Order failed (status ${res.status})`);
         return;
       }
-      recordLocalOrder(data.order, email.trim(), items.length, total);
+      recordLocalOrder(data.order, email.trim(), items.length, data.order.total);
       clear();
       setSubmitted(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
