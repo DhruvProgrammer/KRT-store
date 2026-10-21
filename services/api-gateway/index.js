@@ -91,6 +91,42 @@ Object.entries(services).forEach(([name, config]) => {
         },
         proxyRes: (proxyRes, req) => {
           console.log(`[Gateway] ← ${req.method} ${req.path} ← ${name} status:${proxyRes.statusCode}`);
+          // ponytail: the gateway is the ONLY hop the browser talks to, so it
+          // owns the CORS policy. The upstream services run a bare
+          // `cors()` (no origin list), which answers
+          // Access-Control-Allow-Origin: * -- and http-proxy copies the
+          // upstream's headers onto the response, OVERWRITING the correct
+          // header the gateway's own cors() middleware had just set.
+          //
+          // The browser then refuses the request: "the value of the
+          // Access-Control-Allow-Origin header must not be the wildcard '*'
+          // when the request's credentials mode is 'include'". Every
+          // credentialed call through the gateway failed -- the order
+          // placement (POST /api/orders) most visibly, but the cart and
+          // catalog too.
+          //
+          // So: drop the upstream's CORS headers and re-apply the
+          // gateway's own. Same allowlist, same credentials flag, and Vary
+          // so a shared cache cannot serve one origin's header to another.
+          // proxyRes.headers is a plain object, not a Map.
+          delete proxyRes.headers['access-control-allow-origin'];
+          delete proxyRes.headers['access-control-allow-credentials'];
+          delete proxyRes.headers['access-control-allow-headers'];
+          delete proxyRes.headers['access-control-allow-methods'];
+          delete proxyRes.headers['access-control-max-age'];
+          const origin = req.headers.origin;
+          if (origin && ALLOWED_ORIGINS.includes(origin)) {
+            proxyRes.headers['access-control-allow-origin'] = origin;
+            proxyRes.headers['access-control-allow-credentials'] = 'true';
+            proxyRes.headers['access-control-allow-headers'] =
+              'Content-Type, Authorization, x-notify-token';
+            proxyRes.headers['access-control-allow-methods'] =
+              corsOptions.methods.join(',');
+            proxyRes.headers['access-control-max-age'] = '600';
+          }
+          const vary = proxyRes.headers['vary'];
+          proxyRes.headers['vary'] =
+            !vary || /origin/i.test(vary) ? vary || 'Origin' : `${vary}, Origin`;
         }
       }
     })
