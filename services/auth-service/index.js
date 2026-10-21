@@ -22,11 +22,37 @@ app.use(cors({
   },
   credentials: true
 }));
-// ponytail: trust exactly one proxy hop (the API gateway). Without this,
-// req.ip is the gateway's socket address for EVERY request, which collapses
-// all per-IP rate limiting into one global bucket and writes the gateway's
-// address into every audit-log row.
-app.set('trust proxy', 1);
+// ponytail: trust the client address ONLY from a named proxy hop. This used
+// to be `app.set('trust proxy', 1)` -- "trust one hop" -- which means the
+// X-Forwarded-For header is honoured from ANY peer. The gateway strips and
+// re-sets that header, so it is safe THROUGH the gateway; but anyone who
+// could open a TCP connection to this port directly could send their own
+// X-Forwarded-For and mint a fresh rate-limit bucket per request. Proven:
+// 14 logins to /admin/login, each with a different X-Forwarded-For, and not
+// one of them was limited.
+//
+// A LIST is the fix: the header is only read when the socket peer is one of
+// the addresses we trust. The default is loopback, which is the gateway on
+// this host (how the dev stack and the test suite run). In Docker the
+// gateway is a different container, so docker-compose sets TRUST_PROXY to
+// the network range. If this service is ever published to the internet, the
+// default keeps every client in ONE bucket -- strict, but not a bypass.
+const TRUST_PROXY = (process.env.TRUST_PROXY || 'loopback')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+if (TRUST_PROXY.length) {
+  const VALID = /^(loopback|linklocal|uniquelocal|::1|::|0\.0\.0\.0|\d{1,3}(\.\d{1,3}){3})(\/\d{1,2})?$/i;
+  const bad = TRUST_PROXY.filter((entry) => !VALID.test(entry));
+  if (bad.length) {
+    console.error(
+      `[auth] TRUST_PROXY has an invalid entry: ${bad.join(', ')}. ` +
+        'Use an IP address, a CIDR range (172.16.0.0/12), or loopback.'
+    );
+    process.exit(1);
+  }
+  app.set('trust proxy', TRUST_PROXY);
+}
 app.use(express.json());
 app.use(cookieParser());
 

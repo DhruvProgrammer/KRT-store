@@ -58,9 +58,36 @@ const TRUST_PROXY = (process.env.TRUST_PROXY || '')
   .map((s) => s.trim())
   .filter(Boolean);
 if (TRUST_PROXY.length) {
+  // ponytail: validate the list at boot. A typo here used to crash the
+  // process with "invalid IP address: true" or "invalid range on address"
+  // -- fail-closed, but a crash with a stack trace instead of a message
+  // telling the operator what to fix. The values are IP addresses, CIDR
+  // ranges, or the named subnets express understands (loopback, linklocal,
+  // uniquelocal).
+  const VALID = /^(loopback|linklocal|uniquelocal|::1|::|0\.0\.0\.0|\d{1,3}(\.\d{1,3}){3})(\/\d{1,2})?$/i;
+  const bad = TRUST_PROXY.filter((entry) => !VALID.test(entry));
+  if (bad.length) {
+    console.error(
+      `[Gateway] TRUST_PROXY has an invalid entry: ${bad.join(', ')}. ` +
+        'Use an IP address, a CIDR range (10.0.0.0/8), or loopback.'
+    );
+    process.exit(1);
+  }
   app.set('trust proxy', TRUST_PROXY);
   console.log('[gateway] trusting these proxy hops for the client address:', TRUST_PROXY.join(', '));
 }
+
+// ponytail: the security headers go on EVERY response, not only the
+// proxied ones. The API host is the one that holds the Secure session
+// cookie, and HSTS is host-scoped, so a 429 or a 404 from this origin
+// needs them too -- the rate limiter is quite likely to be a client's FIRST
+// response from this host.
+app.use((req, res, next) => {
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
 
 // ponytail: normalise the client address. An IPv4 client on a dual-stack
 // socket arrives as ::ffff:127.0.0.1, and the SAME client over the IPv6
@@ -300,7 +327,9 @@ Object.entries(services).forEach(([name, config]) => {
           // ponytail: the API origin holds the Secure session cookie, so it
           // needs its own security headers. public/_headers only covers the
           // STATIC site (Netlify), not this service. HSTS here is host-scoped,
-          // so the API host needs it as much as the site host does.
+          // so the API host needs it as much as the site host does. They are
+          // set for every response by the middleware above; this only makes
+          // sure an upstream cannot replace them with something weaker.
           proxyRes.headers['strict-transport-security'] =
             'max-age=31536000; includeSubDomains';
           proxyRes.headers['x-content-type-options'] = 'nosniff';

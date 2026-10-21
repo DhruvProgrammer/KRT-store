@@ -13,11 +13,17 @@ must rotate; deleting the file now does not un-publish it.
 
 | Secret | Where it was | Action |
 |---|---|---|
-| `NOTIFY_TOKEN` | `services/test/CONTRACT.md`, `services/test/mock-notify.cjs`, `services/test/auth-security.test.cjs` | **Rotate.** It is the mailer's shared secret: anyone holding it could send email as the store to anyone. The committed copies are gone from the current tree, but they are still in the history. |
+| `NOTIFY_TOKEN` | `services/test/CONTRACT.md`, `services/test/mock-notify.cjs`, `services/test/auth-security.test.cjs` | **Rotate.** It is the mailer's shared secret: anyone holding it could send email as the store to anyone. The committed copies are gone from the current tree, but they are still in the history. **The local `.env` has already been rotated** to a fresh 32-character value, and the notification service now refuses to start in production with a token shorter than 16 characters — so the published value cannot be deployed again. **Your production `.env` still holds the published value: change it.** |
 | Google OAuth `client_secret` | `services/notification-service/client_secret.json` (was tracked) | **Rotate** in the Google Cloud console and re-download. The file is untracked now and gitignored, but the old one is in the history. |
 | Gmail refresh token | `.env.example` in the history | **Revoke and re-issue.** A refresh token is a permanent mailbox credential — it does not expire. |
 | `JWT_SECRET` | never committed, but if it was reused anywhere | **Rotate.** It signs every session. |
 | `auth.db` (users, password hashes, live refresh tokens) | committed until `6f1b38a` | **Assume every password hash is public.** Ask the affected users to change their password; a hash of a weak password is crackable offline. |
+
+Generate a replacement secret with:
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(24))"
+```
 
 Rewriting the history (`git filter-repo`) is worth doing, but it is **not a
 substitute for rotating**: anything that was published has been copied.
@@ -67,8 +73,9 @@ have to change together.
 |---|---|---|
 | `ALLOWED_ORIGINS` | gateway | the **exact** storefront origin, e.g. `https://krt.design`. A comma-separated list is allowed. This is the CORS allowlist — the storefront's `Origin` must be in it or every credentialed call fails in the browser. |
 | `TRUST_PROXY` | gateway | **Set this if anything sits in front of the gateway** (nginx, Cloudflare, a platform router). Without it the limiter sees the *proxy's* address, and every customer shares one bucket: 5 orders/min and 60 catalogue reads/min for the whole store. Use the proxy's address or CIDR (`loopback` for a local nginx). **If you set it, the gateway's port must not be published to the internet** — anything that can reach a trusted hop can write the `X-Forwarded-For` that hop is trusted to have written. |
+| `TRUST_PROXY` | auth service | The same mechanism, and the same warning. The default is `loopback` (the gateway on this host). In Docker the gateway is a different container, so `docker-compose.yml` sets the Docker network range. If you publish the auth service, narrow this to the gateway's address — otherwise a direct client can forge its own `X-Forwarded-For` and mint a fresh rate-limit bucket per request. |
 | `HOST` | gateway | `0.0.0.0` (the default) — the gateway is the one public hop. |
-| `HOST` | the other services | `127.0.0.1` (the default) outside Docker. The internal services trust one proxy hop, which is only safe if the only thing that can reach them is that proxy. In Docker they get `HOST=0.0.0.0` from `docker-compose.yml` and are `expose`d (unreachable from outside the Docker network). |
+| `HOST` | the other services | `127.0.0.1` (the default) outside Docker. The internal services read the client address from a header, which is only safe if the only thing that can reach them is the proxy. In Docker they get `HOST=0.0.0.0` from `docker-compose.yml` and are `expose`d (unreachable from outside the Docker network). |
 | `PUBLIC_API_URL` | build | the **https** origin of the gateway, e.g. `https://api.krt.design`. A production build fails closed on an `http://` or `localhost` value. It is baked into the storefront's CSP and the fetch target. |
 | `PUBLIC_SITE_URL` | build | `https://krt.design` (defaults to it). |
 
@@ -155,6 +162,14 @@ Not fixed in this pass, in rough priority order:
 6. `script-src` still needs `'unsafe-inline'` because the site is a fully
    static build — Astro inlines the hydration runtime. Narrowing it needs
    per-response nonces, i.e. a server-rendered site.
+7. **The header's `connect-src` is broader than the `<meta>` tag's** — it
+   says `https:` because Netlify's `_headers` cannot interpolate a
+   build-time variable. That is safe only because a browser enforces both
+   policies and the effective one is their intersection.
+   `scripts/check-csp.mjs` asserts that **every** built page carries the
+   strict `<meta>` tag, so the broad header can never be the only policy
+   that applies. The real fix is to generate `dist/_headers` at build time
+   and name the API origin.
 
 ---
 

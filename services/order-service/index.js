@@ -282,8 +282,11 @@ app.post('/', asyncRoute(async (req, res) => {
     if (typeof item.slug !== 'string' || !SLUG_RE.test(item.slug)) {
       return res.status(400).json({ error: 'Each item needs a valid slug' });
     }
-    const quantity = Number(item.quantity);
-    if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_QUANTITY) {
+    // ponytail: the quantity must be a JSON NUMBER that is a whole number.
+    // Number("1e1") is 10, Number(true) is 1 and Number([1]) is 1, so a
+    // coercion check alone accepts a body that is not a quantity at all.
+    const quantity = item.quantity;
+    if (typeof quantity !== 'number' || !Number.isInteger(quantity) || quantity < 1 || quantity > MAX_QUANTITY) {
       return res.status(400).json({ error: `Quantity must be a whole number between 1 and ${MAX_QUANTITY}` });
     }
     requested.push({ slug: item.slug, quantity });

@@ -29,12 +29,25 @@ def _require_notify_token() -> str:
     """Fail closed: an unset NOTIFY_TOKEN used to skip the auth check entirely.
 
     The service now refuses to start instead of accepting every caller.
+
+    A WEAK token is also refused in production. This token is the only thing
+    between a reachable port and sending real email from the store's mailbox,
+    and the one that was committed to the public repository was ten characters
+    long and a dictionary word. 16 characters of entropy is a floor, not a
+    virtue -- but a floor is what stops the next weak token from shipping.
     """
     token = os.getenv("NOTIFY_TOKEN", "").strip()
     if not token:
         raise RuntimeError(
             "NOTIFY_TOKEN is not set. The notification service refuses to start "
             "without it (an empty token would accept every caller)."
+        )
+    if os.getenv("NODE_ENV", "").strip() == "production" and len(token) < 16:
+        raise RuntimeError(
+            f"NOTIFY_TOKEN is only {len(token)} characters. In production it must be at "
+            "least 16. It is the mailer's only shared secret, it sends REAL Gmail, "
+            "and a short one is guessable. Generate one with: python -c \"import "
+            "secrets; print(secrets.token_urlsafe(24))\""
         )
     return token
 

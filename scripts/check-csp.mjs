@@ -18,7 +18,7 @@
 // The header CANNOT be stricter than the tag, only looser: a browser enforces
 // both policies, so the effective one is their intersection.
 
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import assert from "node:assert/strict";
@@ -189,6 +189,44 @@ check("the built page carries the policy from src/data/csp.js", () => {
     match[1],
     buildCsp(builtOrigin),
     "the built <meta> policy is not the one src/data/csp.js builds -- layout and policy have drifted"
+  );
+});
+
+// ponytail: the HEADER's connect-src is deliberately broader than the tag's
+// (it says https:, the tag names the API origin). That is safe ONLY because
+// a browser enforces both and the effective policy is their intersection.
+// It stops being safe the moment a page ships WITHOUT the <meta> tag: the
+// header alone would then permit a fetch to any https origin. The drift
+// check above only proves the two policies agree -- it does not prove every
+// page carries the strict one. This does.
+check("EVERY built page carries the <meta> policy", () => {
+  const dist = join(root, "dist");
+  if (!existsSync(dist)) {
+    console.log("       (skipped: dist/ does not exist -- run the build first)");
+    return;
+  }
+  const missing = [];
+  let checked = 0;
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        walk(full);
+      } else if (entry.name.endsWith(".html")) {
+        checked++;
+        const html = readFileSync(full, "utf8");
+        if (!/<meta http-equiv="Content-Security-Policy"/.test(html)) {
+          missing.push(full.replace(`${root}/`, ""));
+        }
+      }
+    }
+  };
+  walk(dist);
+  assert.ok(checked > 0, "no built HTML pages were found");
+  assert.equal(
+    missing.length,
+    0,
+    `these pages have no <meta> policy, so the broader header policy would be the only one that applies: ${missing.join(", ")}`
   );
 });
 

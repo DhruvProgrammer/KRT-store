@@ -11,7 +11,7 @@
     "og": "node scripts/og-png.mjs",
     "audit:ci": "npm audit --omit=dev --audit-level=moderate",
     "doctor": "npx react-doctor@latest",
-    "test:security": "node services/order-service/selftest.cjs && node services/payment-service/selftest.cjs && node services/cart-service/selftest.cjs && node services/api-gateway/rate-limit.test.cjs && node services/api-gateway/trust-proxy.test.cjs && node services/test/auth-security.test.cjs && node scripts/check-csp.mjs && node scripts/check-catalog.mjs",
+    "test:security": "node services/order-service/selftest.cjs && node services/payment-service/selftest.cjs && node services/cart-service/selftest.cjs && node services/auth-service/trust-proxy.test.cjs && node services/api-gateway/rate-limit.test.cjs && node services/api-gateway/trust-proxy.test.cjs && node services/test/auth-security.test.cjs && node scripts/check-csp.mjs && node scripts/check-catalog.mjs",
     "test:csp": "node scripts/check-csp.mjs",
     "test:catalog": "node scripts/check-catalog.mjs",
     "test:auth": "node services/test/auth-security.test.cjs",

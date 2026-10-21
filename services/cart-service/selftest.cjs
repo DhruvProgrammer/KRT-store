@@ -99,6 +99,18 @@ async function waitFor(base, tries = 60) {
     return { body: { id: email, email, authenticated: true } };
   });
 
+  // --- the stubbed catalog service ---------------------------------------
+  // The cart prices its lines from the catalog, never from the request.
+  const CATALOG = [
+    { slug: 'clarity-plugin', name: 'Clarity', price: 24 },
+    { slug: 'arcwise-template', name: 'Arcwise', price: 59 }
+  ];
+  const catalog = await jsonServer((req) =>
+    req.url === '/products'
+      ? { body: { products: CATALOG } }
+      : { status: 404, body: { error: 'not found' } }
+  );
+
   const cartPort = 3404;
   const base = `http://127.0.0.1:${cartPort}`;
   const child = spawn(process.execPath, [path.join(__dirname, 'index.js')], {
@@ -107,7 +119,8 @@ async function waitFor(base, tries = 60) {
       ...process.env,
       PORT: String(cartPort),
       NODE_ENV: 'development',
-      AUTH_SERVICE_URL: `http://127.0.0.1:${port(auth)}`
+      AUTH_SERVICE_URL: `http://127.0.0.1:${port(auth)}`,
+      CATALOG_SERVICE_URL: `http://127.0.0.1:${port(catalog)}`
     },
     stdio: 'ignore'
   });
@@ -115,6 +128,7 @@ async function waitFor(base, tries = 60) {
   const cleanup = () => {
     try { child.kill(); } catch { /* already gone */ }
     auth.close();
+    catalog.close();
   };
 
   try {
@@ -138,12 +152,47 @@ async function waitFor(base, tries = 60) {
     const added = await call(base, '/items', {
       method: 'POST',
       headers: { ...cookie('token-a'), 'x-user-id': 'someone-elses-id' },
-      body: { slug: 'clarity-plugin', name: 'Clarity Plugin', price: 24, quantity: 1 }
+      body: { slug: 'clarity-plugin', quantity: 1 }
     });
     check('an item can be added with a session', added.status === 201, `status ${added.status}`);
     check('the cart belongs to the session, not to the header',
       added.body && added.body.cart && added.body.cart.userId === 'a@example.com',
       JSON.stringify(added.body && added.body.cart));
+
+    // --- 2b. the price is the catalog's, not the client's ----------------
+    // A third session, so the two-session isolation checks below still start
+    // from an empty cart.
+    const priced = await call(base, '/items', {
+      method: 'POST',
+      headers: cookie('token-c'),
+      body: { slug: 'arcwise-template', name: 'FREE PRODUCT', price: 0.01, quantity: 1 }
+    });
+    const pricedLine = priced.body && priced.body.cart && priced.body.cart.items[0];
+    check('a client-supplied price is ignored',
+      priced.status === 201 && pricedLine && pricedLine.price === 59,
+      JSON.stringify(pricedLine));
+    check('a client-supplied name is ignored',
+      pricedLine && pricedLine.name === 'Arcwise',
+      JSON.stringify(pricedLine));
+
+    const unknown = await call(base, '/items', {
+      method: 'POST',
+      headers: cookie('token-c'),
+      body: { slug: 'no-such-product', quantity: 1 }
+    });
+    check('an unknown slug is refused', unknown.status === 400, `status ${unknown.status}`);
+
+    const badQty = await call(base, '/items', {
+      method: 'POST',
+      headers: cookie('token-c'),
+      body: { slug: 'clarity-plugin', quantity: '1e1' }
+    });
+    check('a quantity that is not a number is refused', badQty.status === 400, `status ${badQty.status}`);
+
+    const cCart = await call(base, '/', { headers: cookie('token-c') });
+    check('the rejected lines left the cart alone',
+      cCart.status === 200 && cCart.body.cart.items.length === 1,
+      JSON.stringify(cCart.body && cCart.body.cart.items));
 
     const aCart = await call(base, '/', { headers: cookie('token-a') });
     check('the owner reads its own cart',

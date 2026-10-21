@@ -46,6 +46,33 @@ const paymentIntents = new Map();
 const idempotencyKeys = new Map();
 let nextId = 1;
 
+// ponytail: both maps are swept. The order service creates the intent BEFORE
+// it checks the code, so an abandoned attempt leaves an uncaptured intent
+// behind -- and nothing ever cleaned it up. 5 attempts/min/IP is 7,200 a
+// day per IP, and the payment service is a HARD dependency of checkout: if
+// it runs out of memory, checkout is down for everybody. An uncaptured
+// intent is dead after a few minutes anyway (nobody captures one that
+// belongs to a failed checkout), so the TTL is short on purpose.
+const INTENT_TTL_MS = 15 * 60 * 1000;
+setInterval(() => {
+  const cutoff = Date.now() - INTENT_TTL_MS;
+  for (const [id, pi] of paymentIntents) {
+    // a CAPTURED intent is the receipt of a real order -- keep those
+    if (pi.status === 'succeeded') continue;
+    if (new Date(pi.createdAt).getTime() < cutoff) paymentIntents.delete(id);
+  }
+  for (const [key, entry] of idempotencyKeys) {
+    const pi = paymentIntents.get(entry.intentId);
+    if (!pi) {
+      idempotencyKeys.delete(key);
+      continue;
+    }
+    if (pi.status !== 'succeeded' && new Date(pi.createdAt).getTime() < cutoff) {
+      idempotencyKeys.delete(key);
+    }
+  }
+}, 60_000).unref();
+
 function getNextId() {
   return String(nextId++);
 }
@@ -168,8 +195,11 @@ app.post('/', async (req, res, next) => {
       if (typeof item.slug !== 'string' || !SLUG_RE.test(item.slug)) {
         return res.status(400).json({ error: 'Each item needs a valid slug' });
       }
-      const quantity = Number(item.quantity);
-      if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_QUANTITY) {
+      // ponytail: the quantity must be a JSON NUMBER that is a whole number.
+      // Number("1e1") is 10, Number(true) is 1 and Number([1]) is 1, so a
+      // coercion check alone accepts a body that is not a quantity at all.
+      const quantity = item.quantity;
+      if (typeof quantity !== 'number' || !Number.isInteger(quantity) || quantity < 1 || quantity > MAX_QUANTITY) {
         return res.status(400).json({ error: `Each item needs an integer quantity between 1 and ${MAX_QUANTITY}` });
       }
       lines.push({ slug: item.slug, quantity });

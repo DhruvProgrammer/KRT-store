@@ -65,6 +65,13 @@ services:
       # rejects — the container would exit 1 on every start.
       - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set to at least 32 characters}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:4321}
+      # ponytail: the gateway is a different container, so the auth service
+      # cannot trust the X-Forwarded-For header from loopback. This names
+      # the Docker network range whose hops ARE trusted. If this service is
+      # ever published to the internet, narrow this to the gateway's
+      # address -- a client that can connect directly would otherwise be
+      # able to forge its own address and mint a fresh rate-limit bucket.
+      - TRUST_PROXY=${TRUST_PROXY:-172.16.0.0/12}
       - NOTIFICATION_SERVICE_URL=http://notification-service:8000
       - NOTIFY_TOKEN=${NOTIFY_TOKEN:?NOTIFY_TOKEN must be set}
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:4321}

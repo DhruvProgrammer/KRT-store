@@ -5,6 +5,7 @@ const app = express();
 app.use(cors());
 
 const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || 'http://localhost:3002';
+const CATALOG_SERVICE_URL = process.env.CATALOG_SERVICE_URL || 'http://localhost:3003';
 
 // ponytail: Express 4 does NOT catch a rejected promise from an async
 // handler — the rejection escapes as an unhandled rejection and kills the
@@ -122,12 +123,47 @@ app.get('/', (req, res) => {
   res.json({ cart: getCart(req.owner) });
 });
 
+// ponytail: the price and the name come from the CATALOG, never from the
+// request body. The cart used to store whatever price the client sent, so
+// a line could say "price 0.01" and a future "checkout from the server
+// cart" path would have charged it. The order service re-prices from the
+// catalog anyway, so this was never a way to get a discount -- it was a
+// landmine for whoever wired the server cart up next.
+async function catalogProduct(slug) {
+  const res = await fetch(`${CATALOG_SERVICE_URL}/products`);
+  if (!res.ok) throw new Error(`catalog responded ${res.status}`);
+  const body = await res.json();
+  const list = Array.isArray(body && body.products) ? body.products : [];
+  return list.find((p) => p && p.slug === slug) || null;
+}
+
 // POST /items - Add item to cart
-app.post('/items', (req, res) => {
-  const { slug, name, price, quantity, image } = req.body || {};
-  const qty = Number(quantity);
-  if (!slug || price == null || !Number.isFinite(qty) || qty < 1) {
-    return res.status(400).json({ error: 'slug, price, and quantity are required' });
+app.post('/items', asyncRoute(async (req, res) => {
+  const { slug, quantity } = req.body || {};
+  // ponytail: the quantity must be a JSON NUMBER that is a whole number.
+  // Number("1e1") is 10, Number(true) is 1 and Number([1]) is 1, so a
+  // coercion check alone accepts a body that is not a quantity at all.
+  const qty = quantity;
+  if (typeof slug !== 'string' || !slug) {
+    return res.status(400).json({ error: 'slug and quantity are required' });
+  }
+  if (typeof qty !== 'number' || !Number.isInteger(qty) || qty < 1) {
+    return res.status(400).json({ error: 'quantity must be a whole number of at least 1' });
+  }
+
+  let product;
+  try {
+    product = await catalogProduct(slug);
+  } catch (err) {
+    console.error('[cart-service] catalog lookup failed:', err.message);
+    return res.status(503).json({ error: 'Pricing is temporarily unavailable, please try again' });
+  }
+  if (!product) {
+    return res.status(400).json({ error: `Unknown product: ${slug}` });
+  }
+  const price = Number(product.price);
+  if (!Number.isFinite(price) || price <= 0) {
+    return res.status(503).json({ error: 'Pricing is temporarily unavailable, please try again' });
   }
 
   const cart = getCart(req.owner);
@@ -140,31 +176,31 @@ app.post('/items', (req, res) => {
       return res.status(400).json({ error: `At most ${MAX_CART_ITEMS} items per cart` });
     }
     cart.items.push({
-      slug,
-      name: name || slug,
-      price: Number(price),
+      slug: product.slug,
+      name: product.name,
+      price,
       quantity: qty,
-      image: image || ''
+      image: ''
     });
   }
 
   cart.updatedAt = new Date().toISOString();
   res.status(201).json({ cart });
-});
+}));
 
 // PUT /items/:slug - Update quantity
 app.put('/items/:slug', (req, res) => {
   const { slug } = req.params;
   const { quantity } = req.body || {};
-  const qty = Number(quantity);
+  const qty = quantity;
   const cart = getCart(req.owner);
   const item = cart.items.find(i => i.slug === slug);
 
   if (!item) {
     return res.status(404).json({ error: 'Item not found in cart' });
   }
-  if (!Number.isFinite(qty) || qty < 1) {
-    return res.status(400).json({ error: 'Quantity must be at least 1' });
+  if (typeof qty !== 'number' || !Number.isInteger(qty) || qty < 1) {
+    return res.status(400).json({ error: 'Quantity must be a whole number of at least 1' });
   }
 
   item.quantity = qty;
