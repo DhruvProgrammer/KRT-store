@@ -156,6 +156,60 @@ function startGateway(port, env) {
     }
   }
 
+  // ---- 4. the gateway must bind loopback unless told otherwise ---------
+  // The internal services bind 127.0.0.1 by default, so a client that is not
+  // the trusted proxy cannot reach them at all -- which is what makes
+  // "trust proxy = 1" safe. The gateway is the one public hop, so it binds
+  // 0.0.0.0 by default and gets an explicit HOST when it should not.
+  console.log('the bind address');
+  const os2 = require('os');
+  const lan2 = Object.values(os2.networkInterfaces())
+    .flat()
+    .find((i) => i && i.family === 'IPv4' && !i.internal);
+
+  const canReach = (port, host) =>
+    new Promise((resolve) => {
+      const net = require('net');
+      const socket = net.connect({ host, port, timeout: 2000 });
+      const done = (result) => {
+        socket.destroy();
+        resolve(result);
+      };
+      socket.on('connect', () => done(true));
+      socket.on('error', () => done(false));
+      socket.on('timeout', () => done(false));
+    });
+
+  if (!lan2) {
+    console.log('  skip (no non-loopback IPv4 on this machine)');
+  } else {
+    child = startGateway(3504, { HOST: '127.0.0.1' });
+    try {
+      if (!(await waitFor(3504))) throw new Error('the gateway did not start');
+      check(
+        'with HOST=127.0.0.1 the gateway is NOT reachable off-loopback',
+        !(await canReach(3504, lan2.address)),
+        'it answered on the LAN address'
+      );
+    } finally {
+      child.kill();
+      await new Promise((r) => setTimeout(r, 800));
+    }
+
+    child = startGateway(3505, { HOST: '0.0.0.0' });
+    try {
+      if (!(await waitFor(3505))) throw new Error('the gateway did not start');
+      check(
+        'with HOST=0.0.0.0 the gateway IS reachable off-loopback (it is the public hop)',
+        await canReach(3505, lan2.address),
+        'it did not answer on the LAN address'
+      );
+    } finally {
+      child.kill();
+      await new Promise((r) => setTimeout(r, 800));
+    }
+  }
+
   console.log(failed ? `\n${failed} check(s) failed` : '\nall checks passed');
   process.exit(failed ? 1 : 0);
 })().catch((e) => {
