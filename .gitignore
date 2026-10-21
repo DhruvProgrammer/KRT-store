@@ -37,4 +37,9 @@ client_secret.json
 pepper.key
 services/test/mock-notify-log.json
 
+# Tool state. The session journals inside hold request/response bodies and
+# page text from the app under test -- OTPs, addresses, tokens. This
+# repository is public, so they stay out of it.
+.reticle/
+
 #folders i dont want 
