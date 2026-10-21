@@ -84,6 +84,12 @@
 
 ## 3. Security & Compliance
 
+> **Start with `DEPLOYMENT-SECURITY.md`.** It is the repo-specific list:
+> which secrets are burned and must be rotated, the API-topology constraint
+> the session cookie imposes, the environment the gateway needs, and the
+> rate limits that are (and are not) in place. This section is the generic
+> checklist; that file is the one that knows this codebase.
+
 ### 3.1 Transport Security
 
 - [ ] Install and enforce **SSL/TLS**:
