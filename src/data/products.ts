@@ -80,7 +80,7 @@ export const products: Product[] = [
     highlights: [
       { label: "Commands", value: "14" },
       { label: "Latency", value: "<12ms" },
-      { label: "Rating", value: "4.9" }
+      { label: "Platforms", value: "2" }
     ],
     relatedSlugs: ["clarity-plugin", "editor-shield", "composer-plugin"],
     lastUpdated: "2026-09-02"

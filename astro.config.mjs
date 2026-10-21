@@ -4,8 +4,66 @@ import tailwind from "@astrojs/tailwind";
 import sitemap from "@astrojs/sitemap";
 
 // The production domain. Overridable with PUBLIC_SITE_URL (deploy env); the
-// default keeps `npm run dev` working with no setup at all.
+// default keeps `npm run build` working with no setup at all.
 const DEFAULT_SITE_URL = "https://krt.design";
+const DEFAULT_SITE_HOST = new URL(DEFAULT_SITE_URL).hostname;
+
+// ponytail: the site URL is baked into EVERY canonical, og:url, JSON-LD
+// `url`/`logo`/`offers.url` and the sitemap. Shipping the IANA placeholder
+// (example.com — a domain that will never resolve) is a total de-index, so
+// the build refuses a bad value instead of quietly shipping a wrong domain.
+//
+// The value must be a bare ORIGIN: scheme + host (+ port). A path, a query
+// string, a fragment or userinfo would all produce broken canonicals, and
+// "https://evil.com/?x=krt.design" is how a placeholder check gets bypassed.
+//
+// The host must also be the production host. A typo like
+// "https://krt.design.evil.com" is otherwise accepted and silently de-indexes
+// the site. Set ALLOW_CUSTOM_SITE_URL=true to build for a different domain
+// (a staging host, for example).
+function resolveSiteUrl(raw) {
+  const source = raw || DEFAULT_SITE_URL;
+  let url;
+  try {
+    url = new URL(source);
+  } catch {
+    throw new Error(`PUBLIC_SITE_URL is not a valid URL ("${source}").`);
+  }
+  if (url.protocol !== "https:") {
+    throw new Error(`PUBLIC_SITE_URL must use https:// ("${source}").`);
+  }
+  if (url.username || url.password) {
+    throw new Error(`PUBLIC_SITE_URL must not contain credentials ("${source}").`);
+  }
+  if (url.search || url.hash) {
+    throw new Error(
+      `PUBLIC_SITE_URL must be a bare origin with no query or fragment ("${source}").`
+    );
+  }
+  if (url.pathname && url.pathname !== "/") {
+    throw new Error(`PUBLIC_SITE_URL must not include a path ("${source}").`);
+  }
+  const host = url.hostname.toLowerCase();
+  if (host === "localhost" || host.endsWith(".localhost") || host === "127.0.0.1" || host === "::1") {
+    throw new Error(`PUBLIC_SITE_URL is insecure ("${source}"). Production must not be localhost.`);
+  }
+  if (/^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(host)) {
+    throw new Error(`PUBLIC_SITE_URL is insecure ("${source}"). Production must not be a private IP.`);
+  }
+  if (/example\.(com|org|net)|your-store/i.test(host)) {
+    throw new Error(`PUBLIC_SITE_URL is still a placeholder ("${source}"). Set the real production domain.`);
+  }
+  if (host !== DEFAULT_SITE_HOST && process.env.ALLOW_CUSTOM_SITE_URL !== "true") {
+    throw new Error(
+      `PUBLIC_SITE_URL host "${host}" is not the production host "${DEFAULT_SITE_HOST}". ` +
+        `A wrong domain here de-indexes every page. Set ALLOW_CUSTOM_SITE_URL=true if this is intentional.`
+    );
+  }
+  return url.origin;
+}
+
+const rawSiteUrl = process.env.PUBLIC_SITE_URL;
+const siteUrl = resolveSiteUrl(rawSiteUrl);
 
 // ponytail: fail the build if PUBLIC_API_URL is missing or insecure. Catches
 // the "http://localhost:3001 leaked into production" footgun — that URL hits
@@ -24,36 +82,6 @@ if (isBuildCommand) {
   if (apiUrl.includes("localhost") || apiUrl.startsWith("http://")) {
     throw new Error(
       `PUBLIC_API_URL is insecure ("${apiUrl}"). Production must be https:// and must not be localhost.`
-    );
-  }
-}
-
-// ponytail: the site URL is baked into EVERY canonical, og:url, JSON-LD
-// `url`/`logo`/`offers.url` and the sitemap. Shipping the IANA placeholder
-// (example.com — a domain that will never resolve) is a total de-index, so
-// the build refuses a missing / non-https / localhost / placeholder value
-// instead of quietly shipping a wrong domain.
-const rawSiteUrl = process.env.PUBLIC_SITE_URL;
-const siteUrl = (rawSiteUrl || DEFAULT_SITE_URL).replace(/\/+$/, "");
-if (isBuildCommand) {
-  if (!rawSiteUrl) {
-    throw new Error(
-      "PUBLIC_SITE_URL is not set. Set it in the shell/CI env or in the Netlify deploy env (prod). " +
-      "(Astro evaluates this config BEFORE loading .env, so a .env entry alone will not do.) " +
-      "Example: PUBLIC_SITE_URL=https://krt.design"
-    );
-  }
-  if (!rawSiteUrl.startsWith("https://")) {
-    throw new Error(`PUBLIC_SITE_URL must use https:// ("${rawSiteUrl}").`);
-  }
-  if (rawSiteUrl.includes("localhost")) {
-    throw new Error(
-      `PUBLIC_SITE_URL is insecure ("${rawSiteUrl}"). Production must be https:// and must not be localhost.`
-    );
-  }
-  if (/example\.com|your-store/i.test(rawSiteUrl)) {
-    throw new Error(
-      `PUBLIC_SITE_URL is still a placeholder ("${rawSiteUrl}"). Set the real production domain.`
     );
   }
 }
@@ -81,22 +109,19 @@ const sitemapLastmod = new Date().toISOString();
 
 export default defineConfig({
   site: siteUrl,
-  // ponytail: "always", not "ignore", so the dev server, the build and the
-  // canonicals agree on ONE url shape. With "ignore" the dev server happily
-  // serves "/store" while handing the page a canonical of "/store/" — the
-  // canonical then points at a url the same dev server only serves after a
-  // redirect. "always" makes the dev server 404 the non-canonical shape
-  // instead of hiding it, which is what caught the extensionless links.
+  // ponytail: "ignore", so BOTH "/store" and "/store/" resolve. The canonical
+  // on every page is the SLASHED form (it is derived from the route path, not
+  // from the request), and the sitemap lists the slashed form too, so Google
+  // still sees exactly one URL per page -- but a link that lost its trailing
+  // slash (a chat client, a QR code, a hand-typed URL) gets the page instead
+  // of a 404. The built artefact is byte-identical either way; only the dev
+  // and preview servers route differently.
   //
-  // The built artefact is byte-identical under either value (the canonical is
-  // derived from the route path, so it is "/store/" either way, and the
-  // sitemap adds the slash for the directory build format) — verified, 59/59
-  // assertions green under both. "always" is kept because it is the stricter
-  // guardrail: Netlify 301s "/store" to "/store/" in production, so a stray
-  // external link works in production but must not 404 in local preview.
-  //
-  // NOTE: every internal href must therefore carry its trailing slash.
-  trailingSlash: "always",
+  // It was "always" here before, which made the dev server 404 "/store" and
+  // hid the extensionless links (ExtraCard, SearchModal, CartList) that were
+  // still shipping -- those are fixed, and all internal hrefs now carry the
+  // slash so they match the canonical.
+  trailingSlash: "ignore",
   integrations: [
     react(),
     tailwind(),
@@ -118,17 +143,6 @@ export default defineConfig({
   markdown: {
     shikiConfig: {
       theme: "github-dark-high-contrast"
-    }
-  },
-  vite: {
-    build: {
-      rollupOptions: {
-        output: {
-          manualChunks: {
-            motion: ["framer-motion"]
-          }
-        }
-      }
     }
   }
 });
