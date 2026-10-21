@@ -9,7 +9,7 @@ const title = "404 — Page not found";
 const description = "This page doesn't exist on KRT store.";
 ---
 
-<BaseLayout title={title} description={description}>
+<BaseLayout title={title} description={description} noindex={true}>
   <Navigation />
   <main id="main">
     <section class="container mx-auto px-4 pt-12 pb-20 sm:px-6 lg:px-8">
@@ -22,7 +22,7 @@ const description = "This page doesn't exist on KRT store.";
           </p>
           <div class="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button href="/">Go home</Button>
-            <Button variant="secondary" href="/store">Browse the store</Button>
+            <Button variant="secondary" href="/store/">Browse the store</Button>
           </div>
         </div>
       </Reveal>

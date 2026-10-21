@@ -2,33 +2,76 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Navigation from "../components/Navigation.astro";
 import Footer from "../components/Footer";
+import Breadcrumbs from "../components/Breadcrumbs.astro";
 import ShopFilter from "../components/ShopFilter";
 import { products } from "../data/products";
 import { categories } from "../data/categories";
+import { pageTitle } from "../data/seo";
 
-const title = "Store — KRT store";
-const description = "Premium plugins, templates, design systems, icon packs, and learning kits for designers and engineers who care about craft.";
+// ponytail: the title used to be "Store - KRT store" (17 characters, no
+// keyword). "KRT store" alone has no search volume; the homepage and the
+// listing pages have to spend their SERP line on the category terms instead.
+const title = pageTitle("Premium Design Plugins, Templates & UI Kits");
+const description =
+  "Premium plugins, templates, design systems, icon packs, and learning kits for designers and engineers who care about craft. Pay once, own forever, updates included.";
+
+const siteUrl = (import.meta.env.SITE || Astro.url.origin).replace(/\/+$/, "");
+
+// ponytail: an ItemList gives the listing page a machine-readable catalogue
+// and a second crawl path to every product.
+//
+// The order is the order the grid actually renders: grouped by category, in
+// the order `categories` declares. The raw products array is NOT the same
+// order, and a schema that disagrees with the page is a content mismatch.
+const renderedOrder = categories.flatMap((category) =>
+  products.filter((product) => product.category === category.slug)
+);
+
+const itemListSchema = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  name: "KRT store — all products",
+  numberOfItems: renderedOrder.length,
+  itemListElement: renderedOrder.map((product, index) => ({
+    "@type": "ListItem",
+    position: index + 1,
+    url: new URL(`/store/${product.slug}/`, `${siteUrl}/`).href,
+    name: product.name
+  }))
+};
+
+const ldJson = (data: unknown) => JSON.stringify(data).replace(/</g, "\\u003c");
 ---
 
-<BaseLayout title={title} description={description}>
+<BaseLayout title={title} description={description} image="/og.png">
   <Navigation />
   <main id="main">
     <header class="container mx-auto border-b border-line px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+      <Breadcrumbs
+        class="mb-6"
+        items={[{ label: "Home", href: "/" }, { label: "Store" }]}
+      />
       <p class="mb-3 text-xs font-black uppercase tracking-[0.28em] text-accent">Store</p>
       <h1 class="max-w-3xl text-4xl font-black tracking-[-0.06em] text-ink sm:text-6xl">
-        Every download in one place.
+        Every download in one place. Design plugins, templates &amp; UI kits.
       </h1>
       <p class="mt-4 max-w-2xl text-base leading-7 text-ink-muted sm:text-lg">
-        Browse the full catalogue. Pay once, own forever, update free.
+        Browse the full catalogue. Pay once, own forever, updates included.
       </p>
       <div class="mt-8 flex flex-wrap gap-3 text-xs font-black uppercase tracking-[0.2em] text-ink-muted">
         <span class="rounded-full border border-accent/30 bg-accent/10 px-3 py-1.5 text-accent">
           {products.length} products
         </span>
+        {categories.map((c) => (
+          <span class="rounded-full border border-line bg-surface/60 px-3 py-1.5">{c.name}</span>
+        ))}
       </div>
     </header>
 
     <ShopFilter client:load products={products} categories={categories} />
   </main>
+
+  <script type="application/ld+json" set:html={ldJson(itemListSchema)} is:inline></script>
+
   <Footer client:load />
 </BaseLayout>

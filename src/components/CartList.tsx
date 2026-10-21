@@ -1,5 +1,6 @@
 
 import { useCart, type CartItem } from "../lib/cart";
+import { UPDATE_POLICY } from "../data/policy";
 import Button from "./Button";
 import Reveal from "./Reveal";
 import TrustMicroBar from "./TrustMicroBar";
@@ -81,7 +82,7 @@ function CartLine({ item }: { item: CartItem }) {
       <article className="rounded-2xl border border-line bg-surface/60 p-4 shadow-soft transition hover:border-accent/30 sm:p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-5">
           <a
-            href={item.slug.startsWith("/") ? item.slug : `/store/${item.slug}`}
+            href={item.slug.startsWith("/") ? item.slug : `/store/${item.slug}/`}
             className="block h-24 w-24 shrink-0 rounded-xl border border-line sm:h-28 sm:w-28"
             style={{ background: item.gradient }}
             aria-label={`View ${item.name}`}
@@ -90,12 +91,12 @@ function CartLine({ item }: { item: CartItem }) {
             <div className="flex flex-col gap-1">
               <p className="text-[10px] font-black uppercase tracking-[0.22em] text-accent">{item.tag ?? "Digital"}</p>
               <a
-                href={item.slug.startsWith("/") ? item.slug : `/store/${item.slug}`}
+                href={item.slug.startsWith("/") ? item.slug : `/store/${item.slug}/`}
                 className="line-clamp-2 text-base font-bold tracking-[-0.02em] text-ink transition hover:text-accent sm:text-lg"
               >
                 {item.name}
               </a>
-              <p className="text-xs text-ink-muted">In stock · Instant download · Lifetime updates</p>
+              <p className="text-xs text-ink-muted">In stock · Instant download · {UPDATE_POLICY.short}</p>
             </div>
             <div className="flex flex-wrap items-center gap-3 pt-1">
               <QuantityStepper value={item.quantity} onChange={(n) => updateQuantity(item.slug, n)} inputId={`qty-${item.slug}`} />
@@ -129,8 +130,8 @@ function EmptyCart() {
           <h1 className="text-5xl font-black tracking-[-0.07em] text-ink sm:text-6xl">Your cart is empty.</h1>
           <p className="mt-5 text-lg leading-8 text-ink-muted">Add some digital goods to get started — they're available instantly after checkout.</p>
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Button href="/store">Browse the store</Button>
-            <Button variant="secondary" href="/extras">Free extras</Button>
+            <Button href="/store/">Browse the store</Button>
+            <Button variant="secondary" href="/extras/">Free extras</Button>
           </div>
         </Reveal>
       </div>
@@ -153,7 +154,7 @@ export default function CartList() {
             <h1 className="text-3xl font-black tracking-[-0.05em] text-ink sm:text-4xl">{count} {count === 1 ? "item" : "items"} ready for checkout</h1>
           </div>
           <div className="flex items-center gap-3">
-            <a href="/store" className="rounded-full border border-line bg-surface/60 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-ink-muted transition hover:border-accent/40 hover:text-accent">Continue shopping</a>
+            <a href="/store/" className="rounded-full border border-line bg-surface/60 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-ink-muted transition hover:border-accent/40 hover:text-accent">Continue shopping</a>
             <button
               type="button" onClick={() => { if (window.confirm("Clear all items from your cart? This cannot be undone.")) { clear(); } }}
               className="rounded-full border border-line bg-surface/60 px-4 py-2 text-xs font-bold text-ink-muted transition hover:border-red-500/40 hover:text-red-400"
@@ -202,7 +203,7 @@ export default function CartList() {
             </dl>
 
             <div className="mt-6">
-              <Button href="/checkout" className="w-full justify-center shadow-[0_0_28px_rgba(0,162,255,0.4)]">Proceed to checkout · {formatPrice(total)}</Button>
+              <Button href="/checkout/" className="w-full justify-center shadow-[0_0_28px_rgba(0,162,255,0.4)]">Proceed to checkout · {formatPrice(total)}</Button>
               <p className="mt-2 text-center text-[11px] text-ink-muted">Paying via <span className="font-bold text-ink">Stripe card</span> · prototype</p>
             </div>
 

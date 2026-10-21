@@ -237,8 +237,8 @@ export default function CheckoutForm() {
               download links and license keys would arrive in your inbox within minutes. This demo doesn't process payments.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Button href="/store">Continue shopping</Button>
-              <Button variant="secondary" href="/extras">Browse free extras</Button>
+              <Button href="/store/">Continue shopping</Button>
+              <Button variant="secondary" href="/extras/">Browse free extras</Button>
             </div>
           </div>
         </Reveal>
@@ -255,7 +255,7 @@ export default function CheckoutForm() {
             <h1 className="text-5xl font-black tracking-[-0.07em] text-ink sm:text-6xl">Your cart is empty.</h1>
             <p className="mt-5 text-lg leading-8 text-ink-muted">Add some products before checking out.</p>
             <div className="mt-9">
-              <Button href="/store">Browse the store</Button>
+              <Button href="/store/">Browse the store</Button>
             </div>
           </div>
         </Reveal>
@@ -447,7 +447,7 @@ export default function CheckoutForm() {
                 {loading ? "Placing order…" : `Pay ${formatPrice(total)} via ${paymentLabel(paymentMethod)}`}
               </Button>
               <a
-                href="/cart"
+                href="/cart/"
                 className="mt-3 block text-center text-xs font-black uppercase tracking-[0.18em] text-ink-muted transition hover:text-accent"
               >
                 ← Back to cart

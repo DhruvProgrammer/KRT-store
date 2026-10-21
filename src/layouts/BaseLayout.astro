@@ -13,9 +13,13 @@ interface Props {
 const { title, description, image, canonical, noindex = false } = Astro.props;
 const siteTitle = "KRT store";
 const siteDescription = description;
-const siteUrl = Astro.url.origin;
-const pageImage = image ? new URL(image, siteUrl).href : `${siteUrl}/og.svg`;
-const canonicalUrl = canonical ?? Astro.url.href;
+// ponytail: the domain comes from the `site` option in astro.config.mjs
+// (Astro exposes it as import.meta.env.SITE), never from Astro.url.origin —
+// the head must not be able to drift from the canonicals and the sitemap.
+const siteUrl = (import.meta.env.SITE || Astro.url.origin).replace(/\/+$/, "");
+const pageImage = image ? new URL(image, siteUrl).href : `${siteUrl}/og.png`;
+const pageImageAlt = image ? title : `${siteTitle} — premium plugins, templates, and design assets`;
+const canonicalUrl = canonical ?? new URL(Astro.url.pathname, `${siteUrl}/`).href;
 // ponytail: CSP host-source needs an ORIGIN. A path-carrying PUBLIC_API_URL
 // ("https://api.x.com/v1") is a silent mismatch that would block every fetch,
 // so normalise through URL instead of trusting the raw env string.
@@ -53,6 +57,17 @@ const websiteSchema = {
   }
 };
 
+// ponytail: JSON.stringify does NOT escape "<", so a schema value holding a
+// closing script tag would terminate the element early and inject markup into
+// the page. Replacing "<" with its -validation JSON escape (backslash-u003c)
+// keeps the payload parseable — JSON.parse accepts the escape — while making a
+// closing tag unrepresentable.
+//
+// NOTE: never write a literal script tag in this comment. Astro's compiler
+// scans the whole file for script blocks, so a tag inside a comment silently
+// turns the rest of the file into script content and breaks Vite's dep scan.
+const ldJson = (data: unknown) => JSON.stringify(data).replace(/</g, "\\u003c");
+
 // ponytail: there is deliberately NO hand-rolled hash list here. Only the build
 // knows the SHA-256 of each script Astro inlines (the island hydrator, the view
 // transition router, component scripts), so a hand-written list can only ever
@@ -68,10 +83,14 @@ const websiteSchema = {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#161a22" />
+    <meta name="color-scheme" content="dark" />
     <meta name="description" content={siteDescription} />
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="canonical" href={canonicalUrl} />
+    {/* ponytail: a canonical on a noindex page is contradictory — it asks the
+        crawler to consolidate onto a URL we are also telling it to drop
+        (the 404 page pointed its canonical at a URL that itself 404s). */}
+    {!noindex && <link rel="canonical" href={canonicalUrl} />}
 
     {noindex && <meta name="robots" content="noindex, nofollow" />}
 
@@ -79,16 +98,23 @@ const websiteSchema = {
     <meta property="og:title" content={title} />
     <meta property="og:description" content={siteDescription} />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content={Astro.url.href} />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:url" content={canonicalUrl} />
     <meta property="og:image" content={pageImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:alt" content={pageImageAlt} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={siteDescription} />
+    <meta name="twitter:url" content={canonicalUrl} />
     <meta name="twitter:image" content={pageImage} />
+    <meta name="twitter:image:alt" content={pageImageAlt} />
 
     <!-- Structured data: Organization + WebSite (every page) -->
-    <script type="application/ld+json" set:html={JSON.stringify(organizationSchema)} is:inline></script>
-    <script type="application/ld+json" set:html={JSON.stringify(websiteSchema)} is:inline></script>
+    <script type="application/ld+json" set:html={ldJson(organizationSchema)} is:inline></script>
+    <script type="application/ld+json" set:html={ldJson(websiteSchema)} is:inline></script>
 
     <!--
       Security headers.

@@ -3,7 +3,9 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import Navigation from "../../components/Navigation.astro";
 import Footer from "../../components/Footer";
 import ExtraDetail from "../../components/ExtraDetail";
-import { extras, type ExtraItem } from "../../data/extras";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
+import { extras, type ExtraItem, EXTRA_CATEGORY_LABELS } from "../../data/extras";
+import { metaDescription, pageTitle } from "../../data/seo";
 
 export const getStaticPaths = () =>
   extras.map((p) => ({ params: { slug: p.slug }, props: { item: p } }));
@@ -13,38 +15,64 @@ interface Props {
 }
 
 const { item } = Astro.props as Props;
-const title = `${item.name} — KRT store Extras`;
-const description = item.description;
+// ponytail: the title suffix used to be "KRT store Extras" — a second brand
+// string that appeared on these 6 pages and nowhere else, eating 6 characters
+// of a 32-character SERP line. One brand suffix, sitewide.
+const title = pageTitle(item.seoTitle);
+const description = metaDescription(item.longDescription);
 
-const siteUrl = Astro.url.origin;
-const pageUrl = new URL(Astro.url.pathname, siteUrl).href;
+const siteUrl = (import.meta.env.SITE || Astro.url.origin).replace(/\/+$/, "");
+const pageUrl = new URL(Astro.url.pathname, `${siteUrl}/`).href;
 
-const breadcrumbSchema = {
+// ponytail: these are six real downloadable items that were shipping with NO
+// Product markup at all — the weakest structured data on the site, on the
+// pages most likely to rank. Google supports free offers with price 0.
+const productSchema = {
   "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  itemListElement: [
-    { "@type": "ListItem", position: 1, name: "Home", item: siteUrl },
-    { "@type": "ListItem", position: 2, name: "Extras", item: `${siteUrl}/extras` },
-    { "@type": "ListItem", position: 3, name: item.name, item: pageUrl }
+  "@type": "Product",
+  name: item.name,
+  description,
+  image: `${siteUrl}/og/${item.slug}.png`,
+  category: EXTRA_CATEGORY_LABELS[item.category],
+  brand: { "@type": "Brand", name: "KRT store" },
+  isAccessibleForFree: true,
+  offers: {
+    "@type": "Offer",
+    price: "0.00",
+    priceCurrency: "USD",
+    availability: "https://schema.org/InStock",
+    url: pageUrl,
+    itemCondition: "https://schema.org/NewCondition",
+    seller: { "@type": "Organization", name: "KRT store" }
+  },
+  additionalProperty: [
+    { "@type": "PropertyValue", name: "Format", value: item.format },
+    { "@type": "PropertyValue", name: "File size", value: item.size },
+    { "@type": "PropertyValue", name: "File type", value: item.fileType }
   ]
 };
+
+// ponytail: JSON.stringify does not escape "<", so a value containing
+// "</script>" would close the element early and inject markup.
+const ldJson = (data: unknown) => JSON.stringify(data).replace(/</g, "\\u003c");
 ---
 
-<BaseLayout title={title} description={description}>
+<BaseLayout title={title} description={description} image={`/og/${item.slug}.png`}>
   <Navigation />
   <main id="main" class="container mx-auto px-4 pt-6 pb-20 sm:px-6 lg:px-8">
-    <nav class="mb-6 flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-ink-muted" aria-label="Breadcrumb">
-      <a href="/" class="transition hover:text-ink">Home</a>
-      <span aria-hidden="true">/</span>
-      <a href="/extras" class="transition hover:text-ink">Extras</a>
-      <span aria-hidden="true">/</span>
-      <span class="text-ink">{item.name}</span>
-    </nav>
+    <Breadcrumbs
+      class="mb-6"
+      items={[
+        { label: "Home", href: "/" },
+        { label: "Extras", href: "/extras/" },
+        { label: item.name }
+      ]}
+    />
 
     <ExtraDetail client:load item={item} />
   </main>
 
-  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} is:inline></script>
+  <script type="application/ld+json" set:html={ldJson(productSchema)} is:inline></script>
 
   <Footer client:load />
 </BaseLayout>

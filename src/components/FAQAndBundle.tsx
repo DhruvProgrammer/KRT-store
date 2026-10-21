@@ -1,24 +1,40 @@
 import Reveal from "./Reveal";
 import Button from "./Button";
+import { REFUND_POLICY, UPDATE_POLICY, SUPPORT_POLICY } from "../data/policy";
+import { LICENSE_TIERS } from "../data/licenses";
+import { products, productsRetailTotal } from "../data/products";
 
+// ponytail: the answers are generated from the shared policy so the FAQ, the
+// announcement bar, the trust bar, the product page and the Terms of Service
+// cannot contradict each other. They did: the marketing promised a
+// "no-questions-asked" refund and "lifetime updates" while the terms said
+// "only if it doesn't work and we can't fix it" and "within the same major
+// version".
 const faqs = [
   {
     question: "Do I get future updates?",
-    answer: "Yes — every purchase includes lifetime updates at no extra cost. You will be notified via email when a new version is released."
+    answer: `${UPDATE_POLICY.sentence} You will be notified by email when a new version is released.`
   },
   {
     question: "Can I use these on multiple sites?",
-    answer: "Each standard license covers usage for one project/site. If you need to use them on multiple client sites or in unlimited projects, developer and agency licenses are available at checkout."
+    answer: `Each purchase comes with a licence tier. ${LICENSE_TIERS[0].permits} ${LICENSE_TIERS[1].permits} ${LICENSE_TIERS[2].permits} You choose your tier on the product page before you buy.`
   },
   {
     question: "What's your refund policy?",
-    answer: "Not happy with your purchase? Email us within 30 days of purchase for a full, no-questions-asked refund. We want you to love what you build."
+    answer: `${REFUND_POLICY.sentence} We want you to love what you build.`
   },
   {
     question: "Is technical support included?",
-    answer: "Absolutely. We pride ourselves on fast, helpful, human-led support. Every customer gets direct access to help, with replies guaranteed within 24 hours."
+    answer: `Yes. Every customer gets direct access to human support. ${SUPPORT_POLICY.response}`
   }
 ];
+
+// ponytail: the reference price was a hardcoded $249 while the catalogue
+// totals more than that. It is now the real sum of every product.
+const BUNDLE_PRICE = 149;
+const bundleRetail = productsRetailTotal;
+const bundleSavings = Math.round((1 - BUNDLE_PRICE / bundleRetail) * 100);
+const bundleProductCount = products.length;
 
 export default function FAQAndBundle() {
   return (
@@ -33,22 +49,22 @@ export default function FAQAndBundle() {
               <div className="relative">
                 <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-accent-bright/40 bg-accent-bright/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-accent-bright">
                   <span className="h-1.5 w-1.5 rounded-full bg-accent-bright shadow-[0_0_10px_rgba(56,189,248,0.7)]" />
-                  Save 40% Off
+                  Save {bundleSavings}% Off
                 </span>
-                <h3 className="text-3xl font-black tracking-[-0.05em] text-ink sm:text-4xl">
+                <h2 className="text-3xl font-black tracking-[-0.05em] text-ink sm:text-4xl">
                   Get the full KRT store Bundle
-                </h3>
+                </h2>
                 <p className="mt-4 text-sm leading-relaxed text-ink-muted">
-                  Every plugin, theme, design token set, and icon pack we make. Get immediate access to all current releases, lifetime updates, and priority developer support with one simple payment.
+                  Every plugin, template, design token set, and icon pack we make — all {bundleProductCount} products. Get immediate access to all current releases, {UPDATE_POLICY.short.toLowerCase()}, and priority developer support with one simple payment.
                 </p>
                 <div className="mt-8 flex items-baseline gap-2">
-                  <span className="text-4xl font-black tracking-[-0.04em] text-ink">$149</span>
-                  <span className="text-sm font-semibold text-ink-muted line-through">$249</span>
+                  <span className="text-4xl font-black tracking-[-0.04em] text-ink">${BUNDLE_PRICE}</span>
+                  <span className="text-sm font-semibold text-ink-muted line-through">${bundleRetail}</span>
                   <span className="ml-1 text-xs font-black uppercase tracking-wider text-accent">One-time payment</span>
                 </div>
                 <div className="mt-8">
                   <Button
-                    href="/store"
+                    href="/store/"
                     className="w-full justify-center shadow-[0_0_28px_rgba(0,162,255,0.5)]"
                   >
                     Purchase the Bundle

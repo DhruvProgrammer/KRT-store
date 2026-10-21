@@ -1,5 +1,4 @@
-import { motion, useReducedMotion } from "framer-motion";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 interface RevealProps {
   children: ReactNode;
@@ -7,23 +6,29 @@ interface RevealProps {
   delay?: number;
 }
 
+/**
+ * Scroll reveal — CSS only.
+ *
+ * The entrance animation is driven by the CSS `view()` scroll timeline (see
+ * `src/styles/global.css`), so it needs no JavaScript and no animation
+ * library: the markup ships visible and the browser fades the element in as
+ * it enters the viewport.
+ *
+ * `delay` shifts the start of the animation range via the `--reveal-delay`
+ * custom property (0.06 -> "6%"), keeping the staggered look of the old
+ * framer-motion implementation.
+ */
 export default function Reveal({ children, className = "", delay = 0 }: RevealProps) {
-  const prefersReducedMotion = useReducedMotion();
-  const shouldAnimate = !prefersReducedMotion;
+  const style =
+    delay > 0 ? ({ "--reveal-delay": `${delay * 100}%` } as CSSProperties) : undefined;
 
   return (
-    <motion.div
-      className={className}
-      initial={shouldAnimate ? { opacity: 0, y: 20 } : false}
-      whileInView={shouldAnimate ? { opacity: 1, y: 0 } : undefined}
-      viewport={{ once: true, margin: "0px 0px -12%" }}
-      transition={{
-        duration: 0.6,
-        delay,
-        ease: [0.22, 1, 0.36, 1]
-      }}
+    <div
+      className={className ? `reveal ${className}` : "reveal"}
+      data-reveal=""
+      style={style}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }

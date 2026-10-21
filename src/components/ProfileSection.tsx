@@ -14,12 +14,29 @@ export default function ProfileSection() {
   return (
     <Reveal>
       <section className="container mx-auto px-4 pt-8 pb-20 sm:px-6 lg:px-8">
-        <nav className="mb-6 flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-ink-muted" aria-label="Breadcrumb">
-          <a href="/" className="transition hover:text-ink">Home</a>
-          <span aria-hidden="true">/</span>
-          <a href="/login" className="transition hover:text-ink">Sign in</a>
-          <span aria-hidden="true">/</span>
-          <span className="text-ink">Profile</span>
+        {/* ponytail: <ol>/<li> gives real list semantics and aria-current marks
+            the current page. The JSON-LD counterpart lives in the Astro
+            Breadcrumbs component; this is a React island, so it renders the
+            visual trail only (and /profile is noindex, so the schema would
+            earn nothing). */}
+        <nav className="mb-6" aria-label="Breadcrumb">
+          <ol className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-ink-muted">
+            <li className="flex items-center gap-2">
+              <a href="/" className="transition hover:text-ink">Home</a>
+            </li>
+            <li className="flex items-center gap-2">
+              <span aria-hidden="true" className="opacity-40">/</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <a href="/login/" className="transition hover:text-ink">Sign in</a>
+            </li>
+            <li className="flex items-center gap-2">
+              <span aria-hidden="true" className="opacity-40">/</span>
+            </li>
+            <li>
+              <span aria-current="page" className="text-ink">Profile</span>
+            </li>
+          </ol>
         </nav>
 
         <div className="grid gap-10 lg:grid-cols-[280px_1fr]">
@@ -28,7 +45,7 @@ export default function ProfileSection() {
               <ul className="space-y-1">
                 <li>
                   <a
-                    href="/login"
+                    href="/login/"
                     className="flex items-center gap-2 rounded-xl bg-accent/10 px-3 py-2 font-black text-accent"
                   >
                     <UserIcon />
@@ -37,7 +54,7 @@ export default function ProfileSection() {
                 </li>
                 <li>
                   <a
-                    href="/settings"
+                    href="/settings/"
                     className="flex items-center gap-2 rounded-xl px-3 py-2 text-ink-muted transition hover:bg-slate-800/40 hover:text-ink"
                   >
                     <span>Settings</span>
@@ -46,7 +63,7 @@ export default function ProfileSection() {
               </ul>
             </nav>
 
-            <Button href="/settings" className="w-full justify-center">
+            <Button href="/settings/" className="w-full justify-center">
               Manage settings
             </Button>
           </aside>
@@ -63,8 +80,8 @@ export default function ProfileSection() {
               Sign in or create an account to see them.
             </p>
             <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row">
-              <Button href="/login">Sign in</Button>
-              <Button variant="secondary" href="/signup">Create account</Button>
+              <Button href="/login/">Sign in</Button>
+              <Button variant="secondary" href="/signup/">Create account</Button>
             </div>
           </div>
         </div>

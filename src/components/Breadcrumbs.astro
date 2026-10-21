@@ -1,0 +1,68 @@
+---
+// One breadcrumb component, so the visible trail and the BreadcrumbList
+// schema can never drift apart.
+//
+// ponytail: this markup was hand-rolled in 10 places, and 8 of them had a
+// visible breadcrumb with NO matching schema. Google requires the structured
+// data to match what is on the page, so the two must be generated together.
+// It also fixes the markup itself: <ol>/<li> gives real list semantics (a
+// screen reader announces "breadcrumb, 3 items" instead of three ungrouped
+// links), and aria-current="page" marks the current page.
+
+export interface Crumb {
+  label: string;
+  /** Omit for the current page — it is not a link. */
+  href?: string;
+}
+
+interface Props {
+  items: Crumb[];
+  class?: string;
+}
+
+const { items, class: className = "" } = Astro.props;
+
+const siteUrl = (import.meta.env.SITE || Astro.url.origin).replace(/\/+$/, "");
+
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: items.map((crumb, index) => ({
+    "@type": "ListItem",
+    position: index + 1,
+    name: crumb.label,
+    ...(crumb.href ? { item: new URL(crumb.href, `${siteUrl}/`).href } : {})
+  }))
+};
+
+// ponytail: JSON.stringify does not escape "<", so a label containing
+// "</script>" would close the element early. See BaseLayout.astro.
+const ldJson = (data: unknown) => JSON.stringify(data).replace(/</g, "\\u003c");
+---
+
+<nav aria-label="Breadcrumb" class={className}>
+  <ol class="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-ink-muted">
+    {
+      items.map((crumb, index) => (
+        <li class="flex items-center gap-2">
+          {crumb.href ? (
+            <a href={crumb.href} class="transition hover:text-ink">
+              {crumb.label}
+            </a>
+          ) : (
+            <span aria-current="page" class="text-ink">
+              {crumb.label}
+            </span>
+          )}
+          {index < items.length - 1 && (
+            <span aria-hidden="true" class="opacity-40">
+              /
+            </span>
+          )}
+        </li>
+      ))
+    }
+  </ol>
+</nav>
+
+<script type="application/ld+json" set:html={ldJson(breadcrumbSchema)} is:inline></script>

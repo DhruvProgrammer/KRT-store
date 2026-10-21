@@ -286,8 +286,8 @@ export default function AuthForm({ mode: initialMode, method: initialMethod }: A
           <h1 className="text-3xl font-black tracking-[-0.06em] text-ink sm:text-4xl">{isLogin ? "Welcome back." : "Welcome to the store."}</h1>
           <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-ink-muted">Signed in as <strong className="text-ink">{email.trim()}</strong>.</p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Button href="/profile">Open profile</Button>
-            <Button variant="secondary" href="/store">Browse the store</Button>
+            <Button href="/profile/">Open profile</Button>
+            <Button variant="secondary" href="/store/">Browse the store</Button>
           </div>
         </div>
       </Reveal>

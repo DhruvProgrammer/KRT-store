@@ -3,21 +3,19 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import Navigation from "../components/Navigation.astro";
 import Footer from "../components/Footer";
 import CheckoutForm from "../components/CheckoutForm";
+import Breadcrumbs from "../components/Breadcrumbs.astro";
 
 const title = "Checkout — KRT store";
 const description = "Complete your order and receive instant download links for your digital goods.";
 ---
 
-<BaseLayout title={title} description={description}>
+<BaseLayout title={title} description={description} noindex={true}>
   <Navigation />
   <main id="main">
-    <nav class="container mx-auto flex flex-wrap items-center gap-2 px-4 pt-6 text-xs font-bold uppercase tracking-[0.18em] text-ink-muted sm:px-6 lg:px-8" aria-label="Breadcrumb">
-      <a href="/" class="transition hover:text-ink">Home</a>
-      <span aria-hidden="true">/</span>
-      <a href="/cart" class="transition hover:text-ink">Cart</a>
-      <span aria-hidden="true">/</span>
-      <span class="text-ink">Checkout</span>
-    </nav>
+    <Breadcrumbs
+      class="container mx-auto flex flex-wrap items-center gap-2 px-4 pt-6 sm:px-6 lg:px-8"
+      items={[{ label: "Home", href: "/" }, { label: "Cart", href: "/cart/" }, { label: "Checkout" }]}
+    />
     <CheckoutForm client:load />
   </main>
   <Footer client:load />

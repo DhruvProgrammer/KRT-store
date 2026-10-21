@@ -49,12 +49,28 @@ export default function SettingsSection() {
   return (
     <Reveal>
       <section className="container mx-auto px-4 pt-8 pb-20 sm:px-6 lg:px-8">
-        <nav className="mb-6 flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-ink-muted" aria-label="Breadcrumb">
-          <a href="/" className="transition hover:text-ink">Home</a>
-          <span aria-hidden="true">/</span>
-          <a href="/profile" className="transition hover:text-ink">Profile</a>
-          <span aria-hidden="true">/</span>
-          <span className="text-ink">Settings</span>
+        {/* ponytail: <ol>/<li> gives real list semantics and aria-current marks
+            the current page. The JSON-LD counterpart lives in the Astro
+            Breadcrumbs component; this is a React island, so it renders the
+            visual trail only (and /settings is noindex). */}
+        <nav className="mb-6" aria-label="Breadcrumb">
+          <ol className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-ink-muted">
+            <li className="flex items-center gap-2">
+              <a href="/" className="transition hover:text-ink">Home</a>
+            </li>
+            <li className="flex items-center gap-2">
+              <span aria-hidden="true" className="opacity-40">/</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <a href="/profile/" className="transition hover:text-ink">Profile</a>
+            </li>
+            <li className="flex items-center gap-2">
+              <span aria-hidden="true" className="opacity-40">/</span>
+            </li>
+            <li>
+              <span aria-current="page" className="text-ink">Settings</span>
+            </li>
+          </ol>
         </nav>
 
         <header className="mb-10 border-b border-line pb-8">
@@ -97,7 +113,7 @@ export default function SettingsSection() {
             </div>
 
             <div className="mt-6">
-              <Button variant="secondary" href="/profile" className="w-full justify-center">
+              <Button variant="secondary" href="/profile/" className="w-full justify-center">
                 Back to profile
               </Button>
             </div>
@@ -195,7 +211,7 @@ export default function SettingsSection() {
                 <h2 className="text-2xl font-black tracking-[-0.05em] text-ink">Data & privacy</h2>
                 <p className="text-sm text-ink-muted">
                   Manage what we keep about you. Full read of your data is in{" "}
-                  <a href="/privacy" className="font-black text-accent underline-offset-2 hover:underline">
+                  <a href="/privacy/" className="font-black text-accent underline-offset-2 hover:underline">
                     Privacy
                   </a>
                   .

@@ -1,4 +1,6 @@
 import type { LegalSection } from "../components/LegalPage";
+import { REFUND_POLICY, UPDATE_POLICY } from "./policy";
+import { LICENSE_TIERS } from "./licenses";
 
 export const termsSections: LegalSection[] = [
   {
@@ -16,17 +18,20 @@ export const termsSections: LegalSection[] = [
   {
     title: "Purchases and licences",
     body: [
-      "Each product comes with either a Regular or Extended licence. The summary on the product page is binding; the full licence text is delivered with the file."
+      "Each product comes with a licence tier, chosen on the product page before you buy. The summary shown there is binding; the full licence text is delivered with the file."
     ],
-    list: [
-      "Regular — use in one project for yourself or a single client",
-      "Extended — use on multiple projects, or resell as part of a larger product"
-    ]
+    // ponytail: the terms used to define only TWO of the three tiers that were
+    // actually sold, and used a third naming scheme ("developer and agency")
+    // in the FAQ. Now they come from the same file as the picker.
+    list: LICENSE_TIERS.map((tier) => `${tier.label} — ${tier.permits}`)
   },
   {
     title: "Refunds",
     body: [
-      "If a product doesn't work as described and we can't fix it, you can request a refund within 30 days of purchase. We'll process it within 5 business days."
+      // ponytail: this used to say "if a product doesn't work as described
+      // and we can't fix it" while the marketing promised a no-questions-asked
+      // refund at the point of sale. One source of truth now.
+      `${REFUND_POLICY.terms} We'll process it within 5 business days.`
     ]
   },
   {
@@ -38,7 +43,9 @@ export const termsSections: LegalSection[] = [
   {
     title: "Updates",
     body: [
-      "Your licence includes free updates within the same major version. Major upgrades are a new purchase unless otherwise stated on the product page."
+      // ponytail: matches the "Lifetime updates" promise in the announcement
+      // bar, the trust bar and the product page.
+      UPDATE_POLICY.terms
     ]
   },
   {

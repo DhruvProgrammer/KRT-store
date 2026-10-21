@@ -111,7 +111,7 @@ export default function ExtraDetail({ item }: { item: ExtraItem }) {
                   <DownloadIcon />
                   <span className="ml-2">{downloading ? "Downloading..." : `Download ${item.format}`}</span>
                 </Button>
-                <Button variant="secondary" href="/extras" className="w-full justify-center">
+                <Button variant="secondary" href="/extras/" className="w-full justify-center">
                   Browse extras
                 </Button>
               </div>
@@ -169,8 +169,8 @@ export default function ExtraDetail({ item }: { item: ExtraItem }) {
           We've made {extras.length} extras — cheatsheets, swatches, starter files. Browse them all.
         </p>
         <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Button href="/extras">Open the extras library</Button>
-          <Button variant="secondary" href="/store">See paid tools</Button>
+          <Button href="/extras/">Open the extras library</Button>
+          <Button variant="secondary" href="/store/">See paid tools</Button>
         </div>
       </section>
     </article>

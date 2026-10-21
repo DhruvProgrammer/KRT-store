@@ -1,12 +1,14 @@
 import { useState } from "react";
 import type { Product } from "../data/products";
-import { products } from "../data/products";
+import { products, productsRetailTotal } from "../data/products";
 import { cart } from "../lib/cart";
 import Button from "./Button";
-import Stars from "./Stars";
 import Reveal from "./Reveal";
 import TrustMicroBar from "./TrustMicroBar";
 import ProductCard from "./ProductCard";
+import { LICENSE_TIERS, licensePrice, type LicenseId } from "../data/licenses";
+import { REFUND_POLICY, UPDATE_POLICY, SUPPORT_POLICY } from "../data/policy";
+import { categoryBySlug } from "../data/categories";
 
 function CheckIcon() {
   return (
@@ -73,13 +75,7 @@ function Details({ title, open, children }: { title: string; open?: boolean; chi
   );
 }
 
-type LicenseKey = "regular" | "extended" | "team";
-
-const variants = [
-  { id: "regular" as LicenseKey, label: "Regular", description: "Use in one project for yourself or a single client.", seats: 1, priceMultiplier: 1 },
-  { id: "extended" as LicenseKey, label: "Extended", description: "Use on multiple projects, or for an entire client studio.", seats: 5, priceMultiplier: 2.6 },
-  { id: "team" as LicenseKey, label: "Team", description: "Unlimited seats and priority developer support for one year.", seats: 25, priceMultiplier: 4.2 }
-];
+type LicenseKey = LicenseId;
 
 interface ProductDetailProps {
   product: Product;
@@ -87,10 +83,16 @@ interface ProductDetailProps {
 
 export default function ProductDetail({ product }: ProductDetailProps) {
   const [licenseKey, setLicenseKey] = useState<LicenseKey>("regular");
-  const variant = variants.find((v) => v.id === licenseKey) ?? variants[0];
-  const finalPrice = Math.round(product.price * variant.priceMultiplier);
+  // ponytail: the three tiers now come from src/data/licenses.ts, which the
+  // Terms of Service and the /licensing page also read. They used to be
+  // defined here, in the FAQ, and (with only two of the three) in the terms.
+  const variant = LICENSE_TIERS.find((v) => v.id === licenseKey) ?? LICENSE_TIERS[0];
+  const finalPrice = licensePrice(product.price, licenseKey);
+  // ponytail: the bundle's reference price was a hardcoded $249 while the
+  // catalogue actually totals more than that — a false reference price. It is
+  // now the real sum of every product.
+  const bundleRetail = productsRetailTotal;
   const bundlePrice = 149;
-  const bundleRetail = 249;
   const bundleSavings = Math.round((1 - bundlePrice / bundleRetail) * 100);
 
   const [quantity, setQuantity] = useState(1);
@@ -111,9 +113,15 @@ export default function ProductDetail({ product }: ProductDetailProps) {
     window.setTimeout(() => setAdded(false), 1800);
   };
 
-  const related = products
-    .filter((p) => p.slug !== product.slug && p.category === product.category)
+  // ponytail: related products are now an explicit list, not a
+  // same-category slice. Two categories have exactly one product, so those
+  // two fell through to "the first four in the array" and their related
+  // block recommended unrelated plugins.
+  const related = product.relatedSlugs
+    .map((slug) => products.find((p) => p.slug === slug))
+    .filter((p): p is Product => Boolean(p))
     .slice(0, 4);
+  const categoryLabel = categoryBySlug(product.category)?.label ?? product.category;
 
   return (
     <article>
@@ -135,12 +143,15 @@ export default function ProductDetail({ product }: ProductDetailProps) {
               {product.tag}
             </p>
             <h1 className="mt-3 text-4xl font-black tracking-[-0.07em] text-ink sm:text-5xl">
-              {product.name}
+              {product.name} — {product.seoTitle}
             </h1>
             <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-ink-muted">
-              <Stars value={product.rating} count={product.reviewCount} size="md" />
+              {/* ponytail: the star rating was removed with the fabricated
+                  review counts ("4.8 - 232 reviews" for a product with no
+                  reviews). The real trust signal is the licence, the file
+                  size and the update promise. */}
               <span className="text-[11px] font-black uppercase tracking-[0.18em] text-ink-muted">
-                · 12-month support · v{product.version}
+                {product.version} · {product.fileSize} · {UPDATE_POLICY.short}
               </span>
             </div>
             <p className="mt-5 text-base leading-8 text-ink-muted">{product.longDescription}</p>
@@ -170,8 +181,8 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                 Choose a license
               </legend>
               <div className="space-y-3">
-                {variants.map((v) => {
-                  const variantPrice = Math.round(product.price * v.priceMultiplier);
+                {LICENSE_TIERS.map((v) => {
+                  const variantPrice = licensePrice(product.price, v.id);
                   const active = licenseKey === v.id;
                   return (
                     <label
@@ -200,7 +211,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                           </span>
                         </span>
                         <span className="mt-1 block text-xs text-ink-muted">
-                          {v.description} {v.seats > 1 ? `· ${v.seats} seats` : ""}
+                          {v.summary} {v.seats > 1 ? `· ${v.seats} seats` : ""}
                         </span>
                       </span>
                     </label>
@@ -245,7 +256,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                   </>
                 )}
               </Button>
-              <Button variant="secondary" href="/cart" className="w-full justify-center">
+              <Button variant="secondary" href="/cart/" className="w-full justify-center">
                 View cart
               </Button>
             </div>
@@ -266,8 +277,8 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                     <RefreshIcon />
                   </span>
                   <span>
-                    <strong className="block text-ink">Lifetime updates</strong>
-                    Receive every release within the major version, free forever.
+                    <strong className="block text-ink">{UPDATE_POLICY.short}</strong>
+                    {UPDATE_POLICY.sentence}
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
@@ -275,8 +286,8 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                     <ShieldIcon />
                   </span>
                   <span>
-                    <strong className="block text-ink">30-day refund</strong>
-                    Don't love it? Email within 30 days for a full refund.
+                    <strong className="block text-ink">{REFUND_POLICY.short}</strong>
+                    {REFUND_POLICY.sentence}
                   </span>
                 </li>
               </ul>
@@ -309,7 +320,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
 
       <Reveal delay={0.2}>
         <section className="mt-16 border-t border-line pt-10">
-          <h2 className="mb-6 text-2xl font-black tracking-[-0.06em] text-ink">Product details</h2>
+          <h2 className="mb-6 text-2xl font-black tracking-[-0.06em] text-ink">What&rsquo;s included in {product.name}</h2>
           <div className="border-t border-line">
             <Details title="Description" open>
               <p className="max-w-3xl text-sm leading-relaxed text-ink-muted">{product.longDescription}</p>
@@ -353,7 +364,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                   </tr>
                   <tr>
                     <th scope="row" className="py-2 text-left text-ink-muted">License</th>
-                    <td className="py-2 text-ink">Regular / Extended / Team</td>
+                    <td className="py-2 text-ink">{LICENSE_TIERS.map((t) => `${t.label} (${t.seats} seat${t.seats === 1 ? "" : "s"})`).join(" / ")}</td>
                   </tr>
                   <tr>
                     <th scope="row" className="py-2 text-left text-ink-muted">Category</th>
@@ -390,7 +401,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
             </Details>
             <Details title="Support & documentation">
               <p className="max-w-3xl text-sm text-ink-muted">
-                48-hour response on business days. A complete knowledge base ships with the download. Migration guides and example projects are linked from the README.
+                {SUPPORT_POLICY.response} A complete knowledge base ships with the download. Migration guides and example projects are linked from the README.
               </p>
             </Details>
             <Details title="Frequently asked questions">
@@ -425,24 +436,20 @@ export default function ProductDetail({ product }: ProductDetailProps) {
             <p className="text-xs font-black uppercase tracking-[0.18em] text-ink-muted">
               Customers also bought
             </p>
-            <h2 className="text-2xl font-black tracking-[-0.06em] text-ink">Related products</h2>
+            <h2 className="text-2xl font-black tracking-[-0.06em] text-ink">
+              More {categoryLabel.toLowerCase()} like {product.name}
+            </h2>
           </div>
           <a
-            href="/store"
+            href="/store/"
             className="text-xs font-black uppercase tracking-[0.18em] text-ink-muted transition hover:text-accent"
           >
             View all →
           </a>
         </div>
-        {related.length > 0 ? (
+        {related.length > 0 && (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {related.map((item) => (
-              <ProductCard key={item.slug} product={item} />
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {products.filter((p) => p.slug !== product.slug).slice(0, 4).map((item) => (
               <ProductCard key={item.slug} product={item} />
             ))}
           </div>
@@ -454,11 +461,11 @@ export default function ProductDetail({ product }: ProductDetailProps) {
           Ready to ship {product.name}?
         </h2>
         <p className="mt-2 text-sm text-ink-muted">
-          Instant download. Lifetime updates. 30-day refund.
+          Instant download. {UPDATE_POLICY.short}. {REFUND_POLICY.short}.
         </p>
         <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Button onClick={handleAdd}>Add to cart · ${finalPrice * quantity}</Button>
-          <Button variant="secondary" href="/store">Keep browsing</Button>
+          <Button variant="secondary" href="/store/">Keep browsing</Button>
         </div>
       </section>
     </article>

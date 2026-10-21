@@ -14,13 +14,6 @@ function Notify({ message, type, onDone }: { message: string; type?: "success" |
   return <p role="status" className={`rounded-2xl border px-5 py-3 text-sm font-bold ${cls}`}>{message}</p>;
 }
 
-function StarIcon() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" className="h-3 w-3 text-amber-400">
-      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-    </svg>
-  );
-}
 
 function LoginGate({ onAuth }: { onAuth: () => void }) {
   const [email, setEmail] = useState("");
@@ -80,9 +73,7 @@ function ProductForm({ product, onSave, onCancel }: { product: Product; onSave: 
       features: form.features.split("\n").map((s) => s.trim()).filter(Boolean),
       compatibility: form.compatibility.split("\n").map((s) => s.trim()).filter(Boolean),
       highlights: [{ label: "Updated", value: "now" }],
-      price: Number(form.price) || 0,
-      rating: Number(form.rating) || 0,
-      reviewCount: Number(form.reviewCount) || 0
+      price: Math.max(0, Math.round(Number(form.price) || 0))
     });
   };
 
@@ -198,7 +189,7 @@ function ProductsTab() {
       {notify && <Notify message={notify.message} type={notify.type} onDone={() => setNotify(null)} />}
 
       {(adding || editProduct) && (
-        <ProductForm product={editProduct || { slug: "", name: "", category: "plugins", tag: "New", description: "", longDescription: "", price: 0, features: [], compatibility: [], version: "v1.0.0", fileSize: "1 MB", gradient: "linear-gradient(135deg, #8e99a8 0%, #3d4654 100%)", highlights: [], rating: 0, reviewCount: 0 }}
+        <ProductForm product={editProduct || { slug: "", name: "", category: "plugins", tag: "New", description: "", longDescription: "", seoTitle: "", price: 0, features: [], compatibility: [], version: "v1.0.0", fileSize: "1 MB", gradient: "linear-gradient(135deg, #8e99a8 0%, #3d4654 100%)", highlights: [], relatedSlugs: [], lastUpdated: "" }}
           onSave={handleSave} onCancel={() => { setAdding(false); setEditProduct(null); }} />
       )}
 
@@ -220,7 +211,6 @@ function ProductsTab() {
                     <span className="font-mono">{p.slug}</span>
                     <span>·</span>
                     <span className="capitalize">{p.category}</span>
-                    {p.rating > 0 && <><span>·</span><span className="inline-flex items-center gap-0.5"><StarIcon />{p.rating.toFixed(1)}</span></>}
                   </p>
                 </div>
               </div>
@@ -251,7 +241,7 @@ function CategoriesTab() {
 
   const startEdit = (c: Category) => { setEditSlug(c.slug); setForm({ slug: c.slug, name: c.name, description: c.description }); };
   const saveEdit = () => { if (!editSlug) return; updateCategory(editSlug, { name: form.name, description: form.description }); setEditSlug(null); setNotify({ message: "Category updated." }); refresh(); };
-  const saveNew = () => { if (!form.slug || !form.name) return; addCategory({ slug: form.slug, name: form.name, tagline: "", description: form.description }); setAdding(false); setNotify({ message: "Category created." }); refresh(); };
+  const saveNew = () => { if (!form.slug || !form.name) return; addCategory({ slug: form.slug, name: form.name, label: form.name, tagline: "", description: form.description }); setAdding(false); setNotify({ message: "Category created." }); refresh(); };
   const handleDelete = (slug: string) => { if (!window.confirm(`Delete category "${slug}"?`)) return; deleteCategory(slug); setNotify({ message: "Category removed." }); refresh(); };
 
   return (

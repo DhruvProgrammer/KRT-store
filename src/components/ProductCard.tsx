@@ -2,7 +2,6 @@ import { useState } from "react";
 import type { Product } from "../data/products";
 import { cart } from "../lib/cart";
 import Reveal from "./Reveal";
-import Stars from "./Stars";
 import TrustMicroBar from "./TrustMicroBar";
 
 function PlusIcon() {
@@ -61,17 +60,23 @@ export default function ProductCard({ product }: ProductCardProps) {
         <div className="flex flex-1 flex-col p-5 pt-4">
           <div className="flex items-center justify-between">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-ink-muted">{product.tag}</p>
-            <Stars value={product.rating} count={product.reviewCount} size="sm" />
+            {/* ponytail: the star rating was removed with the fabricated review
+                counts. It rendered "4.8 - 232 reviews" for a product with no
+                reviews behind it. */}
+            <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-ink-muted">
+              {product.version}
+            </span>
           </div>
           <h3 className="mt-2 flex items-baseline text-xl font-black tracking-[-0.04em] text-ink transition-colors group-hover:text-accent">
+            {/* ponytail: the visible product name is the anchor text. It used
+                to be aria-hidden, so Google's link text for all 12 products was
+                "View Clarity" instead of "Clarity". */}
             <a
-              href={`/store/${product.slug}`}
+              href={`/store/${product.slug}/`}
               className="absolute inset-0 z-0"
-              aria-label={`View ${product.name}`}
             >
-              <span className="sr-only">View {product.name}</span>
+              <span>{product.name}</span>
             </a>
-            <span aria-hidden="true">{product.name}</span>
           </h3>
           <p className="mt-2 flex-1 text-sm leading-7 text-ink-muted">{product.description}</p>
 

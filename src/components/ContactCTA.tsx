@@ -35,8 +35,8 @@ export default function ContactCTA() {
                 </ul>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
-                <Button href="/store">Browse the store</Button>
-                <Button variant="secondary" href="/extras">
+                <Button href="/store/">Browse the store</Button>
+                <Button variant="secondary" href="/extras/">
                   Free extras
                 </Button>
               </div>

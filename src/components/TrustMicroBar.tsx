@@ -1,3 +1,5 @@
+import { REFUND_POLICY, UPDATE_POLICY } from "../data/policy";
+
 interface TrustMicroBarProps {
   variant?: "compact" | "full";
 }
@@ -45,7 +47,7 @@ export default function TrustMicroBar({ variant = "compact" }: TrustMicroBarProp
         <span aria-hidden="true" className="opacity-30">·</span>
         <span className="inline-flex items-center gap-1">
           <ShieldIcon />
-          30-day
+          {REFUND_POLICY.windowDays}-day
         </span>
       </div>
     );
@@ -63,11 +65,11 @@ export default function TrustMicroBar({ variant = "compact" }: TrustMicroBarProp
       </li>
       <li className={baseClass}>
         <RefreshIcon />
-        Lifetime updates
+        {UPDATE_POLICY.short}
       </li>
       <li className={baseClass}>
         <ShieldIcon />
-        30-day refund
+        {REFUND_POLICY.short}
       </li>
     </ul>
   );

@@ -2,20 +2,52 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Navigation from "../components/Navigation.astro";
 import Footer from "../components/Footer";
+import Breadcrumbs from "../components/Breadcrumbs.astro";
 import ExtrasFilter from "../components/ExtrasFilter";
 import { extras } from "../data/extras";
+import { pageTitle } from "../data/seo";
 
-const title = "Extras — KRT store";
-const description = "Cheatsheets, starter files, icon batches, and small free tools from KRT store. No account required.";
+const title = pageTitle("Free Swatches, Icons, Starters & Checklists");
+const description =
+  "Free cheatsheets, colour swatches, starter files, icon packs, and small design tools from KRT store. Always free, no signup, no email gate.";
+
+const siteUrl = (import.meta.env.SITE || Astro.url.origin).replace(/\/+$/, "");
+
+// ponytail: same as the store listing — the ItemList order must match the
+// order the grid renders, which is grouped by type (the types appear in the
+// order the items array first introduces them).
+const extraTypes = Array.from(new Set(extras.map((item) => item.category)));
+const renderedOrder = extraTypes.flatMap((type) =>
+  extras.filter((item) => item.category === type)
+);
+
+const itemListSchema = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  name: "KRT store — free extras",
+  numberOfItems: renderedOrder.length,
+  itemListElement: renderedOrder.map((item, index) => ({
+    "@type": "ListItem",
+    position: index + 1,
+    url: new URL(`/extras/${item.slug}/`, `${siteUrl}/`).href,
+    name: item.name
+  }))
+};
+
+const ldJson = (data: unknown) => JSON.stringify(data).replace(/</g, "\\u003c");
 ---
 
-<BaseLayout title={title} description={description}>
+<BaseLayout title={title} description={description} image="/og.png">
   <Navigation />
   <main id="main">
     <header class="container mx-auto border-b border-line px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+      <Breadcrumbs
+        class="mb-6"
+        items={[{ label: "Home", href: "/" }, { label: "Extras" }]}
+      />
       <p class="mb-3 text-xs font-black uppercase tracking-[0.28em] text-accent">Extras</p>
       <h1 class="max-w-3xl text-4xl font-black tracking-[-0.06em] text-ink sm:text-6xl">
-        Free tools, guides, and swatches.
+        Free tools, guides, and swatches. Free design extras for designers.
       </h1>
       <p class="mt-4 max-w-2xl text-base leading-7 text-ink-muted sm:text-lg">
         Small things we've made and want out in the world. No email gate.
@@ -31,5 +63,8 @@ const description = "Cheatsheets, starter files, icon batches, and small free to
 
     <ExtrasFilter client:load items={extras} />
   </main>
+
+  <script type="application/ld+json" set:html={ldJson(itemListSchema)} is:inline></script>
+
   <Footer client:load />
 </BaseLayout>

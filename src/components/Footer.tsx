@@ -1,9 +1,12 @@
+// ponytail: trailing slashes everywhere, because astro.config.mjs sets
+// trailingSlash: "always" — an internal link to "/store" would 301 to
+// "/store/" on every click and point the crawler at a non-canonical URL.
 const linkGroups = [
   {
     title: "Shop",
     links: [
-      { href: "/store", label: "Store" },
-      { href: "/extras", label: "Free extras" },
+      { href: "/store/", label: "Store" },
+      { href: "/extras/", label: "Free extras" },
       { href: "/", label: "Home" }
     ]
   },
@@ -18,20 +21,19 @@ const linkGroups = [
   {
     title: "Account",
     links: [
-      { href: "/login", label: "Sign in" },
-      { href: "/signup", label: "Create account" },
-      { href: "/profile", label: "Profile" },
-      { href: "/settings", label: "Settings" },
-      { href: "/cart", label: "Cart" }
+      { href: "/login/", label: "Sign in" },
+      { href: "/signup/", label: "Create account" },
+      { href: "/profile/", label: "Profile" },
+      { href: "/settings/", label: "Settings" },
+      { href: "/cart/", label: "Cart" }
     ]
   },
   {
     title: "Company",
     links: [
-      { href: "/#contact", label: "About KRT store" },
-      { href: "/privacy", label: "Privacy" },
-      { href: "/terms", label: "Terms of service" },
-      { href: "/admin", label: "Admin" }
+      { href: "/licensing/", label: "Licensing" },
+      { href: "/privacy/", label: "Privacy" },
+      { href: "/terms/", label: "Terms of service" }
     ]
   }
 ];
@@ -53,7 +55,7 @@ export default function Footer() {
           </a>
           <p className="mt-5 max-w-xs text-sm leading-7 text-ink-muted">
             Premium plugins, templates, and design assets crafted for designers and engineers who care about
-            craft. Pay once, own forever, update free.
+            craft. Pay once, own forever, updates included.
           </p>
         </div>
 
@@ -77,8 +79,8 @@ export default function Footer() {
         <div className="container mx-auto flex flex-col gap-3 px-4 py-6 text-xs text-ink-muted sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <p>© 2026 KRT store. Crafted with Inter, Tailwind, and Astro.</p>
           <div className="flex flex-wrap gap-x-5 gap-y-2">
-            <a href="/privacy" className="transition hover:text-ink">Privacy</a>
-            <a href="/terms" className="transition hover:text-ink">Terms</a>
+            <a href="/privacy/" className="transition hover:text-ink">Privacy</a>
+            <a href="/terms/" className="transition hover:text-ink">Terms</a>
             <a href="/#contact" className="transition hover:text-ink">Contact</a>
           </div>
         </div>

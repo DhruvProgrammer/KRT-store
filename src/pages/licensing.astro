@@ -1,0 +1,96 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Navigation from "../components/Navigation.astro";
+import Footer from "../components/Footer";
+import Breadcrumbs from "../components/Breadcrumbs.astro";
+import { LICENSE_TIERS } from "../data/licenses";
+import { REFUND_POLICY, UPDATE_POLICY } from "../data/policy";
+import { pageTitle } from "../data/seo";
+
+// ponytail: three licence tiers were sold on the product page, defined in the
+// Terms of Service, and explained NOWHERE. A customer paying 4.2x for "Team"
+// had no definition of what they bought. This page and the Terms of Service
+// now read the same file.
+const title = pageTitle("License Tiers: Regular, Extended & Team");
+const description =
+  "How KRT store licences work: Regular for one project, Extended for studios and client work, Team for 25 seats. One purchase, free updates, 30-day refund.";
+---
+
+<BaseLayout title={title} description={description} image="/og.png">
+  <Navigation />
+  <main id="main" class="container mx-auto px-4 pt-6 pb-20 sm:px-6 lg:px-8">
+    <Breadcrumbs
+      class="mb-6"
+      items={[{ label: "Home", href: "/" }, { label: "Licensing" }]}
+    />
+
+    <header class="mb-12 border-b border-line pb-10">
+      <p class="mb-3 text-xs font-black uppercase tracking-[0.28em] text-accent">Licensing</p>
+      <h1 class="max-w-3xl text-4xl font-black tracking-[-0.06em] text-ink sm:text-6xl">
+        Licence tiers: Regular, Extended &amp; Team
+      </h1>
+      <p class="mt-5 max-w-2xl text-base leading-8 text-ink-muted sm:text-lg">
+        Every product is sold with a licence tier. You choose the tier on the product page before
+        you buy, and the same rules apply to every plugin, template, design system, icon pack, and
+        learning kit in the store.
+      </p>
+    </header>
+
+    <section class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {
+        LICENSE_TIERS.map((tier) => (
+          <article class="rounded-3xl border border-line bg-surface/70 p-7 shadow-soft">
+            <h2 class="text-2xl font-black tracking-[-0.04em] text-ink">{tier.label}</h2>
+            <p class="mt-1 text-sm font-black uppercase tracking-[0.18em] text-accent">
+              {tier.seats} seat{tier.seats === 1 ? "" : "s"}
+            </p>
+            <p class="mt-4 text-sm leading-7 text-ink-muted">{tier.permits}</p>
+          </article>
+        ))
+      }
+    </section>
+
+    <section class="mt-16">
+      <h2 class="text-2xl font-black tracking-[-0.05em] text-ink sm:text-3xl">
+        How updates and refunds work
+      </h2>
+      <div class="mt-6 space-y-5">
+        <div class="rounded-3xl border border-line bg-surface/70 p-6">
+          <h3 class="text-lg font-black text-ink">{UPDATE_POLICY.short}</h3>
+          <p class="mt-2 text-sm leading-7 text-ink-muted">{UPDATE_POLICY.terms}</p>
+        </div>
+        <div class="rounded-3xl border border-line bg-surface/70 p-6">
+          <h3 class="text-lg font-black text-ink">{REFUND_POLICY.short}</h3>
+          <p class="mt-2 text-sm leading-7 text-ink-muted">{REFUND_POLICY.terms}</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="mt-16">
+      <h2 class="text-2xl font-black tracking-[-0.05em] text-ink sm:text-3xl">
+        What you can&rsquo;t do with any licence
+      </h2>
+      <ul class="mt-6 space-y-3 text-sm leading-7 text-ink-muted">
+        <li class="flex items-start gap-3">
+          <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent"></span>
+          Resell or redistribute the product as-is.
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent"></span>
+          Publish the source files publicly.
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent"></span>
+          Claim authorship of the product.
+        </li>
+      </ul>
+      <p class="mt-6 text-sm text-ink-muted">
+        The full licence text ships with every download and is binding alongside this summary. See
+        the <a href="/terms/" class="font-black text-accent underline-offset-2 hover:underline">Terms of Service</a> for
+        the complete terms.
+      </p>
+    </section>
+  </main>
+
+  <Footer client:load />
+</BaseLayout>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Product } from "../data/products";
 import type { Category } from "../data/categories";
 import ProductCard from "./ProductCard";
@@ -8,19 +8,52 @@ interface ShopFilterProps {
   categories: Category[];
 }
 
-type SortKey = "featured" | "price-asc" | "price-desc" | "rating";
+// ponytail: the "Highest rated" sort was removed with the fabricated ratings.
+// The list is no longer a ranking by review count, and a sort that promises
+// a ranking the data does not support is worse than no sort at all.
+type SortKey = "featured" | "price-asc" | "price-desc";
 
 const sortOptions: { value: SortKey; label: string }[] = [
   { value: "featured", label: "Featured" },
-  { value: "rating", label: "Highest rated" },
   { value: "price-asc", label: "Price: low to high" },
   { value: "price-desc", label: "Price: high to low" }
 ];
 
 export default function ShopFilter({ products, categories }: ShopFilterProps) {
+  // ponytail: the state is seeded from the URL so the search results and the
+  // category filter are LINKABLE, and so the SearchAction in the WebSite
+  // schema (target /store?q=...) actually works. It used to point at a
+  // parameter nothing read, so every ?q= URL was a dead end.
+  //
+  // The URL is read in an effect, NOT in the useState initialiser: the server
+  // has no window, so an initialiser that reads window.location makes the
+  // server-rendered HTML disagree with the first client render and React
+  // throws a hydration mismatch (error #418).
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("featured");
+  const [hydrated, setHydrated] = useState(false);
+
+  // Adopt the incoming deep link after mount.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setSearch(params.get("q") ?? "");
+    setActiveCategory(params.get("category"));
+    setHydrated(true);
+  }, []);
+
+  // Mirror the state back to the URL so the current view can be shared.
+  // Gated on `hydrated`, otherwise this effect would immediately erase the
+  // deep link the mount effect just read.
+  useEffect(() => {
+    if (!hydrated) return;
+    const params = new URLSearchParams();
+    if (search.trim()) params.set("q", search.trim());
+    if (activeCategory) params.set("category", activeCategory);
+    const query = params.toString();
+    const url = query ? `/store/?${query}` : "/store/";
+    window.history.replaceState(null, "", url);
+  }, [search, activeCategory, hydrated]);
 
   const filtered = useMemo(() => {
     let list = products;
@@ -30,6 +63,7 @@ export default function ShopFilter({ products, categories }: ShopFilterProps) {
         (p) =>
           p.name.toLowerCase().includes(q) ||
           p.description.toLowerCase().includes(q) ||
+          p.longDescription.toLowerCase().includes(q) ||
           p.tag.toLowerCase().includes(q) ||
           p.category.toLowerCase().includes(q)
       );
@@ -41,9 +75,30 @@ export default function ShopFilter({ products, categories }: ShopFilterProps) {
     const sorted = [...list];
     if (sortKey === "price-asc") sorted.sort((a, b) => a.price - b.price);
     else if (sortKey === "price-desc") sorted.sort((a, b) => b.price - a.price);
-    else if (sortKey === "rating") sorted.sort((a, b) => b.rating - a.rating);
     return sorted;
   }, [search, activeCategory, sortKey, products]);
+
+  // ponytail: the listing page used to be ONE flat grid with no <h2> at all —
+  // so the two pages that should own the head terms ("design plugins", "UI
+  // kits") had a single keyword-free heading. Grouping by category adds five
+  // keyword-bearing H2 sections and puts the category copy (which was already
+  // in the data model but never rendered) to work.
+  const groups = useMemo(() => {
+    const byCategory = new Map<string, Product[]>();
+    for (const product of filtered) {
+      const bucket = byCategory.get(product.category) ?? [];
+      bucket.push(product);
+      byCategory.set(product.category, bucket);
+    }
+    return categories
+      .filter((c) => byCategory.has(c.slug))
+      .map((c) => ({ category: c, items: byCategory.get(c.slug) ?? [] }));
+  }, [filtered, categories]);
+
+  const reset = () => {
+    setActiveCategory(null);
+    setSearch("");
+  };
 
   return (
     <section className="container mx-auto px-4 pb-20 sm:px-6 lg:px-8">
@@ -101,10 +156,7 @@ export default function ShopFilter({ products, categories }: ShopFilterProps) {
 
           <button
             type="button"
-            onClick={() => {
-              setActiveCategory(null);
-              setSearch("");
-            }}
+            onClick={reset}
             className="inline-flex min-h-[44px] items-center rounded-xl px-3 text-xs font-black uppercase tracking-[0.2em] text-ink-muted transition hover:text-accent"
           >
             Reset
@@ -140,19 +192,33 @@ export default function ShopFilter({ products, categories }: ShopFilterProps) {
               </p>
               <button
                 type="button"
-                onClick={() => {
-                  setActiveCategory(null);
-                  setSearch("");
-                }}
+                onClick={reset}
                 className="mt-6 inline-flex items-center justify-center rounded-full bg-accent px-5 py-2.5 text-sm font-black text-white shadow-[0_0_22px_rgba(0,162,255,0.35)] transition hover:bg-accent-bright"
               >
                 Reset
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {filtered.map((product) => (
-                <ProductCard key={product.slug} product={product} />
+            <div className="space-y-12">
+              {groups.map(({ category, items }) => (
+                <section key={category.slug} aria-labelledby={`cat-${category.slug}`}>
+                  <div className="mb-5 border-b border-line pb-4">
+                    <h2
+                      id={`cat-${category.slug}`}
+                      className="text-2xl font-black tracking-[-0.04em] text-ink sm:text-3xl"
+                    >
+                      {category.name}
+                    </h2>
+                    <p className="mt-2 max-w-2xl text-sm leading-7 text-ink-muted">
+                      {category.tagline}. {category.description}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                    {items.map((product) => (
+                      <ProductCard key={product.slug} product={product} />
+                    ))}
+                  </div>
+                </section>
               ))}
             </div>
           )}

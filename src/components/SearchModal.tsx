@@ -173,17 +173,17 @@ export default function SearchModal({
                 <p className="text-[11px] font-black uppercase tracking-[0.24em] text-ink-muted">Quick links</p>
                 <ul className="mt-3 space-y-2 text-sm">
                   <li>
-                    <a href="/store" onClick={close} className="text-ink transition hover:text-accent">
+                    <a href="/store/" onClick={close} className="text-ink transition hover:text-accent">
                       Browse the store →
                     </a>
                   </li>
                   <li>
-                    <a href="/extras" onClick={close} className="text-ink transition hover:text-accent">
+                    <a href="/extras/" onClick={close} className="text-ink transition hover:text-accent">
                       Browse free extras →
                     </a>
                   </li>
                   <li>
-                    <a href="/cart" onClick={close} className="text-ink transition hover:text-accent">
+                    <a href="/cart/" onClick={close} className="text-ink transition hover:text-accent">
                       View cart →
                     </a>
                   </li>
@@ -213,7 +213,7 @@ export default function SearchModal({
                     {storeResults.map((r) => (
                       <li key={`store-${r.slug}`}>
                         <a
-                          href={`/store/${r.slug}`}
+                          href={`/store/${r.slug}/`}
                           onClick={close}
                           className="block rounded-xl border border-line/0 bg-surface/40 px-4 py-3 transition hover:border-accent/30 hover:bg-surface/80"
                         >
@@ -235,7 +235,7 @@ export default function SearchModal({
                     {extrasResults.map((r) => (
                       <li key={`extras-${r.slug}`}>
                         <a
-                          href={`/extras/${r.slug}`}
+                          href={`/extras/${r.slug}/`}
                           onClick={close}
                           className="block rounded-xl border border-line/0 bg-surface/40 px-4 py-3 transition hover:border-accent/30 hover:bg-surface/80"
                         >

@@ -2,15 +2,19 @@
 import SearchModal, { type SearchProduct, type SearchExtra } from "./SearchModal";
 import { products } from "../data/products";
 import { extras } from "../data/extras";
+import { REFUND_POLICY, UPDATE_POLICY } from "../data/policy";
 
 const links = [
   { href: "/", label: "Home" },
-  { href: "/store", label: "Store" },
-  { href: "/extras", label: "Extras" },
+  { href: "/store/", label: "Store" },
+  { href: "/extras/", label: "Extras" },
   { href: "/#contact", label: "Contact" }
 ];
 
-const announcement = "Free updates for life · 30-day refund";
+// ponytail: the announcement is generated from the shared policy so it cannot
+// drift from the terms. It used to say "Free updates for life" while the
+// contract said "within the same major version".
+const announcement = `${UPDATE_POLICY.short} · ${REFUND_POLICY.short}`;
 
 const searchProducts: SearchProduct[] = products.map((p) => ({
   slug: p.slug,
@@ -37,7 +41,7 @@ const searchExtras: SearchExtra[] = extras.map((e) => ({
         <span class="truncate">{announcement}</span>
       </p>
       <div class="hidden items-center gap-4 sm:flex">
-        <a href="/store" class="transition hover:text-ink">Browse store</a>
+        <a href="/store/" class="transition hover:text-ink">Browse store</a>
         <span aria-hidden="true" class="opacity-30">·</span>
         <a href="/#contact" class="transition hover:text-ink">Contact</a>
       </div>
@@ -66,7 +70,7 @@ const searchExtras: SearchExtra[] = extras.map((e) => ({
     {/* DESKTOP header buttons */}
     <div class="hidden items-center gap-2 md:flex">
       <a
-        href="/login"
+        href="/login/"
         class="inline-flex h-11 items-center gap-2 rounded-full border border-line bg-surface-ink px-4 text-xs font-bold text-ink-muted transition hover:border-accent/40 hover:bg-surface-bright hover:text-ink"
       >
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="h-4 w-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -94,7 +98,7 @@ const searchExtras: SearchExtra[] = extras.map((e) => ({
       </button>
 
       <a
-        href="/cart"
+        href="/cart/"
         aria-label="Open cart"
         class="relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-surface-ink text-ink transition hover:border-accent/40 hover:bg-surface-bright"
       >
@@ -110,7 +114,7 @@ const searchExtras: SearchExtra[] = extras.map((e) => ({
       </a>
 
       <a
-        href="/store"
+        href="/store/"
         class="hidden items-center gap-2 rounded-full bg-accent px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-white shadow-[0_0_22px_rgba(0,162,255,0.35)] transition hover:bg-accent-bright hover:shadow-[0_0_30px_rgba(0,162,255,0.55)] md:inline-flex"
       >
         Shop now
@@ -120,7 +124,7 @@ const searchExtras: SearchExtra[] = extras.map((e) => ({
     {/* MOBILE header buttons */}
     <div class="flex items-center gap-1 md:hidden">
       <a
-        href="/login"
+        href="/login/"
         class="hidden h-11 items-center gap-1.5 rounded-full px-3 text-xs font-bold text-ink-muted transition hover:text-ink sm:inline-flex"
       >
         Sign in
@@ -140,7 +144,7 @@ const searchExtras: SearchExtra[] = extras.map((e) => ({
       </button>
 
       <a
-        href="/cart"
+        href="/cart/"
         aria-label="Open cart"
         class="relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-surface-ink text-ink transition hover:border-accent/40 hover:bg-surface-bright"
       >
@@ -196,27 +200,27 @@ const searchExtras: SearchExtra[] = extras.map((e) => ({
     <nav class="flex flex-col gap-1 px-3 py-2" aria-label="Mobile primary">
       <p class="px-3 pt-3 pb-2 text-[11px] font-black uppercase tracking-[0.2em] text-ink-muted">Browse</p>
       <a href="/" class="block rounded-xl px-4 py-3 text-base font-semibold text-ink transition hover:bg-surface">Home</a>
-      <a href="/store" class="block rounded-xl px-4 py-3 text-base font-semibold text-ink transition hover:bg-surface">Store</a>
-      <a href="/extras" class="block rounded-xl px-4 py-3 text-base font-semibold text-ink transition hover:bg-surface">Extras</a>
+      <a href="/store/" class="block rounded-xl px-4 py-3 text-base font-semibold text-ink transition hover:bg-surface">Store</a>
+      <a href="/extras/" class="block rounded-xl px-4 py-3 text-base font-semibold text-ink transition hover:bg-surface">Extras</a>
       <a href="/#contact" class="block rounded-xl px-4 py-3 text-base font-semibold text-ink transition hover:bg-surface">Contact</a>
 
       <p class="px-3 pt-5 pb-2 text-[11px] font-black uppercase tracking-[0.2em] text-ink-muted">Account</p>
-      <a href="/login" class="block rounded-xl px-4 py-3 text-base font-semibold text-ink transition hover:bg-surface">Sign in</a>
-      <a href="/signup" class="block rounded-xl px-4 py-3 text-base font-semibold text-ink transition hover:bg-surface">Create account</a>
-      <a href="/profile" class="block rounded-xl px-4 py-3 text-base font-semibold text-ink transition hover:bg-surface">Profile</a>
-      <a href="/settings" class="block rounded-xl px-4 py-3 text-base font-semibold text-ink transition hover:bg-surface">Settings</a>
-      <a href="/cart" class="block rounded-xl px-4 py-3 text-base font-semibold text-ink transition hover:bg-surface">Cart</a>
+      <a href="/login/" class="block rounded-xl px-4 py-3 text-base font-semibold text-ink transition hover:bg-surface">Sign in</a>
+      <a href="/signup/" class="block rounded-xl px-4 py-3 text-base font-semibold text-ink transition hover:bg-surface">Create account</a>
+      <a href="/profile/" class="block rounded-xl px-4 py-3 text-base font-semibold text-ink transition hover:bg-surface">Profile</a>
+      <a href="/settings/" class="block rounded-xl px-4 py-3 text-base font-semibold text-ink transition hover:bg-surface">Settings</a>
+      <a href="/cart/" class="block rounded-xl px-4 py-3 text-base font-semibold text-ink transition hover:bg-surface">Cart</a>
 
-      <a href="/store" class="mt-4 block rounded-xl bg-accent px-4 py-3 text-center text-base font-bold text-white shadow-[0_0_22px_rgba(0,162,255,0.35)] transition hover:bg-accent-bright">
+      <a href="/store/" class="mt-4 block rounded-xl bg-accent px-4 py-3 text-center text-base font-bold text-white shadow-[0_0_22px_rgba(0,162,255,0.35)] transition hover:bg-accent-bright">
         Browse store
       </a>
     </nav>
 
     <div class="mt-auto border-t border-line/60 px-4 py-3">
       <div class="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] font-bold uppercase tracking-[0.18em] text-ink-muted">
-        <a href="/privacy" class="transition hover:text-ink">Privacy</a>
+        <a href="/privacy/" class="transition hover:text-ink">Privacy</a>
         <span aria-hidden="true" class="opacity-30">·</span>
-        <a href="/terms" class="transition hover:text-ink">Terms</a>
+        <a href="/terms/" class="transition hover:text-ink">Terms</a>
         <span aria-hidden="true" class="opacity-30">·</span>
         <a href="/#contact" class="transition hover:text-ink">Contact</a>
       </div>

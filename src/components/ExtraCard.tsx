@@ -15,7 +15,7 @@ export default function ExtraCard({ item }: { item: ExtraItem }) {
   return (
     <Reveal className="flex w-full">
       <a
-        href={`/extras/${item.slug}`}
+        href={`/extras/${item.slug}/`}
         className="group flex w-full flex-col overflow-hidden rounded-[1.25rem] border border-line bg-surface/70 shadow-soft transition duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-[0_0_28px_rgba(0,162,255,0.18)]"
       >
         <article className="flex flex-1 flex-col">

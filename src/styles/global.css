@@ -308,3 +308,75 @@ label {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Scroll reveal — CSS-only entrance animation (replaces framer-motion).
+
+   The animation is driven by the CSS `view()` scroll timeline, so it needs
+   no JavaScript and no animation library: the markup ships *visible* and the
+   browser fades the element in as it enters the viewport.
+
+   How it behaves (verified in Chrome 14x):
+   - `animation-range-start: entry <delay>%` — the fade starts when the
+     element's top edge reaches the bottom of the viewport.
+   - `animation-range-end: entry 100%` — the element is fully revealed once
+     it has entered the viewport.
+   - The `40%` keyframe means the fade is already finished 40% into the
+     entry range, so anything that is on screen when the page loads (or that
+     is taller than the viewport, e.g. the legal pages) paints fully opaque
+     instead of sitting at a partial opacity.
+   - Elements that are still below the fold start at `opacity: 0` and fade in
+     as they scroll in — the original reveal effect.
+
+   Fallbacks (all of them show the content, never hide it):
+   - Browsers without scroll-driven animation support: no animation at all.
+   - `prefers-reduced-motion: reduce`: no movement, fully visible.
+   - No JavaScript: fully visible (the `scripting: none` safety net).
+--------------------------------------------------------------------------- */
+
+[data-reveal] {
+  /* Default so `animation-range-start` never resolves to an invalid value. */
+  --reveal-delay: 0%;
+}
+
+@keyframes reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  40% {
+    opacity: 1;
+    transform: none;
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@supports (animation-timeline: view()) {
+  [data-reveal] {
+    animation: reveal-in cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-timeline: view();
+    animation-range-start: entry var(--reveal-delay);
+    animation-range-end: entry 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* Safety net: without scripting the reveal must never leave content hidden. */
+@media (scripting: none) {
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
