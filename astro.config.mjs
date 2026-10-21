@@ -84,12 +84,31 @@ function resolveSiteUrl(raw, { strict }) {
 const rawSiteUrl = process.env.PUBLIC_SITE_URL;
 const siteUrl = resolveSiteUrl(rawSiteUrl, { strict: process.argv.includes("build") });
 
-// ponytail: fail the build if PUBLIC_API_URL is missing or insecure. Catches
-// the "http://localhost:3001 leaked into production" footgun — that URL hits
-// the visitor's own machine (or a DNS-hijacked resolver), and the previous
-// build silently shipped it because the fallback `|| "http://localhost:3001"`
-// in AuthForm/CheckoutForm masked the missing env var on Netlify.
+// ponytail: fail the build if PUBLIC_API_URL is missing, and fail a
+// PRODUCTION build if it is insecure.
+//
+// The insecure check used to run on every build, which meant "npm run build"
+// could not run locally at all: the project's own .env has
+// PUBLIC_API_URL=http://localhost:3001, which is exactly the value the
+// check rejected. The check exists to catch "http://localhost:3001 leaked
+// into production" -- that URL hits the visitor's own machine (or a
+// DNS-hijacked resolver), and the previous build silently shipped it
+// because the fallback "|| http://localhost:3001" in AuthForm/CheckoutForm
+// masked the missing env var on Netlify.
+//
+// So it is now a production gate. Netlify sets CONTEXT=production and
+// NETLIFY=true in the build environment, so the deploy is still guarded; a
+// local build points at the local gateway and is allowed to.
+//
+// NODE_ENV is deliberately NOT the signal: Astro sets NODE_ENV=production
+// before it evaluates this config, so it is "production" for a local build
+// too and it says nothing about where the build is going.
 const isBuildCommand = process.argv.includes("build");
+const isProductionBuild =
+  isBuildCommand &&
+  (process.env.CONTEXT === "production" ||
+    process.env.NETLIFY === "true" ||
+    process.env.PRODUCTION_BUILD === "true");
 if (isBuildCommand) {
   const apiUrl = process.env.PUBLIC_API_URL;
   if (!apiUrl) {
@@ -98,7 +117,7 @@ if (isBuildCommand) {
       "Example: PUBLIC_API_URL=https://api.example.com"
     );
   }
-  if (apiUrl.includes("localhost") || apiUrl.startsWith("http://")) {
+  if (isProductionBuild && (apiUrl.includes("localhost") || apiUrl.startsWith("http://"))) {
     throw new Error(
       `PUBLIC_API_URL is insecure ("${apiUrl}"). Production must be https:// and must not be localhost.`
     );

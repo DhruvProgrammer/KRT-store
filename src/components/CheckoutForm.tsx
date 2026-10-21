@@ -162,6 +162,11 @@ export default function CheckoutForm() {
   const [otpResendCooldown, setOtpResendCooldown] = useState(0);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  // ponytail: the code-sending flow gets its OWN error. It used to share
+  // the submit error, which renders next to the PAY button at the bottom of
+  // the form -- so a failed send showed nothing next to the button that was
+  // clicked, and the button looked broken.
+  const [emailError, setEmailError] = useState("");
 
   useEffect(() => {
     if (otpResendCooldown > 0) {
@@ -179,7 +184,7 @@ export default function CheckoutForm() {
   const sendCode = async () => {
     if (!isValidEmail) return;
     setLoading(true);
-    setErrorMessage("");
+    setEmailError("");
     try {
       const res = await fetch(`${API_URL}/api/auth/send-otp`, {
         method: "POST",
@@ -194,7 +199,7 @@ export default function CheckoutForm() {
       setOtpSent(true);
       setOtpResendCooldown(60);
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : "Failed to send code");
+      setEmailError(err instanceof Error ? err.message : "Failed to send code");
     } finally {
       setLoading(false);
     }
@@ -203,6 +208,7 @@ export default function CheckoutForm() {
   const resendCode = async () => {
     if (otpResendCooldown > 0) return;
     setLoading(true);
+    setEmailError("");
     try {
       const res = await fetch(`${API_URL}/api/auth/send-otp`, {
         method: "POST",
@@ -215,9 +221,9 @@ export default function CheckoutForm() {
       const data = await res.json().catch(() => null);
       if (!res.ok) throw new Error(data?.error || "Failed to resend code");
       setOtpResendCooldown(60);
-      setErrorMessage("");
+      setEmailError("");
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : "Failed to resend code");
+      setEmailError(err instanceof Error ? err.message : "Failed to resend code");
     } finally {
       setLoading(false);
     }
@@ -391,6 +397,14 @@ export default function CheckoutForm() {
                       </button>
                     </div>
                   </div>
+                )}
+                {emailError && (
+                  <p
+                    className="mt-3 rounded-2xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-200"
+                    role="alert"
+                  >
+                    {emailError}
+                  </p>
                 )}
               </div>
             </fieldset>
