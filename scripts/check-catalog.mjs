@@ -44,12 +44,23 @@ function parse(source) {
   return pairs;
 }
 
+// Same slug->stock pairs as `parse` (only products that HAVE stock; absent = unlimited).
+function parseStocks(source) {
+  const stocks = new Map();
+  const pattern = /slug:\s*["']([^"']+)["'][\s\S]*?stock:\s*(\d+)/g;
+  let match;
+  while ((match = pattern.exec(source)) !== null) stocks.set(match[1], Number(match[2]));
+  return stocks;
+}
+
 const storefront = parse(
   readFileSync(join(root, "src", "data", "products.ts"), "utf8")
 );
 const catalogue = parse(
   readFileSync(join(root, "services", "catalog-service", "index.js"), "utf8")
 );
+const storefrontStocks = parseStocks(readFileSync(join(root, "src", "data", "products.ts"), "utf8"));
+const catalogueStocks = parseStocks(readFileSync(join(root, "services", "catalog-service", "index.js"), "utf8"));
 
 console.log("Catalogue / storefront price check");
 
@@ -86,6 +97,21 @@ check("every price matches", () => {
     const cataloguePrice = catalogue.get(slug);
     if (cataloguePrice !== undefined && cataloguePrice !== price) {
       wrong.push(`${slug}: storefront ${price} vs catalogue ${cataloguePrice}`);
+    }
+  }
+  if (wrong.length) throw new Error(wrong.join("; "));
+});
+
+check("stock is defined on both sides and equal", () => {
+  const wrong = [];
+  for (const [slug, stock] of storefrontStocks) {
+    if (catalogueStocks.get(slug) !== stock) {
+      wrong.push(`${slug}: storefront stock ${stock}, catalogue ${catalogueStocks.get(slug)}`);
+    }
+  }
+  for (const [slug, stock] of catalogueStocks) {
+    if (!storefrontStocks.has(slug)) {
+      wrong.push(`${slug}: catalogue stock ${stock}, storefront has none`);
     }
   }
   if (wrong.length) throw new Error(wrong.join("; "));
