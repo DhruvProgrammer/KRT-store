@@ -1,0 +1,58 @@
+# KRT store
+
+URL: https://krt.design/
+Premium plugins, templates, design systems, icon packs and learning kits for designers and engineers. Free extras: swatches, starters, guides and snippets.
+
+## Store
+
+URL: https://krt.design/store/
+
+## Products
+
+### Clarity — Accessibility
+URL: https://krt.design/store/clarity-plugin/
+One-click accessibility audits for live URLs and design files.
+
+### Pivot — Editor tool
+URL: https://krt.design/store/pivot-extension/
+Jump between files, symbols, and references without leaving the keyboard.
+
+### Composer — Workflow
+URL: https://krt.design/store/composer-plugin/
+Generate Tailwind CSS component files from design tokens automatically.
+
+### Atlas — Blog starter
+URL: https://krt.design/store/atlas-template/
+An Astro blog template with editorial rhythm and zero config.
+
+### Arcwise — SaaS starter
+URL: https://krt.design/store/arcwise-template/
+A Next.js SaaS landing template with pricing, auth, and payments.
+
+### Calm Tokens — Token pack
+URL: https://krt.design/store/calm-tokens/
+A neutral gray design token set for premium dark-mode interfaces.
+
+### Frontline UI — Component library
+URL: https://krt.design/store/frontline-ui/
+React components with glass surfaces, motion, and Gumroad-style actions.
+
+### Monochrome — Icon family
+URL: https://krt.design/store/monochrome-icons/
+320 monotone SVG icons for UI, dashboards, and marketing pages.
+
+### Open Lesson Kit — Course starter
+URL: https://krt.design/store/open-lesson-kit/
+An Astro course template with video embeds, progress, and quizzes.
+
+### Editor Shield — Content safety
+URL: https://krt.design/store/editor-shield/
+Auto-save, version snapshots, and offline recovery for browser editors.
+
+### Dash UI Kit — Dashboard system
+URL: https://krt.design/store/dash-ui-kit/
+A complete dashboard design system with charts, tables, and sidebars.
+
+### Trailhead — Release notes
+URL: https://krt.design/store/trailhead-template/
+A change-log and release-notes template with RSS and categories.
