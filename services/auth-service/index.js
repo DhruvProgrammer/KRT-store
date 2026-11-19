@@ -770,6 +770,19 @@ app.post('/register', registerLimiter, asyncRoute(async (req, res) => {
   if (!email || typeof password !== 'string' || !firstName || !otp) {
     return res.status(400).json({ error: 'Email, password, first name, and OTP are required' });
   }
+  // ponytail: the stored free-text fields (first_name, last_name, phone) are
+  // client-asserted and stored — bound them at the boundary. (Email is
+  // already bounded by normalizeEmail; password by validatePassword.)
+  const MAX_STORED_TEXT = 254;
+  if (firstName.length > MAX_STORED_TEXT) {
+    return res.status(400).json({ error: `First name must be at most ${MAX_STORED_TEXT} characters` });
+  }
+  if (lastName && lastName.length > MAX_STORED_TEXT) {
+    return res.status(400).json({ error: `Last name must be at most ${MAX_STORED_TEXT} characters` });
+  }
+  if (phone && phone.length > MAX_STORED_TEXT) {
+    return res.status(400).json({ error: `Phone must be at most ${MAX_STORED_TEXT} characters` });
+  }
 
   const pwErr = validatePassword(password);
   if (pwErr) return res.status(400).json({ error: pwErr });
