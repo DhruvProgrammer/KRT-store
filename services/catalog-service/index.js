@@ -75,6 +75,7 @@ const products = [
     description: 'A Next.js SaaS landing template with pricing, auth, and payments.',
     longDescription: 'Arcwise gives you a complete SaaS landing page out of the box: pricing tables, Stripe checkout, Supabase auth, and a responsive dashboard shell. Built with Tailwind, Framer Motion, and TypeScript.',
     price: 59,
+    stock: 1,
     features: ['Pricing comparison table', 'Stripe checkout integration', 'Supabase auth flow', 'Dashboard layout shell'],
     compatibility: ['Next.js 14+', 'Supabase', 'Stripe'],
     version: 'v2.1.3',
