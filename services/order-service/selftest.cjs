@@ -17,7 +17,9 @@ const path = require('path');
 const GOOD_OTP = '123456';
 const CATALOG = [
   { slug: 'clarity-plugin', name: 'Clarity Plugin', price: 24 },
-  { slug: 'arcwise-template', name: 'Arcwise Template', price: 59 }
+  { slug: 'arcwise-template', name: 'Arcwise Template', price: 59 },
+  // ponytail: a product with a finite unit count — drives the last-item race test.
+  { slug: 'finite-widget', name: 'Finite Widget', price: 7, stock: 1 }
 ];
 
 let passed = 0;
@@ -385,6 +387,65 @@ async function waitFor(base, tries = 60) {
     const keys = payment.created.map((c) => c.key);
     check('every order attempt sent its own Idempotency-Key',
       new Set(keys).size === keys.length, JSON.stringify(keys));
+
+    // --- 7. idempotency: a retry of the same attempt id returns the same order ---
+    const first = await post(base, '/', {
+      email: 'idem@example.com', otp: GOOD_OTP, paymentMethod: 'stripe',
+      items: [{ slug: 'clarity-plugin', quantity: 1 }], checkoutAttemptId: 'selftest-idem-1'
+    });
+    check('attempt id: the first POST creates the order', first.status === 201, `status ${first.status}`);
+    const retry = await post(base, '/', {
+      email: 'idem@example.com', otp: GOOD_OTP, paymentMethod: 'stripe',
+      items: [{ slug: 'clarity-plugin', quantity: 1 }], checkoutAttemptId: 'selftest-idem-1'
+    });
+    check('attempt id: a retry of the same id returns the SAME order',
+      retry.status === 201 && retry.body.order && retry.body.order.id === first.body.order.id,
+      `${retry.status} vs ${first.status}`);
+    const idemList = await get(base, '/', { Cookie: 'krt_access=idem@example.com' });
+    check('attempt id: the list holds exactly one order for the address',
+      idemList.body.orders.length === 1, JSON.stringify(idemList.body));
+
+    // another user replaying the same attempt id gets a 409, never the order
+    const forgedAttempt = await post(base, '/', {
+      email: 'someoneelse@example.com', otp: GOOD_OTP, paymentMethod: 'stripe',
+      items: [{ slug: 'clarity-plugin', quantity: 1 }], checkoutAttemptId: 'selftest-idem-1'
+    });
+    check('attempt id: another user replaying it gets a 409', forgedAttempt.status === 409, `status ${forgedAttempt.status}`);
+
+    // concurrent retries of one attempt share the outcome
+    const [cA, cB] = await Promise.all([
+      post(base, '/', { email: 'idem2@example.com', otp: GOOD_OTP, paymentMethod: 'stripe', items: [{ slug: 'clarity-plugin', quantity: 1 }], checkoutAttemptId: 'selftest-idem-2' }),
+      post(base, '/', { email: 'idem2@example.com', otp: GOOD_OTP, paymentMethod: 'stripe', items: [{ slug: 'clarity-plugin', quantity: 1 }], checkoutAttemptId: 'selftest-idem-2' })
+    ]);
+    check('attempt id: concurrent retries return the same order',
+      cA.status === 201 && cB.status === 201 && cA.body.order.id === cB.body.order.id, `${cA.status}/${cB.status}`);
+
+    // a new attempt id is a new purchase
+    const newAttempt = await post(base, '/', {
+      email: 'idem-again@example.com', otp: GOOD_OTP, paymentMethod: 'stripe',
+      items: [{ slug: 'clarity-plugin', quantity: 1 }], checkoutAttemptId: 'selftest-idem-3'
+    });
+    check('attempt id: a new attempt id creates a new order', newAttempt.status === 201, `status ${newAttempt.status}`);
+
+    // --- 8. the last item: two concurrent different-attempt buyers ------------
+    const soldOut = await Promise.all([
+      post(base, '/', { email: 'seller1@example.com', otp: GOOD_OTP, paymentMethod: 'stripe', items: [{ slug: 'finite-widget', quantity: 1 }], checkoutAttemptId: 'selftest-soldout-1' }),
+      post(base, '/', { email: 'seller2@example.com', otp: GOOD_OTP, paymentMethod: 'stripe', items: [{ slug: 'finite-widget', quantity: 1 }], checkoutAttemptId: 'selftest-soldout-2' })
+    ]);
+    check('last item: exactly one buyer gets it (one 201, one 409)',
+      [soldOut[0].status, soldOut[1].status].includes(201)
+        && [soldOut[0].status, soldOut[1].status].includes(409)
+        && new Set([soldOut[0].status, soldOut[1].status]).size === 2,
+      `statuses ${soldOut[0].status}/${soldOut[1].status}`);
+    const winner = soldOut[0].status === 201 ? soldOut[0] : soldOut[1];
+    check('last item: the winner bought the finite widget',
+      !!winner.body.order && winner.body.order.items[0].slug === 'finite-widget',
+      JSON.stringify(winner.body && winner.body.order && winner.body.order.items));
+    const third = await post(base, '/', {
+      email: 'seller3@example.com', otp: GOOD_OTP, paymentMethod: 'stripe',
+      items: [{ slug: 'finite-widget', quantity: 1 }], checkoutAttemptId: 'selftest-soldout-3'
+    });
+    check('last item: the next attempt is refused', third.status === 409, `status ${third.status}`);
   } finally {
     cleanup();
   }
