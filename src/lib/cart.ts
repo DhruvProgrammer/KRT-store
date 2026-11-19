@@ -12,6 +12,8 @@ export interface CartItem {
 const STORAGE_KEY = "dg-cart";
 const PAYMENT_KEY = "dg-payment-method";
 const MAX_QUANTITY = 99;
+// ponytail: mirrors the server's slug charset (services/order-service/index.js).
+const SLUG_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;
 const MIN_QUANTITY = 1;
 
 export const PAYMENT_METHODS = [
@@ -65,6 +67,7 @@ function validateItem(raw: unknown): CartItem | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
   if (typeof r.slug !== "string" || r.slug.length === 0) return null;
+  if (!SLUG_RE.test(r.slug)) return null;
   if (typeof r.name !== "string" || r.name.length === 0) return null;
   const price = Number(r.price);
   if (!Number.isFinite(price) || price < 0) return null;
