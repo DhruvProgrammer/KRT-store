@@ -8,6 +8,8 @@ export interface Product {
   /** Keyword-bearing title for the SERP: `{seoTitle} | KRT store`. */
   seoTitle: string;
   price: number;
+  /** Optional unit stock the order service enforces atomically; absent = unlimited. */
+  stock?: number;
   features: string[];
   compatibility: string[];
   version: string;
@@ -151,6 +153,7 @@ export const products: Product[] = [
       "Arcwise gives you a complete SaaS landing page out of the box: pricing tables, Stripe checkout, Supabase auth, and a responsive dashboard shell. Built with Tailwind, Framer Motion, and TypeScript.",
     seoTitle: "Next.js SaaS Landing Template with Stripe & Auth",
     price: 59,
+    stock: 1,
     features: [
       "Pricing comparison table",
       "Stripe checkout integration",
