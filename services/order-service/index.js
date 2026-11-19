@@ -86,6 +86,14 @@ async function fetchCatalog() {
   for (const product of list) {
     if (product && typeof product.slug === 'string') bySlug.set(product.slug, product);
   }
+  // ponytail: refresh the stock map on every fetch (the catalog is static;
+  // this is the order-side view of limited supply for `reserveStock`).
+  stockBySlug = new Map();
+  for (const product of list) {
+    if (product && typeof product.slug === 'string') {
+      stockBySlug.set(product.slug, Number.isInteger(product.stock) ? product.stock : null);
+    }
+  }
   return bySlug;
 }
 
@@ -242,6 +250,67 @@ function getNextOrderId() {
   return String(nextOrderId++);
 }
 
+// ---------------------------------------------------------------------------
+// Robustness: client-generated checkout attempt ids + atomic stock reservation
+// ---------------------------------------------------------------------------
+
+// ponytail: absent/null -> the server generates a fresh uuid (the field is
+// optional); anything else must be printable ASCII, 1–128 — the same shape
+// the payment service accepts for its Idempotency-Key, and short enough that
+// `order-${orderId}-${attemptId}` stays under its 255-char cap with a
+// roomy counter.
+function normalizeAttemptId(value) {
+  if (value === undefined || value === null) return null;
+  if (typeof value !== 'string' || value.length < 1 || value.length > 128 || !/^[\x21-\x7E]+$/.test(value)) {
+    throw new Error('checkoutAttemptId must be printable ASCII, 1-128 characters');
+  }
+  return value;
+}
+
+let stockBySlug = new Map();      // slug -> integer stock, or null = unlimited (seeded in fetchCatalog)
+const reservedBySlug = new Map(); // slug -> quantity reserved by open (unconfirmed) orders
+
+function reserveStock(items) {
+  // ponytail: synchronous, two-phase. The check and the commit run in one
+  // event-loop turn, so two concurrent checkouts cannot both pass a last
+  // item. Duplicate slugs in one order are charged against each other
+  // (`plan` accumulates per-slug). Returns false WITHOUT committing anything
+  // when any line does not fit.
+  const plan = new Map(); // slug -> claimed quantity in this order
+  for (const it of items) {
+    const stock = stockBySlug.get(it.slug);
+    if (stock == null) continue; // unlimited
+    const claimed = plan.get(it.slug) || 0;
+    const reserved = (reservedBySlug.get(it.slug) || 0) + claimed;
+    if (reserved + it.quantity > stock) return false;
+    plan.set(it.slug, claimed + it.quantity);
+  }
+  for (const [slug, qty] of plan) {
+    reservedBySlug.set(slug, (reservedBySlug.get(slug) || 0) + qty);
+  }
+  return true;
+}
+
+function releaseStock(items) {
+  for (const it of items) {
+    const stock = stockBySlug.get(it.slug);
+    if (stock == null) continue;
+    reservedBySlug.set(it.slug, Math.max(0, (reservedBySlug.get(it.slug) || 0) - it.quantity));
+  }
+}
+
+// ponytail: ordersByKey makes POST / idempotent on the client-generated
+// attempt id: a retry of the same attempt returns the SAME order (the retry
+// contract — the response may have been lost after the server already paid).
+// Another user replaying someone else's attempt id gets a 409, never
+// someone else's order.
+const ordersByKey = new Map();
+const MAX_ORDER_KEYS = 1000;
+// ponytail: inflightByKey shares the outcome of one in-flight attempt between
+// concurrent retries (a double-click cannot create two orders or
+// double-capture).
+const inflightByKey = new Map();
+
 // POST / - Create order
 app.post('/', asyncRoute(async (req, res) => {
   const body = req.body || {};
@@ -292,6 +361,49 @@ app.post('/', asyncRoute(async (req, res) => {
     requested.push({ slug: item.slug, quantity });
   }
 
+  // ponytail: idempotency on the client-generated checkout attempt id. A
+  // retry of the same id returns the original order (the retry contract:
+  // the response may have been lost after the server already placed the
+  // order). Another user replaying someone else's attempt id gets a 409 —
+  // never someone else's order. Absent/null -> a fresh uuid, like before;
+  // a present-but-invalid id is refused.
+  let attemptId;
+  try {
+    attemptId = normalizeAttemptId(body.checkoutAttemptId) || crypto.randomUUID();
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
+
+  const existing = ordersByKey.get(attemptId);
+  if (existing) {
+    if (existing.email === email) {
+      console.log(`[order-service] idempotent retry: returning the existing order ${existing.order.id} for attempt ${attemptId}`);
+      return res.status(201).json({ order: existing.order });
+    }
+    return res.status(409).json({ error: 'That purchase attempt is already used.' });
+  }
+  const inflight = inflightByKey.get(attemptId);
+  if (inflight) {
+    if (inflight.email !== email) return res.status(409).json({ error: 'That purchase attempt is already used.' });
+    const result = await inflight.promise;
+    if (result.error) return res.status(result.error.status).json({ error: result.error.error });
+    return res.status(201).json({ order: result.order });
+  }
+
+  const flow = runOrder(email, otp, body, requested, attemptId);
+  inflightByKey.set(attemptId, { email, promise: flow });
+  try {
+    const result = await flow;
+    if (result.error) return res.status(result.error.status).json({ error: result.error.error });
+    return res.status(201).json({ order: result.order });
+  } finally {
+    inflightByKey.delete(attemptId);
+  }
+}));
+
+// runOrder — the purchase flow (see the POST / handler for the idempotency
+// contract). Returns { order } or { error: { status, error } }.
+async function runOrder(email, otp, body, requested, attemptId) {
   // ponytail: the catalog is fetched BEFORE the OTP is consumed so a catalog
   // outage does not burn the customer's one-shot code. If the catalog cannot
   // be reached the order FAILS — falling back to the posted price (or to
@@ -301,63 +413,39 @@ app.post('/', asyncRoute(async (req, res) => {
     catalog = await fetchCatalog();
   } catch (err) {
     console.error('[order-service] catalog unavailable:', err.message);
-    return res.status(503).json({ error: 'Pricing is temporarily unavailable, please try again' });
+    return { error: { status: 503, error: 'Pricing is temporarily unavailable, please try again' } };
   }
 
   const items = [];
   for (const want of requested) {
     const product = catalog.get(want.slug);
     if (!product) {
-      return res.status(400).json({ error: `Unknown product: ${want.slug}` });
+      return { error: { status: 400, error: `Unknown product: ${want.slug}` } };
     }
     const price = Number(product.price);
     if (!Number.isFinite(price) || price <= 0) {
       console.error('[order-service] catalog product has no usable price:', want.slug, product.price);
-      return res.status(503).json({ error: 'Pricing is temporarily unavailable, please try again' });
+      return { error: { status: 503, error: 'Pricing is temporarily unavailable, please try again' } };
     }
     items.push({ slug: product.slug, name: product.name, price, quantity: want.quantity });
   }
 
   const total = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
   if (!Number.isFinite(total) || total <= 0) {
-    return res.status(400).json({ error: 'Order total must be greater than zero' });
+    return { error: { status: 400, error: 'Order total must be greater than zero' } };
   }
   if (total > MAX_ORDER_TOTAL) {
-    return res.status(400).json({ error: `Order total ${total} exceeds the maximum of ${MAX_ORDER_TOTAL}` });
+    return { error: { status: 400, error: `Order total ${total} exceeds the maximum of ${MAX_ORDER_TOTAL}` } };
   }
 
-  // ponytail: ORDER OF OPERATIONS. The money moves LAST and the one-shot
-  // code is consumed BEFORE it moves, so a code can never buy two orders.
-  //
-  //   1. the catalog prices the cart            (a failure here costs nothing)
-  //   2. the payment service creates the intent and the two derived totals
-  //      are compared                          (a failure here does NOT burn
-  //                                                the code: the customer can
-  //                                                retry with the same code)
-  //   3. the OTP is consumed                    (the replay guard: the code is
-  //                                                dead before any money moves,
-  //                                                and a bad code leaves an
-  //                                                UNCAPTURED intent, which
-  //                                                costs nothing)
-  //   4. the intent is captured                 (the money moves. A failure
-  //                                                here is the ONE case that
-  //                                                burns the code -- the
-  //                                                payment service answered a
-  //                                                moment earlier, so the
-  //                                                window is a sliver)
-  //   5. the order is created
-  //
-  // The other order (capture first, code second) would charge a customer
-  // whose code turned out to be wrong, and would let a replayed code buy two
-  // orders. This one cannot.
+  // ponytail: RACE SAFETY — reserve the limited items atomically, BEFORE
+  // creating the intent or touching the verification code: two buyers of the
+  // last item cannot both claim it. If the stock is gone, nothing was charged
+  // and no intent was created.
+  if (!reserveStock(items)) return { error: { status: 409, error: 'That item is sold out.' } };
+
   const orderId = getNextOrderId();
-  // ponytail: the idempotency key is stable for THIS attempt -- a retried
-  // create returns the same intent instead of making a second one -- and
-  // unique for the next one. The order id alone is not enough: the in-memory
-  // counter starts at 1 again after a restart, so "order-1" would collide
-  // with an order from the previous life of the process. The random part is
-  // drawn once per attempt and reused for every call of that attempt.
-  const idempotencyKey = `order-${orderId}-${crypto.randomUUID()}`;
+  const idempotencyKey = `order-${orderId}-${attemptId}`;
 
   let intent;
   try {
@@ -371,7 +459,8 @@ app.post('/', asyncRoute(async (req, res) => {
     });
   } catch (err) {
     console.error('[order-service] payment intent failed:', err.message);
-    return res.status(503).json({ error: 'Payment is temporarily unavailable, please try again' });
+    releaseStock(items);
+    return { error: { status: 503, error: 'Payment is temporarily unavailable, please try again' } };
   }
 
   // ponytail: the two services priced the same cart independently. If they
@@ -380,25 +469,36 @@ app.post('/', asyncRoute(async (req, res) => {
   const charged = Number(intent.amount);
   if (!Number.isFinite(charged) || Math.abs(charged - total) > AMOUNT_TOLERANCE) {
     console.error('[order-service] payment amount mismatch: charged', charged, 'order total', total);
-    return res.status(400).json({ error: 'The order total could not be verified, please try again' });
+    releaseStock(items);
+    return { error: { status: 400, error: 'The order total could not be verified, please try again' } };
   }
 
-  // Require a verified email OTP before accepting the order. This is what
-  // makes the address above trustworthy: the server proved the caller
-  // controls that mailbox, so the verified address is the order's owner.
-  // ponytail: the code is consumed here, BEFORE the capture, so a replayed
-  // code cannot buy a second order. The intent created above is abandoned
-  // uncaptured -- no money moved.
-  const otpOk = await verifyCheckoutOtp(email, otp);
-  if (!otpOk) {
-    return res.status(400).json({ error: 'Invalid or expired verification code' });
-  }
+  if (intent.status === 'succeeded') {
+    // ponytail: RECONCILE — an earlier attempt already captured this intent
+    // (crash between capture and the order push). The money already moved,
+    // so the order is created without capturing again — and without
+    // re-verifying the OTP, which that attempt consumed.
+    console.log('[order-service] intent already captured; creating the order without a second capture');
+  } else {
+    // Require a verified email OTP before accepting the order. This is what
+    // makes the address above trustworthy: the server proved the caller
+    // controls that mailbox, so the verified address is the order's owner.
+    // ponytail: the code is consumed here, BEFORE the capture, so a replayed
+    // code cannot buy a second order. The intent created above is abandoned
+    // uncaptured -- no money moved.
+    const otpOk = await verifyCheckoutOtp(email, otp);
+    if (!otpOk) {
+      releaseStock(items);
+      return { error: { status: 400, error: 'Invalid or expired verification code' } };
+    }
 
-  try {
-    await capturePayment(intent.id);
-  } catch (err) {
-    console.error('[order-service] capture failed:', err.message);
-    return res.status(503).json({ error: 'Payment could not be completed, please try again' });
+    try {
+      await capturePayment(intent.id);
+    } catch (err) {
+      console.error('[order-service] capture failed:', err.message);
+      releaseStock(items);
+      return { error: { status: 503, error: 'Payment could not be completed, please try again' } };
+    }
   }
 
   const now = new Date().toISOString();
@@ -407,6 +507,9 @@ app.post('/', asyncRoute(async (req, res) => {
     email,
     items,
     total,
+    // ponytail: the client's checkout attempt id — the retry key the client
+    // uses (see ordersByKey above).
+    checkoutAttemptId: attemptId,
     shippingAddress: sanitizeAddress(body.shippingAddress),
     // ponytail: the intent id is the one the PAYMENT SERVICE returned. The
     // client used to be able to post any string here and have it stored
@@ -422,9 +525,13 @@ app.post('/', asyncRoute(async (req, res) => {
   };
 
   orders.push(order);
+  // ponytail: the retry contract: a retry of this attempt id returns this
+  // same order instead of charging again.
+  ordersByKey.set(attemptId, { email, order });
+  if (ordersByKey.size >= MAX_ORDER_KEYS) ordersByKey.delete(ordersByKey.keys().next().value);
   notifyCustomer(order);
-  res.status(201).json({ order });
-}));
+  return { order };
+}
 
 // GET / - List the signed-in account's orders
 // ponytail: the owner of an order is the address the server VERIFIED (the
