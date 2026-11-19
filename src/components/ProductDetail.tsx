@@ -165,12 +165,12 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                   key={h.label}
                   className="rounded-3xl border border-line bg-surface/70 p-4 transition hover:border-accent/30 hover:shadow-[0_0_22px_rgba(0,162,255,0.18)]"
                 >
-                  <dd className="text-2xl font-black tracking-[-0.05em] text-accent drop-shadow-[0_0_8px_rgba(0,162,255,0.25)]">
+                  <div className="text-2xl font-black tracking-[-0.05em] text-accent drop-shadow-[0_0_8px_rgba(0,162,255,0.25)]">
                     {h.value}
-                  </dd>
-                  <dd className="mt-1 text-xs font-bold uppercase tracking-[0.18em] text-ink-muted">
+                  </div>
+                  <div className="mt-1 text-xs font-bold uppercase tracking-[0.18em] text-ink-muted">
                     {h.label}
-                  </dd>
+                  </div>
                 </div>
               ))}
             </div>
