@@ -4,6 +4,12 @@ const cors = require('cors');
 const app = express();
 app.use(cors());
 
+// ponytail: same slug charset as the order service (no path traversal, no
+// query, no whitespace) and the same quantity cap, so a cart line can never
+// disagree with what the order service accepts at checkout.
+const SLUG_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;
+const MAX_QUANTITY = 99;
+
 const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || 'http://localhost:3002';
 const CATALOG_SERVICE_URL = process.env.CATALOG_SERVICE_URL || 'http://localhost:3003';
 
@@ -144,11 +150,11 @@ app.post('/items', asyncRoute(async (req, res) => {
   // Number("1e1") is 10, Number(true) is 1 and Number([1]) is 1, so a
   // coercion check alone accepts a body that is not a quantity at all.
   const qty = quantity;
-  if (typeof slug !== 'string' || !slug) {
-    return res.status(400).json({ error: 'slug and quantity are required' });
+  if (typeof slug !== 'string' || !SLUG_RE.test(slug)) {
+    return res.status(400).json({ error: 'slug must be a catalog-style slug' });
   }
-  if (typeof qty !== 'number' || !Number.isInteger(qty) || qty < 1) {
-    return res.status(400).json({ error: 'quantity must be a whole number of at least 1' });
+  if (typeof qty !== 'number' || !Number.isInteger(qty) || qty < 1 || qty > MAX_QUANTITY) {
+    return res.status(400).json({ error: `quantity must be a whole number between 1 and ${MAX_QUANTITY}` });
   }
 
   let product;
@@ -170,7 +176,10 @@ app.post('/items', asyncRoute(async (req, res) => {
   const existing = cart.items.find(item => item.slug === slug);
 
   if (existing) {
-    existing.quantity += qty;
+    // ponytail: clamp the merge the same way the client does
+    // (src/lib/cart.ts) — a line stays at the cap instead of growing past
+    // what the order service accepts at checkout.
+    existing.quantity = Math.min(MAX_QUANTITY, existing.quantity + qty);
   } else {
     if (cart.items.length >= MAX_CART_ITEMS) {
       return res.status(400).json({ error: `At most ${MAX_CART_ITEMS} items per cart` });
@@ -199,8 +208,8 @@ app.put('/items/:slug', (req, res) => {
   if (!item) {
     return res.status(404).json({ error: 'Item not found in cart' });
   }
-  if (typeof qty !== 'number' || !Number.isInteger(qty) || qty < 1) {
-    return res.status(400).json({ error: 'Quantity must be a whole number of at least 1' });
+  if (typeof qty !== 'number' || !Number.isInteger(qty) || qty < 1 || qty > MAX_QUANTITY) {
+    return res.status(400).json({ error: `Quantity must be a whole number between 1 and ${MAX_QUANTITY}` });
   }
 
   item.quantity = qty;
