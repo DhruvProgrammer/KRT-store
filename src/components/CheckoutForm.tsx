@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import {
   useCart,
   PAYMENT_METHODS,
@@ -12,6 +12,42 @@ import OtpInput from "./OtpInput";
 
 function formatPrice(cents: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents);
+}
+
+// ponytail: the checkout attempt id is reused across network-error retries
+// (the retry returns the same order instead of charging again) and survives
+// a page reload via localStorage (a re-submit returns the same order if the
+// first one actually landed). Cleared on success.
+const ATTEMPT_ID_KEY = "dg-checkout-attempt";
+
+function readStoredAttempt(): { email: string; id: string } | null {
+  try {
+    const raw = localStorage.getItem(ATTEMPT_ID_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed.email === "string" && typeof parsed.id === "string"
+      ? { email: parsed.email, id: parsed.id }
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeStoredAttempt(attempt: { email: string; id: string }) {
+  try { localStorage.setItem(ATTEMPT_ID_KEY, JSON.stringify(attempt)); } catch { /* ignore */ }
+}
+
+function clearStoredAttempt() {
+  try { localStorage.removeItem(ATTEMPT_ID_KEY); } catch { /* ignore */ }
+}
+
+// ponytail: mirrors the server's slug charset (services/order-service/index.js)
+// — defense in depth: the browser validates what it sends.
+const SLUG_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;
+function validateCartItems(items: { slug: string; quantity: number }[]): boolean {
+  return items.every(
+    (i) => SLUG_RE.test(i.slug) && Number.isInteger(i.quantity) && i.quantity >= 1 && i.quantity <= 99
+  );
 }
 
 function recordLocalOrder(order: { id: string }, email: string, itemCount: number, total: number): void {
@@ -153,6 +189,9 @@ export default function CheckoutForm() {
   const [otpResendCooldown, setOtpResendCooldown] = useState(0);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  // ponytail: idempotent purchase attempt (see handleSubmit).
+  const submitAttemptRef = useRef<string | null>(null);
+  const submittingRef = useRef(false);
   // ponytail: the code-sending flow gets its OWN error. It used to share
   // the submit error, which renders next to the PAY button at the bottom of
   // the form -- so a failed send showed nothing next to the button that was
@@ -272,11 +311,32 @@ export default function CheckoutForm() {
       setErrorMessage("Verify your email with the 6-digit code before placing the order.");
       return;
     }
+    if (!validateCartItems(items)) {
+      setErrorMessage("Some items in your cart can't be purchased. Remove them and add them again.");
+      return;
+    }
+    if (submittingRef.current) return; // double-submit guard
 
     const API_URL = import.meta.env.PUBLIC_API_URL;
     if (!API_URL) {
       throw new Error("PUBLIC_API_URL is not set");
     }
+
+    // ponytail: the checkout attempt id — idempotency of the purchase. Reuse
+    // order: the ref (in-flight/retry), then the localStorage record (a
+    // reload reuses it — the server returns the same order if the first
+    // attempt landed; a stored id for a DIFFERENT email is not this user's
+    // attempt), then a fresh uuid. The id is written to storage on submit and
+    // cleared on success.
+    const emailKey = email.trim().toLowerCase();
+    const storedAttempt = readStoredAttempt();
+    const attemptId =
+      submitAttemptRef.current ??
+      (storedAttempt && storedAttempt.email === emailKey ? storedAttempt.id : null) ??
+      crypto.randomUUID();
+    submitAttemptRef.current = attemptId;
+    writeStoredAttempt({ email: emailKey, id: attemptId });
+    submittingRef.current = true;
     setLoading(true);
     try {
       const res = await fetch(`${API_URL}/api/orders`, {
@@ -291,25 +351,38 @@ export default function CheckoutForm() {
         // and the total are the server's — it looks them up in the catalog.
         // The `x-user-id` header is gone: the order belongs to the address
         // the server verified with the OTP, not to a header we could forge.
+        // The attempt id makes the purchase retry-safe (the server dedups on it).
         body: JSON.stringify({
           email: email.trim(),
           otp,
           items: items.map((i) => ({ slug: i.slug, quantity: i.quantity })),
-          paymentMethod
+          paymentMethod,
+          checkoutAttemptId: attemptId
         })
       });
       const data = await res.json().catch(() => null);
-      if (!res.ok || !data?.order) {
+      if (res.ok && data?.order) {
+        submitAttemptRef.current = null; // success: the next Pay is a new attempt
+        clearStoredAttempt();
+        recordLocalOrder(data.order, email.trim(), items.length, data.order.total);
+        clear();
+        setSubmitted(true);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else {
+        // Terminal failure: KEEP the attempt id — a re-click retries the same
+        // purchase attempt.
         setErrorMessage(data?.error || `Order failed (status ${res.status})`);
-        return;
+        if (data?.error === "That purchase attempt is already used.") {
+          // Defensive: the stored id was consumed by another email — start fresh.
+          submitAttemptRef.current = null;
+          clearStoredAttempt();
+        }
       }
-      recordLocalOrder(data.order, email.trim(), items.length, data.order.total);
-      clear();
-      setSubmitted(true);
-      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
+      // Network error: ambiguous — the retry reuses the attempt id.
       setErrorMessage(err instanceof Error ? `Network connection failed: ${err.message}` : "Network connection failed");
     } finally {
+      submittingRef.current = false;
       setLoading(false);
     }
   };
