@@ -43,7 +43,10 @@ const paymentIntents = new Map();
 // ponytail: Idempotency-Key -> { fingerprint, intentId }. In-memory and
 // unbounded, like the intents Map above; a real deployment keeps idempotency
 // keys in Stripe (24h TTL) instead of in the process.
-const idempotencyKeys = new Map();
+// ponytail: TWO-LEVEL map (email -> key): no string join between the customer
+// email and the key, so a colon (or any separator) inside either can't forge
+// another customer's key — the old `${scope}:${key}` join was ambiguous.
+const idempotencyKeys = new Map(); // email -> Map<key, { fingerprint, intentId }>
 let nextId = 1;
 
 // ponytail: both maps are swept. The order service creates the intent BEFORE
@@ -61,15 +64,15 @@ setInterval(() => {
     if (pi.status === 'succeeded') continue;
     if (new Date(pi.createdAt).getTime() < cutoff) paymentIntents.delete(id);
   }
-  for (const [key, entry] of idempotencyKeys) {
-    const pi = paymentIntents.get(entry.intentId);
-    if (!pi) {
-      idempotencyKeys.delete(key);
-      continue;
+  for (const [scope, byEmail] of idempotencyKeys) {
+    for (const [key, entry] of byEmail) {
+      const pi = paymentIntents.get(entry.intentId);
+      if (!pi) { byEmail.delete(key); continue; }
+      if (pi.status !== 'succeeded' && new Date(pi.createdAt).getTime() < cutoff) {
+        byEmail.delete(key);
+      }
     }
-    if (pi.status !== 'succeeded' && new Date(pi.createdAt).getTime() < cutoff) {
-      idempotencyKeys.delete(key);
-    }
+    if (byEmail.size === 0) idempotencyKeys.delete(scope);
   }
 }, 60_000).unref();
 
@@ -208,13 +211,17 @@ app.post('/', async (req, res, next) => {
     // client happened to send the cart in.
     lines.sort((a, b) => (a.slug < b.slug ? -1 : a.slug > b.slug ? 1 : 0));
 
-    // ponytail: the fingerprint is the REQUEST, not the derived amount. A
-    // price change between the first call and the retry must not turn a
-    // legitimate retry into a 409 -- the retry returns the original intent.
-    const fingerprint = JSON.stringify({ items: lines, currency, orderId, metadata });
+    // ponytail: the fingerprint is the REQUEST, not the derived amount, and
+    // not the orderId: the order service mints a fresh orderId per attempt,
+    // so including it would turn a legitimate retry (same client attempt id)
+    // into a 409 instead of the same intent. The retry returns the original
+    // intent.
+    const fingerprint = JSON.stringify({ items: lines, currency, metadata });
 
-    const idempotencyId = `${scope}:${key}`;
-    const prior = idempotencyKeys.get(idempotencyId);
+    // ponytail: two-level lookup: the idempotency map is (email -> key), so
+    // no string join can alias two different (email, key) pairs.
+    const byEmail = idempotencyKeys.get(scope);
+    const prior = byEmail && byEmail.get(key);
     if (prior) {
       if (prior.fingerprint !== fingerprint) {
         return res.status(409).json({ error: 'Idempotency-Key was already used with a different request body' });
@@ -268,7 +275,12 @@ app.post('/', async (req, res, next) => {
     };
 
     paymentIntents.set(id, pi);
-    idempotencyKeys.set(idempotencyId, { fingerprint, intentId: id });
+    let mapForEmail = idempotencyKeys.get(scope);
+    if (!mapForEmail) {
+      mapForEmail = new Map();
+      idempotencyKeys.set(scope, mapForEmail);
+    }
+    mapForEmail.set(key, { fingerprint, intentId: id });
     res.status(201).json({ paymentIntent: pi });
   } catch (err) {
     next(err);
