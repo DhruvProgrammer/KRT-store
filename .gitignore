@@ -23,6 +23,7 @@ __pycache__/
 .env
 # Runtime logs
 *.log
+*.err
 
 # Runtime databases (and their WAL sidecars). The auth DB holds password
 # hashes and live refresh tokens — it is a runtime artifact, never a source
