@@ -178,6 +178,15 @@ async function waitFor(base, tries = 60) {
     check('capturing an unknown intent is a 404', bogus.status === 404, `status ${bogus.status}`);
     const badId = await post(base, '/capture', { paymentIntentId: '<script>' });
     check('a malformed paymentIntentId is refused', badId.status === 400, `status ${badId.status}`);
+
+    // --- 5. the fingerprint ignores orderId --------------------------------
+    const fpA = await post(base, '/', { items: [{ slug: 'clarity-plugin', quantity: 1 }], metadata: email },
+      { 'Idempotency-Key': 'fp-retry', orderId: 1 });
+    const fpB = await post(base, '/', { items: [{ slug: 'clarity-plugin', quantity: 1 }], metadata: email },
+      { 'Idempotency-Key': 'fp-retry', orderId: 42 });
+    check('the fingerprint ignores orderId: same key + same body, different orderId, returns the same intent',
+      fpA.status === 201 && fpB.status === 200 && fpA.body.paymentIntent.id === fpB.body.paymentIntent.id,
+      `${fpA.status}/${fpB.status}`);
   } finally {
     try { child.kill(); } catch { /* already gone */ }
     catalog.close();
