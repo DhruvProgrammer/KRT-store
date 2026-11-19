@@ -1,0 +1,260 @@
+# KRT store — full agent-readable text
+
+URL: https://krt.design/
+
+## Store
+
+URL: https://krt.design/store/
+
+## Clarity — Accessibility
+URL: https://krt.design/store/clarity-plugin/
+Price: $24
+Version: v1.4.2 · File size: 2.3 MB
+Compatibility: Figma 13+, Chrome 119+, Web
+
+Clarity is a browser and Figma plugin that scans your design or live site for contrast failures, missing focus indicators, and motion issues. It runs Lighthouse-based rules without leaving your workflow and exports a shareable audit report in seconds.
+
+### Features
+
+- One-click contrast and focus audits
+- Live URL scanning
+- Lighthouse rule coverage
+- Exportable audit report
+
+### Highlights
+
+- Rules: 92
+- Avg scan: <4s
+- Platforms: 3
+
+## Pivot — Editor tool
+URL: https://krt.design/store/pivot-extension/
+Price: $19
+Version: v2.0.1 · File size: 1.1 MB
+Compatibility: VS Code 1.85+, Web
+
+Pivot is a VS Code extension that gives you command-palette speed for navigating large codebases. Search by symbol, jump to references, and switch between related files with a single keystroke.
+
+### Features
+
+- Fuzzy symbol search
+- Cross-file reference jump
+- Related file switching
+- Zero-config setup
+
+### Highlights
+
+- Commands: 14
+- Latency: <12ms
+- Platforms: 2
+
+## Composer — Workflow
+URL: https://krt.design/store/composer-plugin/
+Price: $29
+Version: v1.1.0 · File size: 3.8 MB
+Compatibility: Tailwind 3.4+, Node 18+, CLI
+
+Composer reads your design token JSON and produces ready-to-use Tailwind CSS component files with variants, responsive props, and dark-mode classes baked in. Stop writing repetitive utility classes by hand.
+
+### Features
+
+- Token-to-component generation
+- Dark-mode variant support
+- Responsive breakpoint props
+- Plugin API for custom transforms
+
+### Highlights
+
+- Templates: 28
+- Build time: <0.5s
+- Transfers: 2.1k
+
+## Atlas — Blog starter
+URL: https://krt.design/store/atlas-template/
+Price: $39
+Version: v3.2.0 · File size: 4.6 MB
+Compatibility: Astro 5+, Vercel, Netlify
+
+Atlas is a production-ready Astro blog built for long-form reading. It ships with calm typography, table-of-contents generation, RSS, and dark mode by default. Deploy to Vercel or Netlify in under a minute.
+
+### Features
+
+- Editorial long-form layout
+- Auto table of contents
+- RSS and sitemap included
+- One-command deploy
+
+### Highlights
+
+- Lighthouse: 98
+- Pages: 6
+- Fonts: 0
+
+## Arcwise — SaaS starter
+URL: https://krt.design/store/arcwise-template/
+Price: $59
+Stock: 1
+Version: v2.1.3 · File size: 8.2 MB
+Compatibility: Next.js 14+, Supabase, Stripe
+
+Arcwise gives you a complete SaaS landing page out of the box: pricing tables, Stripe checkout, Supabase auth, and a responsive dashboard shell. Built with Tailwind, Framer Motion, and TypeScript.
+
+### Features
+
+- Pricing comparison table
+- Stripe checkout integration
+- Supabase auth flow
+- Dashboard layout shell
+
+### Highlights
+
+- Components: 42
+- Auth: Built-in
+- Payments: Stripe
+
+## Calm Tokens — Token pack
+URL: https://krt.design/store/calm-tokens/
+Price: $34
+Version: v2.4.0 · File size: 0.8 MB
+Compatibility: Figma, Tailwind 3+, CSS
+
+Calm Tokens is a curated set of 120 design tokens covering color, spacing, typography, and elevation. Optimised for dark-mode reading interfaces with WCAG AA contrast ratios across every surface.
+
+### Features
+
+- 120 semantic tokens
+- WCAG AA contrast verified
+- Figma variables export
+- Tailwind and CSS output
+
+### Highlights
+
+- Tokens: 120
+- Themes: 2
+- Format: JSON
+
+## Frontline UI — Component library
+URL: https://krt.design/store/frontline-ui/
+Price: $49
+Version: v1.8.1 · File size: 5.4 MB
+Compatibility: React 19+, Tailwind 3+, Astro
+
+Frontline UI is a React component library built on Tailwind and Framer Motion. It provides glass cards, reveal animations, pill buttons, and editorial prose layouts that match the aesthetic of premium developer-education sites.
+
+### Features
+
+- 28 production components
+- Framer Motion animations
+- Gumroad-style button variants
+- Accessible by default
+
+### Highlights
+
+- Components: 28
+- Bundle: 14kb
+- A11y: AA
+
+## Monochrome — Icon family
+URL: https://krt.design/store/monochrome-icons/
+Price: $29
+Version: v3.0.0 · File size: 1.6 MB
+Compatibility: React, Vue, Figma, SVG
+
+Monochrome delivers 320 carefully drawn SVG icons in three weights — light, regular, bold — with a consistent 24px grid. Every icon is optimised for dark-mode surfaces and ships with React, Vue, and raw SVG exports.
+
+### Features
+
+- 320 icons in 3 weights
+- 24px grid, 2px stroke
+- React, Vue, and SVG formats
+- Figma component library
+
+### Highlights
+
+- Icons: 320
+- Weights: 3
+- Formats: 4
+
+## Open Lesson Kit — Course starter
+URL: https://krt.design/store/open-lesson-kit/
+Price: $44
+Version: v1.5.0 · File size: 6.1 MB
+Compatibility: Astro 5+, React, Vercel
+
+Open Lesson Kit is a fully functional course platform built with Astro and React. It includes video lesson pages, progress tracking, markdown quiz blocks, and a clean reading experience. Deploy once and start teaching.
+
+### Features
+
+- Video lesson pages
+- Progress tracking with localStorage
+- Markdown quiz blocks
+- Certificate generation
+
+### Highlights
+
+- Lessons: Unlimited
+- Quizzes: Yes
+- Lighthouse: 97
+
+## Editor Shield — Content safety
+URL: https://krt.design/store/editor-shield/
+Price: $18
+Version: v1.2.4 · File size: 0.9 MB
+Compatibility: Chrome 119+, Firefox 125+, Safari 17+
+
+Editor Shield is a lightweight browser plugin that adds auto-save, version snapshots, and offline recovery to any contenteditable field, CMS editor, or web-based writing tool. Never lose a draft again.
+
+### Features
+
+- Auto-save every 30 seconds
+- Version snapshots with diff
+- Offline recovery
+- Works on any contenteditable
+
+### Highlights
+
+- Saves: Auto
+- Recovery: Offline
+- Editors: All
+
+## Dash UI Kit — Dashboard system
+URL: https://krt.design/store/dash-ui-kit/
+Price: $54
+Version: v2.3.0 · File size: 7.2 MB
+Compatibility: React 19+, Tailwind 3+, Recharts
+
+Dash UI Kit provides every piece you need to build a calm, data-rich dashboard: chart wrappers, data tables, filter controls, sidebar navigation, and detail drawers. Built for React with Tailwind and Framer Motion.
+
+### Features
+
+- Chart components (bar, line, pie)
+- Sortable data tables
+- Sidebar and drawer layout
+- Responsive mobile shell
+
+### Highlights
+
+- Components: 36
+- Charts: 6
+- Layouts: 4
+
+## Trailhead — Release notes
+URL: https://krt.design/store/trailhead-template/
+Price: $29
+Version: v1.0.2 · File size: 2.8 MB
+Compatibility: Astro 5+, Netlify, Vercel
+
+Trailhead is a minimal Astro template for publishing product changelogs and release notes. It includes category filters, RSS, search, and a clean editorial layout that integrates with any product site.
+
+### Features
+
+- Category-based filters
+- Full-text client search
+- RSS feed included
+- Embeddable widget script
+
+### Highlights
+
+- Speed: Instant
+- RSS: Yes
+- Search: Client
