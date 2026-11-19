@@ -104,6 +104,10 @@ services:
       - PORT=3004
       - HOST=0.0.0.0
       - NODE_ENV=production
+      # ponytail: session identity comes from the gateway, which calls the
+      # auth service; without this the container resolves localhost:3002 to
+      # ITSELF and every cart route 401s.
+      - AUTH_SERVICE_URL=http://auth-service:3002
     networks:
       - krt-network
 
