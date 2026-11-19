@@ -1,6 +1,7 @@
 const express = require('express');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const cors = require('cors');
+const { classifyVisitor } = require('./agent-detection');
 
 const app = express();
 
@@ -195,6 +196,16 @@ app.use((req, res, next) => {
   next();
 });
 
+// ponytail: detection result feeds the upstream header. It awaits the
+// (cached, 60s) directory fetch only for requests carrying a Signature-Agent;
+// unsigned requests take no network path. Detection is advisory — it never
+// changes what is served (no cloaking), only policy inputs upstream.
+app.use(async (req, res, next) => {
+  if (req.path === '/health') return next();
+  req.visitorType = (await classifyVisitor(req)).tier;
+  next();
+});
+
 // ponytail: no express.json() here — the gateway is a pure proxy. Parsing the
 // body consumes the stream before createProxyMiddleware forwards it, so
 // backends (e.g. order-service) get an empty body and receipts never send.
@@ -269,6 +280,10 @@ Object.entries(services).forEach(([name, config]) => {
           const peer = peerIp(req);
           if (peer) proxyReq.setHeader('x-forwarded-for', peer);
           proxyReq.setHeader('x-real-ip', peer || '');
+          // Detected tier (verified_agent / declared_bot / human) for the
+          // upstream policy inputs (per-action rate limits, step-up auth).
+          // The value is advisory — every visitor gets the same content.
+          proxyReq.setHeader('x-visitor-type', req.visitorType || 'human');
         },
         proxyRes: (proxyRes, req, res) => {
           console.log(`[Gateway] ← ${req.method} ${req.path} ← ${name} status:${proxyRes.statusCode}`);
