@@ -189,6 +189,31 @@ async function waitFor(base, tries = 60) {
     });
     check('a quantity that is not a number is refused', badQty.status === 400, `status ${badQty.status}`);
 
+    const badSlug = await call(base, '/items', {
+      method: 'POST', headers: cookie('token-c'), body: { slug: '../etc/passwd', quantity: 1 }
+    });
+    check('a slug with path traversal is refused', badSlug.status === 400, `status ${badSlug.status}`);
+
+    const badSlug2 = await call(base, '/items', {
+      method: 'POST', headers: cookie('token-c'), body: { slug: 'Bad Slug', quantity: 1 }
+    });
+    check('a slug with invalid characters is refused', badSlug2.status === 400, `status ${badSlug2.status}`);
+
+    const overQty = await call(base, '/items', {
+      method: 'POST', headers: cookie('token-c'), body: { slug: 'clarity-plugin', quantity: 100 }
+    });
+    check('a quantity over 99 is refused', overQty.status === 400, `status ${overQty.status}`);
+
+    const zeroQty = await call(base, '/items', {
+      method: 'POST', headers: cookie('token-c'), body: { slug: 'clarity-plugin', quantity: 0 }
+    });
+    check('a quantity of 0 is refused', zeroQty.status === 400, `status ${zeroQty.status}`);
+
+    const putOver = await call(base, '/items/arcwise-template', {
+      method: 'PUT', headers: cookie('token-c'), body: { quantity: 100 }
+    });
+    check('PUT refuses a quantity over 99', putOver.status === 400, `status ${putOver.status}`);
+
     const cCart = await call(base, '/', { headers: cookie('token-c') });
     check('the rejected lines left the cart alone',
       cCart.status === 200 && cCart.body.cart.items.length === 1,
